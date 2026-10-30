@@ -24,19 +24,22 @@ class PutPimPhotoTest {
   }
 
   @Test
-  @DisplayName("posts the file as upload_filename, with the descriptor's inner fields in data")
+  @DisplayName("posts the file as upload_filename, with the descriptor in the body data field")
   void postsTheFile() {
     var file = Path.of("photo.jpg");
     var request = requestOf(new PutPimPhoto("WS1", "ACC1", "OBJ1", file));
 
+    // command/service/workstation_id go in the query; data goes in the multipart body, not the
+    // query.
     assertThat(request.query())
         .containsEntry(QueryParameter.COMMAND, "put")
         .containsEntry(QueryParameter.SERVICE, "photos")
         .containsEntry(QueryParameter.WORKSTATION_ID, "WS1")
-        // the CGI wraps data as [{<data>,"filepath":…}], so data is the inner fields, braces-free,
-        // and the backend finds the contact by its id.
-        .containsEntry(QueryParameter.DATA, "\"id\":\"OBJ1\",\"account_id\":\"ACC1\"");
-    assertThat(request.query().get(QueryParameter.DATA)).doesNotStartWith("{").doesNotEndWith("}");
+        .doesNotContainKey(QueryParameter.DATA);
+    // the data body field is the descriptor's inner fields, braces-free, so the CGI's
+    // [{<data>,"filepath":…}] wrap is valid; the backend finds the contact by its id.
+    assertThat(request.item()).isEqualTo("\"id\":\"OBJ1\",\"account_id\":\"ACC1\"");
+    assertThat(request.item()).doesNotStartWith("{").doesNotEndWith("}");
     assertThat(request.file()).isEqualTo(file);
     assertThat(request.fileField()).isEqualTo("upload_filename");
     assertThat(request.fileContentType()).isEqualTo("image/jpeg");

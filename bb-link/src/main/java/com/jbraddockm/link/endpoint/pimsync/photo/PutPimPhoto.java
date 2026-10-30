@@ -12,15 +12,15 @@ import java.nio.file.Path;
 import java.util.Objects;
 
 /**
- * Sends one contact photo to the device. The image is uploaded as the one part of a multipart form;
- * the contact it belongs to is named by its {@code objectId} (its device contact id). The device's
- * photo endpoint is a <em>batch</em>: the CGI wraps the {@code data} field as {@code
- * [{<data>,"filepath":"…"}]} (adding the uploaded file's path), and the backend iterates that array
- * and finds each contact by its {@code id}. So {@code data} is the descriptor's inner fields with
- * no enclosing braces ({@code "id":…,"account_id":…}); bb-link does not send a bare {@code
- * {"account_id":…,"object_id":…}} object (that would wrap to malformed JSON). The device refuses a
- * photo over its size limit with status 1004. Changes the device, so it is never repeated after a
- * dropped connection.
+ * Sends one contact photo to the device. The multipart body carries two parts: the image (as the
+ * {@code upload_filename} part) and a {@code data} form field with the contact descriptor. The
+ * device reads {@code data} from the body (not the query, the way it reads command/service),
+ * renames the upload, and wraps the descriptor as {@code [{<data>,"filepath":"…"}]}; the backend
+ * iterates that array and finds the contact by its {@code id}. So {@code data} is the descriptor's
+ * inner fields with no enclosing braces ({@code "id":…,"account_id":…}) — a bare object, or {@code
+ * data} placed in the query, yields a malformed {@code [{…}]} / {@code [{,…}]} and a 404. The
+ * device generates the size variants from this one image. It refuses a photo over its size limit
+ * with status 1004. Changes the device, so it is never repeated after a dropped connection.
  *
  * @param workstationId the client identifier whose account the photo belongs to
  * @param accountId the account the photo is stored under
@@ -59,18 +59,15 @@ public record PutPimPhoto(String workstationId, String accountId, String objectI
     // braces — strip them from the serialized object.
     var object = Json.write(Json.object("id", objectId, "account_id", accountId));
     var data = object.substring(1, object.length() - 1);
+    // data rides a "data" form field in the multipart body (not the query): the device reads it
+    // there and wraps it as [{<data>,"filepath":"…"}]. command/service/workstation_id stay in the
+    // query, where the device reads those.
     var request =
         CgiRequest.Multipart.of(
-                Endpoint.PIM_SYNC,
-                file,
-                UPLOAD_FIELD,
-                "image/jpeg",
-                PhotoPhase.SENDING,
-                "contact photo")
+                Endpoint.PIM_SYNC, file, UPLOAD_FIELD, "image/jpeg", PhotoPhase.SENDING, data)
             .with(QueryParameter.COMMAND, PimCommand.PUT)
             .withText(QueryParameter.SERVICE, PhotoConversation.SERVICE)
             .withText(QueryParameter.WORKSTATION_ID, workstationId)
-            .withText(QueryParameter.DATA, data)
             .describedAs("Sending a contact photo");
     return new PhotoConversation(request);
   }

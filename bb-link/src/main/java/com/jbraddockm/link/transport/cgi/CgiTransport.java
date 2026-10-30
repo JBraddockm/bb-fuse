@@ -124,6 +124,18 @@ public final class CgiTransport implements AutoCloseable {
     var fileBytes = Files.readAllBytes(request.file());
     var fileName = request.file().getFileName().toString();
     var boundary = "----bblinkPhotoBoundary";
+    // The device reads the item descriptor from a "data" form field in the body (not the query, the
+    // way command/service are read), then wraps it as [{<data>,"filepath":"…"}]. Send it as its own
+    // part when present; without it the device sees a malformed [{,"filepath":…}] and answers 404.
+    var dataPart =
+        request.item().isEmpty()
+            ? new byte[0]
+            : ("--"
+                    + boundary
+                    + "\r\nContent-Disposition: form-data; name=\"data\"\r\n\r\n"
+                    + request.item()
+                    + "\r\n")
+                .getBytes(StandardCharsets.UTF_8);
     var preamble =
         ("--"
                 + boundary
@@ -136,10 +148,15 @@ public final class CgiTransport implements AutoCloseable {
                 + "\r\n\r\n")
             .getBytes(StandardCharsets.UTF_8);
     var epilogue = ("\r\n--" + boundary + "--\r\n").getBytes(StandardCharsets.UTF_8);
-    var body = new byte[preamble.length + fileBytes.length + epilogue.length];
-    System.arraycopy(preamble, 0, body, 0, preamble.length);
-    System.arraycopy(fileBytes, 0, body, preamble.length, fileBytes.length);
-    System.arraycopy(epilogue, 0, body, preamble.length + fileBytes.length, epilogue.length);
+    var body = new byte[dataPart.length + preamble.length + fileBytes.length + epilogue.length];
+    var at = 0;
+    System.arraycopy(dataPart, 0, body, at, dataPart.length);
+    at += dataPart.length;
+    System.arraycopy(preamble, 0, body, at, preamble.length);
+    at += preamble.length;
+    System.arraycopy(fileBytes, 0, body, at, fileBytes.length);
+    at += fileBytes.length;
+    System.arraycopy(epilogue, 0, body, at, epilogue.length);
 
     var post = new HttpPost(checkedUrl(request.pathAndQuery()));
     post.getParams().setBooleanParameter("http.protocol.expect-continue", false);

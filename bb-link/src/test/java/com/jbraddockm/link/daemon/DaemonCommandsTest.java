@@ -292,7 +292,7 @@ class DaemonCommandsTest {
     }
 
     @Test
-    @DisplayName("putPimPhoto uploads the file and names the contact in the data query field")
+    @DisplayName("putPimPhoto uploads the file with command, service and workstation in the query")
     void putPimPhoto() throws Exception {
       var file = tempDir.resolve("in.jpg");
       Files.writeString(file, "MYPHOTO");
@@ -300,11 +300,13 @@ class DaemonCommandsTest {
 
       assertThat(daemon.done(id).get("ok")).isEqualTo(true);
       assertThat(((Number) daemon.data(id).get("code")).intValue()).isZero();
+      // command/service/workstation_id ride the query; the contact descriptor rides the multipart
+      // body "data" field (asserted at the request level in PutPimPhotoTest), not the query.
       assertThat(device.pimRequests().getLast())
           .contains("command=put")
           .contains("service=photos")
           .contains("workstation_id=W1")
-          .contains("data=");
+          .doesNotContain("data=");
     }
 
     @Test
