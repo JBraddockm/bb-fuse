@@ -18,6 +18,7 @@ import org.apache.http.HttpVersion;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.cookie.Cookie;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.impl.client.BasicCookieStore;
@@ -33,8 +34,7 @@ import org.apache.http.util.EntityUtils;
  * tool's client: HTTP/1.1, the same user agent, a ten second connect timeout and TLS that accepts
  * the device's certificate.
  */
-@SuppressWarnings(
-    "deprecation") // deprecated only in newer HttpClient versions; the build pins 4.0.3
+// deprecated only in newer HttpClient versions; the build pins 4.0.3
 public final class CgiTransport implements AutoCloseable {
 
   private static final int CONNECT_TIMEOUT_MILLIS = 10_000;
@@ -72,6 +72,42 @@ public final class CgiTransport implements AutoCloseable {
     return header == null ? null : header.getValue();
   }
 
+  /**
+   * Whether a download's answer is the data stream (written to the file) rather than an error
+   * envelope (kept in the body). The backup archive comes as {@code octet-stream}; a contact photo
+   * comes as an {@code image/…} type, while an error — "not modified", "unauthorised" — comes as
+   * JSON or XML and must stay in the body so the conversation can read it.
+   */
+  private static boolean isStreamedAnswer(String contentType) {
+    if (contentType == null) {
+      return false;
+    }
+    var lower = contentType.toLowerCase(java.util.Locale.ROOT);
+    return lower.contains("octet-stream") || lower.contains("image/");
+  }
+
+  /** Copies the answer to the download's file, reporting bytes the way an upload reports them. */
+  private static long streamToFile(
+      HttpEntity entity, CgiRequest.Download download, UploadObserver observer) throws IOException {
+    var step = Math.max(64 * 1024L, download.expectedLength() / 100);
+    long total = 0;
+    long lastReported = 0;
+    var buffer = new byte[64 * 1024];
+    try (var in = entity == null ? InputStream.nullInputStream() : entity.getContent();
+        var out = Files.newOutputStream(download.destination())) {
+      int read;
+      while ((read = in.read(buffer)) >= 0) {
+        out.write(buffer, 0, read);
+        total += read;
+        if (total - lastReported >= step) {
+          lastReported = total;
+          observer.sent(total);
+        }
+      }
+    }
+    return total;
+  }
+
   public DeviceTarget target() {
     return target;
   }
@@ -81,11 +117,15 @@ public final class CgiTransport implements AutoCloseable {
   }
 
   public CgiResponse get(String pathAndQuery) throws IOException {
-    return execute(new HttpGet(checkedUrl(pathAndQuery)), "GET " + pathAndQuery, "");
+    return execute(
+        new HttpGet(checkedUrl(pathAndQuery)),
+        "GET " + pathAndQuery,
+        "",
+        CgiRequest.DEFAULT_READ_TIMEOUT);
   }
 
-  CgiResponse send(CgiRequest request) throws IOException {
-    return send(request, UploadObserver.NONE);
+  void send(CgiRequest request) throws IOException {
+    send(request, UploadObserver.NONE);
   }
 
   public CgiResponse send(CgiRequest request, UploadObserver observer) throws IOException {
@@ -93,11 +133,7 @@ public final class CgiTransport implements AutoCloseable {
       case CgiRequest.Get get -> get(get.pathAndQuery());
       case CgiRequest.Form form -> {
         var body = form.encodedBody();
-        var post = new HttpPost(checkedUrl(form.endpoint().path()));
-        post.getParams().setBooleanParameter("http.protocol.expect-continue", false);
-        var entity = new ByteArrayEntity(body.getBytes(StandardCharsets.US_ASCII));
-        entity.setContentType("application/x-www-form-urlencoded");
-        post.setEntity(entity);
+        var post = formPost(form.endpoint().path(), body);
         yield execute(post, "POST " + form.endpoint().path(), body, form.readTimeout());
       }
       case CgiRequest.Body body -> {
@@ -210,15 +246,10 @@ public final class CgiTransport implements AutoCloseable {
   private CgiResponse download(CgiRequest.Download download, UploadObserver observer)
       throws IOException {
     var body = download.encodedBody();
-    var post = new HttpPost(checkedUrl(download.endpoint().path()));
-    post.getParams().setBooleanParameter("http.protocol.expect-continue", false);
-    var entity = new ByteArrayEntity(body.getBytes(StandardCharsets.US_ASCII));
-    entity.setContentType("application/x-www-form-urlencoded");
-    post.setEntity(entity);
+    var post = formPost(download.endpoint().path(), body);
     HttpConnectionParams.setSoTimeout(post.getParams(), (int) download.readTimeout().toMillis());
     var requestLine = "POST " + download.endpoint().path();
-    var cookieNames =
-        cookies.getCookies().stream().map(cookie -> cookie.getName()).sorted().toList();
+    var cookieNames = cookies.getCookies().stream().map(Cookie::getName).sorted().toList();
     try {
       var response = client.execute(post, context);
       var contentType = valueOf(response.getFirstHeader("Content-Type"));
@@ -251,40 +282,14 @@ public final class CgiTransport implements AutoCloseable {
     }
   }
 
-  /**
-   * Whether a download's answer is the data stream (written to the file) rather than an error
-   * envelope (kept in the body). The backup archive comes as {@code octet-stream}; a contact photo
-   * comes as an {@code image/…} type, while an error — "not modified", "unauthorised" — comes as
-   * JSON or XML and must stay in the body so the conversation can read it.
-   */
-  private static boolean isStreamedAnswer(String contentType) {
-    if (contentType == null) {
-      return false;
-    }
-    var lower = contentType.toLowerCase(java.util.Locale.ROOT);
-    return lower.contains("octet-stream") || lower.contains("image/");
-  }
-
-  /** Copies the answer to the download's file, reporting bytes the way an upload reports them. */
-  private static long streamToFile(
-      HttpEntity entity, CgiRequest.Download download, UploadObserver observer) throws IOException {
-    var step = Math.max(64 * 1024L, download.expectedLength() / 100);
-    long total = 0;
-    long lastReported = 0;
-    var buffer = new byte[64 * 1024];
-    try (var in = entity == null ? InputStream.nullInputStream() : entity.getContent();
-        var out = Files.newOutputStream(download.destination())) {
-      int read;
-      while ((read = in.read(buffer)) >= 0) {
-        out.write(buffer, 0, read);
-        total += read;
-        if (total - lastReported >= step) {
-          lastReported = total;
-          observer.sent(total);
-        }
-      }
-    }
-    return total;
+  /** Builds a form-urlencoded POST to the path, carrying the already-encoded body. */
+  private HttpPost formPost(String path, String body) {
+    var post = new HttpPost(checkedUrl(path));
+    post.getParams().setBooleanParameter("http.protocol.expect-continue", false);
+    var entity = new ByteArrayEntity(body.getBytes(StandardCharsets.US_ASCII));
+    entity.setContentType("application/x-www-form-urlencoded");
+    post.setEntity(entity);
+    return post;
   }
 
   private String checkedUrl(String pathAndQuery) {
@@ -295,17 +300,11 @@ public final class CgiTransport implements AutoCloseable {
     return url;
   }
 
-  private CgiResponse execute(HttpUriRequest request, String requestLine, String requestBody)
-      throws IOException {
-    return execute(request, requestLine, requestBody, CgiRequest.DEFAULT_READ_TIMEOUT);
-  }
-
   private CgiResponse execute(
       HttpUriRequest request, String requestLine, String requestBody, Duration readTimeout)
       throws IOException {
     HttpConnectionParams.setSoTimeout(request.getParams(), (int) readTimeout.toMillis());
-    var cookieNames =
-        cookies.getCookies().stream().map(cookie -> cookie.getName()).sorted().toList();
+    var cookieNames = cookies.getCookies().stream().map(Cookie::getName).sorted().toList();
     try {
       var response = client.execute(request, context);
       HttpEntity entity = response.getEntity();
