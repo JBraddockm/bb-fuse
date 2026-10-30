@@ -27,20 +27,35 @@ class DeletePimItemTest {
   }
 
   @ParameterizedTest(name = "{0}")
-  @CsvSource({"CONTACTS, contacts", "EVENTS, events", "CALENDARS, calendars"})
-  @DisplayName("posts delete with the workstation, the service and the object id in an ids body")
-  void asksToDelete(PimService service, String name) {
+  @CsvSource({"CONTACTS, contacts", "EVENTS, events"})
+  @DisplayName("posts delete for contacts/events with the workstation, service and ids body")
+  void asksToDeleteByBody(PimService service, String name) {
     var request = requestOf(new DeletePimItem("WS1", service, "OBJ1"));
 
     assertThat(request.fields())
         .containsEntry(FormField.COMMAND, "delete")
         .containsEntry(FormField.SERVICE, name)
         .containsEntry(FormField.WORKSTATION_ID, "WS1");
-    // the device deletes by a body {"type":"id","ids":[…]}, not an object_id query parameter.
+    // contacts/events delete by a batch body {"type":"id","ids":[…]}.
     assertThat(request.fields().get(FormField.DATA))
         .contains("\"type\":\"id\"")
         .contains("\"ids\":[\"OBJ1\"]");
     assertThat(request.describe()).isEqualTo("Removing one " + name + " item");
+  }
+
+  @Test
+  @DisplayName("posts calendar delete with the bare object id as the data field")
+  void asksToDeleteCalendarByBareId() {
+    var request = requestOf(new DeletePimItem("WS1", PimService.CALENDARS, "7"));
+
+    assertThat(request.fields())
+        .containsEntry(FormField.COMMAND, "delete")
+        .containsEntry(FormField.SERVICE, "calendars")
+        .containsEntry(FormField.WORKSTATION_ID, "WS1");
+    // calendars have no batch delete: the CGI formats the data value straight into the DELETE
+    // path, so data is the bare id — not a {"type":"id","ids":[…]} object.
+    assertThat(request.fields().get(FormField.DATA)).isEqualTo("7");
+    assertThat(request.describe()).isEqualTo("Removing one calendars item");
   }
 
   @Test

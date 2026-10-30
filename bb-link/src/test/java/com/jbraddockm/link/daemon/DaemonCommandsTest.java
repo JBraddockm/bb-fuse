@@ -227,6 +227,26 @@ class DaemonCommandsTest {
     }
 
     @Test
+    @DisplayName("deletePimItem for calendars sends the bare id as the data field")
+    void deletePimCalendar() throws Exception {
+      var id = ask("request--delete-pim-calendar.json", Map.of());
+
+      assertThat(daemon.done(id).get("ok")).isEqualTo(true);
+      assertThat(daemon.data(id))
+          .containsEntry("command", "delete")
+          .containsEntry("service", "calendars");
+      // the CGI formats data into the DELETE path, so calendars send data=<bare id>, not an ids
+      // body.
+      assertThat(device.pimRequests().getLast())
+          .contains("command=delete")
+          .contains("workstation_id=W1")
+          .contains("service=calendars")
+          .contains("data=7")
+          .doesNotContain("object_id=")
+          .doesNotContain("type");
+    }
+
+    @Test
     @DisplayName("putPimItem posts the item it is given as the data field, verbatim")
     void putPimItem() throws Exception {
       var id = ask("request--put-pim-item.json", Map.of());

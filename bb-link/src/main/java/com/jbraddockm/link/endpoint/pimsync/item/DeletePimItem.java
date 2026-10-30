@@ -17,11 +17,17 @@ import java.util.Objects;
 
 /**
  * Removes one item — a contact, event or calendar — from a workstation's account, named by its
- * object identifier. The device's delete endpoint is a <em>batch</em>: it reads the ids from the
- * body as {@code {"type":"id","ids":[…]}} (the {@code type} selects whether an id is the device's
- * own object id or a sync id). So the one object id is sent in the body as a one-element {@code
- * ids} array; it is not an {@code object_id} query parameter. Changes the device, so it is never
- * repeated after a dropped connection.
+ * object identifier. Every delete is a POST carrying a {@code data} field, but what {@code data}
+ * holds differs by service. For {@code contacts} and {@code events} the endpoint is a
+ * <em>batch</em> that reads the ids from {@code data} as {@code {"type":"id","ids":[…]}} (the
+ * {@code type} selects whether an id is the device's own object id or a sync id), so the one object
+ * id is posted as a one-element {@code ids} array. For {@code calendars} there is no batch delete:
+ * the device removes a calendar only through {@code DELETE /bblink/calendar/<account>/<id>} (the id
+ * in the path, no body), and the CGI builds that path by formatting the {@code data} value straight
+ * in — so {@code data} is the bare object id, not a JSON object. (Confirmed from the CGI: {@code
+ * extract_data_param} feeds the calendar-delete path builder, which does {@code snprintf("/%s",
+ * data)} with an HTTP {@code DELETE}.) Changes the device, so it is never repeated after a dropped
+ * connection.
  *
  * @param workstationId the client identifier whose account holds the item
  * @param service the kind of item
@@ -48,12 +54,19 @@ public record DeletePimItem(String workstationId, PimService service, String obj
 
   @Override
   public Conversation<PimAnswer> conversation() {
+    // The data field differs by service: contacts/events read the batch {"type":"id","ids":[…]};
+    // calendars have no batch delete, so the CGI formats data straight into the DELETE path, which
+    // means data is the bare object id.
+    var data =
+        service == PimService.CALENDARS
+            ? objectId
+            : Json.write(Map.of("type", "id", "ids", List.of(objectId)));
     var request =
         CgiRequest.Form.to(Endpoint.PIM_SYNC)
             .with(FormField.COMMAND, PimCommand.DELETE)
             .with(FormField.SERVICE, service)
             .withText(FormField.WORKSTATION_ID, workstationId)
-            .withText(FormField.DATA, Json.write(Map.of("type", "id", "ids", List.of(objectId))))
+            .withText(FormField.DATA, data)
             .describedAs("Removing one " + service.wireName() + " item");
     return new PimSyncConversation(PimCommand.DELETE, service, request);
   }
