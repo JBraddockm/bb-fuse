@@ -15,6 +15,7 @@ import com.jbraddockm.core.json.Json;
 import com.jbraddockm.core.tunnel.TunnelBrokerClient;
 import com.jbraddockm.link.endpoint.characteristics.DeviceCharacteristics;
 import com.jbraddockm.link.endpoint.characteristics.GetDeviceCharacteristics;
+import com.jbraddockm.link.endpoint.characteristics.UsbDiscovery;
 import com.jbraddockm.link.endpoint.discovery.DeviceScanner;
 import com.jbraddockm.link.endpoint.discovery.FriendlyNameAdvertiser;
 import com.jbraddockm.link.endpoint.pairing.CertificateRetrieval;
@@ -24,15 +25,16 @@ import com.jbraddockm.link.endpoint.pairing.store.PairingDirectory;
 import com.jbraddockm.link.endpoint.pairing.store.StoredPairing;
 import com.jbraddockm.link.endpoint.properties.DeviceProperties;
 import com.jbraddockm.link.endpoint.properties.GetDeviceProperties;
-import com.jbraddockm.link.transport.tunnel.BrokerTunnelConnector;
 import com.jbraddockm.link.transport.cgi.Authentication;
 import com.jbraddockm.link.transport.cgi.ConnectionPath;
-import com.jbraddockm.link.transport.session.DeviceSession;
 import com.jbraddockm.link.transport.cgi.DeviceTarget;
 import com.jbraddockm.link.transport.cgi.ExchangeObserver;
+import com.jbraddockm.link.transport.cgi.Step;
+import com.jbraddockm.link.transport.cgi.TransportScheme;
 import com.jbraddockm.link.transport.login.LoginOnly;
 import com.jbraddockm.link.transport.login.SmbCredentials;
-import com.jbraddockm.link.transport.cgi.TransportScheme;
+import com.jbraddockm.link.transport.session.DeviceSession;
+import com.jbraddockm.link.transport.tunnel.BrokerTunnelConnector;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -97,6 +99,12 @@ public final class LinkService implements Service<DeviceSession> {
   }
 
   private static DeviceCharacteristics readCharacteristics(DeviceSession session, Reply reply) {
+    if (session.connectionPath() == ConnectionPath.USB) {
+      // Over USB the :8443 management listener does not serve discovery.cgi — it is on the
+      // unauthenticated :80 listener — so reading it over the session drops the connection and
+      // forces a needless re-login. Read it from :80 directly instead.
+      return characteristicsOverHttp(session.target().host(), reply);
+    }
     return switch (session.execute(new GetDeviceCharacteristics(), reply)) {
       case CommandOutcome.Succeeded<DeviceCharacteristics>(var characteristics, _) ->
           characteristics;
@@ -105,6 +113,26 @@ public final class LinkService implements Service<DeviceSession> {
         yield null;
       }
     };
+  }
+
+  private static DeviceCharacteristics characteristicsOverHttp(String host, Reply reply) {
+    reply.onLog(LogLevel.INFO, "Reading the device characteristics");
+    try {
+      return switch (UsbDiscovery.read(host)) {
+        case Step.Finish<DeviceCharacteristics>(var characteristics) -> characteristics;
+        case Step.Fail<DeviceCharacteristics>(var error, var ignored) -> {
+          reply.onLog(
+              LogLevel.WARN, "Could not read the device characteristics: " + error.message());
+          yield null;
+        }
+        case Step.Send<DeviceCharacteristics> ignored -> null;
+      };
+    } catch (IOException failure) {
+      reply.onLog(
+          LogLevel.WARN,
+          "Could not read the device characteristics from port 80: " + failure.getMessage());
+      return null;
+    }
   }
 
   /**
@@ -137,7 +165,8 @@ public final class LinkService implements Service<DeviceSession> {
     describesDevice(params); // refuses a malformed option while no session exists yet
     var session =
         DeviceSession.forTarget(target, observer, params.optionalString("smbHost").orElse(null));
-    // The pairing that names us to the device sits beside the certificate the connect uses: the client
+    // The pairing that names us to the device sits beside the certificate the connect uses: the
+    // client
     // certificate the login offers, or the tunnel certificate on a tunnel connect (set below).
     var pairingCertificate = clientCertificate(target.authentication());
     // `tunnel` opts a Wi-Fi LAN connect into a broker-managed tunnel: bb-link brings the tunnel up
@@ -151,18 +180,14 @@ public final class LinkService implements Service<DeviceSession> {
               .optionalString("brokerSocket")
               .map(Path::of)
               .orElse(TunnelBrokerClient.DEFAULT_SOCKET);
-      // The tunnel's client identity (the device's enrolled cert) is passed by path to the daemon, so
+      // The tunnel's client identity (the device's enrolled cert) is passed by path to the daemon,
+      // so
       // its binary embeds no device cert. Absent, the daemon falls back to its own resolution.
       var tunnelCert = params.optionalString("tunnelCertificate").map(Path::of).orElse(null);
       var tunnelKey = params.optionalString("tunnelKey").map(Path::of).orElse(null);
       session.useTunnel(
           new BrokerTunnelConnector(
-              socket,
-              target.host(),
-              params.flag("stableSmb"),
-              "bb-link",
-              tunnelCert,
-              tunnelKey));
+              socket, target.host(), params.flag("stableSmb"), "bb-link", tunnelCert, tunnelKey));
       if (tunnelCert != null) {
         pairingCertificate = tunnelCert;
       }
@@ -176,9 +201,9 @@ public final class LinkService implements Service<DeviceSession> {
   }
 
   /**
-   * The client certificate a certificate login offers, or {@code null} for a password or no-password
-   * login. The {@code pairing.json} beside it holds the identifier the device folds to match our
-   * Friendly advert.
+   * The client certificate a certificate login offers, or {@code null} for a password or
+   * no-password login. The {@code pairing.json} beside it holds the identifier the device folds to
+   * match our Friendly advert.
    */
   private static Path clientCertificate(Authentication authentication) {
     return switch (authentication) {
@@ -190,8 +215,8 @@ public final class LinkService implements Service<DeviceSession> {
   }
 
   /**
-   * Advertises this workstation's friendly name over mDNS for the device this connect pairs with, so
-   * the device shows it in Device Connections instead of the {@code Desktop-XXXX} fallback.
+   * Advertises this workstation's friendly name over mDNS for the device this connect pairs with,
+   * so the device shows it in Device Connections instead of the {@code Desktop-XXXX} fallback.
    * Best-effort, and attached to the session so the advert is withdrawn when the connection ends. A
    * connect with no pairing beside its certificate advertises nothing.
    */
