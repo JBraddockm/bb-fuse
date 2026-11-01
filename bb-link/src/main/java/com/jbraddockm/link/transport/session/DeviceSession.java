@@ -18,7 +18,6 @@ import com.jbraddockm.link.transport.cgi.TransportScheme;
 import com.jbraddockm.link.transport.login.FailureClassifier;
 import com.jbraddockm.link.transport.login.Login;
 import com.jbraddockm.link.transport.login.LoginException;
-import com.jbraddockm.link.transport.login.PasswordRequiredException;
 import com.jbraddockm.link.transport.login.SmbCredentials;
 import com.jbraddockm.link.transport.tunnel.TunnelBinding;
 import com.jbraddockm.link.transport.tunnel.TunnelConnector;
@@ -297,7 +296,7 @@ public final class DeviceSession implements ServiceSession {
     var connectionRenewed = false;
     while (true) {
       try {
-        ensureLoggedIn(listener);
+        ensureLoggedIn();
         return ConversationRunner.run(
             command.conversation(),
             (request, observer) -> transport.send(request, observer),
@@ -331,14 +330,14 @@ public final class DeviceSession implements ServiceSession {
     }
   }
 
-  private void ensureLoggedIn(CommandListener listener) throws LoginException, IOException {
+  private void ensureLoggedIn() throws LoginException, IOException {
     if (closed) {
       throw new IllegalStateException("the session is closed");
     }
     if (transport == null) {
       var fresh = new CgiTransport(transportTarget, observer);
       try {
-        smbCredentials = login(fresh, listener);
+        smbCredentials = login(fresh);
       } catch (LoginException | IOException | RuntimeException failure) {
         fresh.close();
         throw failure;
@@ -359,28 +358,20 @@ public final class DeviceSession implements ServiceSession {
     return transportTarget.host();
   }
 
-  private SmbCredentials login(CgiTransport fresh, CommandListener listener)
-      throws LoginException, IOException {
-    try {
-      var credentials = Login.perform(fresh).orElse(null);
-      return credentials != null
-          ? new SmbCredentials(
-              credentials.user(),
-              credentials.password(),
-              credentials.workgroup(),
-              credentials.netBios(),
-              smbHost())
-          : null;
-    } catch (PasswordRequiredException asked) {
-      if (!target.authentication().certificateAlone()) {
-        throw asked;
-      }
-      listener.onLog(
-          LogLevel.WARN,
-          "The device asked for a password during the login; continuing with the certificate alone,"
-              + " without share credentials");
-      return null;
-    }
+  private SmbCredentials login(CgiTransport fresh) throws LoginException, IOException {
+    // A password challenge under a certificate-alone session means the device refused the
+    // certificate and now wants a password. bb-link reports that honestly (PASSWORD_REQUIRED,
+    // certRefused) rather than silently continuing without share credentials; recovering by
+    // retrying with a password is the caller's decision, not the transport's.
+    var credentials = Login.perform(fresh).orElse(null);
+    return credentials != null
+        ? new SmbCredentials(
+            credentials.user(),
+            credentials.password(),
+            credentials.workgroup(),
+            credentials.netBios(),
+            smbHost())
+        : null;
   }
 
   private void discardTransport() {

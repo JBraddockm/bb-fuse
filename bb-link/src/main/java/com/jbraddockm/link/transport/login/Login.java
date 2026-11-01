@@ -38,15 +38,33 @@ public final class Login {
       throws LoginException, IOException {
     var first = transport.get(LOGIN_PATH + "?request_version=1");
     var document = LoginDocument.of(first);
+    return settle(transport, first, document, () -> answerChallenge(transport, document));
+  }
+
+  /**
+   * Resolves a login answer into credentials or the matching failure. A denial, a device error and
+   * a success are the same wherever they arrive; only a password challenge is handled differently
+   * by the first request and the answer to it, so the caller passes what to do with one.
+   */
+  private static Optional<SmbCredentials> settle(
+      CgiTransport transport, CgiResponse response, LoginDocument document, Challenge onChallenge)
+      throws LoginException, IOException {
     return switch (document.status()) {
       case DENIED -> throw document.denial();
-      case ERROR -> throw legacyLogin();
+      case ERROR -> throw document.error();
+      case SYS_ERROR -> throw new DeviceLoginError("SysErr", null);
       case SUCCESS -> {
-        acceptCookie(transport, first);
+        acceptCookie(transport, response);
         yield document.smb();
       }
-      case PASSWORD_CHALLENGE -> answerChallenge(transport, document);
+      case PASSWORD_CHALLENGE -> onChallenge.handle();
     };
+  }
+
+  /** What to do with a password challenge in a given place of the login. */
+  @FunctionalInterface
+  private interface Challenge {
+    Optional<SmbCredentials> handle() throws LoginException, IOException;
   }
 
   private static Optional<SmbCredentials> answerChallenge(
@@ -61,17 +79,14 @@ public final class Login {
     }
     var answerData = hash(password.get(), algorithm, challenge);
     var answer = transport.get(LOGIN_PATH + "?challenge_data=" + answerData + "&request_version=1");
-    var document = LoginDocument.of(answer);
-    return switch (document.status()) {
-      case DENIED -> throw document.denial();
-      case SUCCESS -> {
-        acceptCookie(transport, answer);
-        yield document.smb();
-      }
-      case ERROR, PASSWORD_CHALLENGE ->
+    return settle(
+        transport,
+        answer,
+        LoginDocument.of(answer),
+        () -> {
           throw new UnusableLoginResponseException(
               "Status error: the device did not accept the answer to its challenge");
-    };
+        });
   }
 
   private static String hash(String password, int algorithm, LoginDocument challenge)

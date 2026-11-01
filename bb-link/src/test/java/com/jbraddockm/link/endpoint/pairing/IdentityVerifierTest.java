@@ -6,14 +6,14 @@ import com.jbraddockm.core.command.CommandListener;
 import com.jbraddockm.core.error.CoreErrorCode;
 import com.jbraddockm.link.LinkErrorCode;
 import com.jbraddockm.link.endpoint.pairing.pki.CertificateDetails;
-import com.jbraddockm.link.transport.cgi.Authentication;
-import com.jbraddockm.link.transport.tls.ClientCertificate;
-import com.jbraddockm.link.transport.session.DeviceSession;
-import com.jbraddockm.link.transport.cgi.DeviceTarget;
-import com.jbraddockm.link.transport.cgi.TransportScheme;
 import com.jbraddockm.link.testing.Resources;
 import com.jbraddockm.link.testing.TestPki;
 import com.jbraddockm.link.testing.TlsTestDevice;
+import com.jbraddockm.link.transport.cgi.Authentication;
+import com.jbraddockm.link.transport.cgi.DeviceTarget;
+import com.jbraddockm.link.transport.cgi.TransportScheme;
+import com.jbraddockm.link.transport.session.DeviceSession;
+import com.jbraddockm.link.transport.tls.ClientCertificate;
 import java.nio.file.Path;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -85,7 +85,8 @@ class IdentityVerifierTest {
   }
 
   @Test
-  @DisplayName("says failed with the words of the certificate when the device refuses it")
+  @DisplayName(
+      "says failed with certRefused when the device refuses the certificate it just signed")
   void aCertificateThatIsRefused() {
     device.behaviour = TlsTestDevice.Behaviour.REFUSES_EVERYONE;
 
@@ -93,8 +94,10 @@ class IdentityVerifierTest {
 
     assertThat(verification.state()).isEqualTo(Verification.State.FAILED);
     assertThat(verification.error()).isNotNull();
-    assertThat(verification.error().code()).isEqualTo(CoreErrorCode.AUTH_FAILED);
-    assertThat(verification.error().message()).contains("did not accept the client certificate");
+    assertThat(verification.error().code()).isEqualTo(LinkErrorCode.PASSWORD_REQUIRED);
+    assertThat(verification.error().details())
+        .containsEntry("authRequired", "password")
+        .containsEntry("certRefused", true);
   }
 
   @Test

@@ -2,16 +2,15 @@ package com.jbraddockm.link.daemon;
 
 import static com.jbraddockm.link.daemon.DaemonRun.errorCode;
 import static com.jbraddockm.link.daemon.DaemonRun.errorDetails;
-import static com.jbraddockm.link.daemon.DaemonRun.errorMessage;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.jbraddockm.link.endpoint.pairing.CertificateRetrieval;
 import com.jbraddockm.link.endpoint.pairing.Pairing;
-import com.jbraddockm.link.transport.cgi.ExchangeObserver;
-import com.jbraddockm.link.transport.cgi.TransportScheme;
 import com.jbraddockm.link.testing.FakeDevice;
 import com.jbraddockm.link.testing.Resources;
 import com.jbraddockm.link.testing.TestPki;
+import com.jbraddockm.link.transport.cgi.ExchangeObserver;
+import com.jbraddockm.link.transport.cgi.TransportScheme;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -104,23 +103,20 @@ class DaemonAuthenticationTest {
 
     @Test
     @DisplayName(
-        "a certificate alone, to a device that does not take it, is AUTH_FAILED saying that it is"
-            + " the certificate: it logs in twice, never answers the password question, counts no"
-            + " attempt, and warns of the question")
+        "a certificate alone, to a device that does not take it, is PASSWORD_REQUIRED with"
+            + " certRefused: it logs in once, never answers the password question, counts no"
+            + " attempt, and recovery is left to the caller")
     void aDeviceThatDoesNotTakeTheCertificate() throws Exception {
       var logins = device.loginRequests.get();
 
       var refusal = connect(152, "request--connect-certificate.json", files());
 
-      assertThat(errorCode(refusal)).isEqualTo("AUTH_FAILED");
-      assertThat(errorMessage(refusal)).contains("client certificate");
-      assertThat(device.loginRequests.get()).isEqualTo(logins + 2);
+      assertThat(errorCode(refusal)).isEqualTo("PASSWORD_REQUIRED");
+      assertThat(errorDetails(refusal))
+          .containsEntry("authRequired", "password")
+          .containsEntry("certRefused", true);
+      assertThat(device.loginRequests.get()).isEqualTo(logins + 1);
       assertThat(device.failedAttempts.get()).isZero();
-      assertThat(daemon.events(152, "log"))
-          .anyMatch(
-              event ->
-                  "warn".equals(event.get("level"))
-                      && String.valueOf(event.get("message")).contains("asked for a password"));
     }
 
     @Test

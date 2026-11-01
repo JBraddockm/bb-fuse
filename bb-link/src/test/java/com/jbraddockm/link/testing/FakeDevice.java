@@ -489,8 +489,10 @@ public final class FakeDevice implements AutoCloseable {
     NO_PASSWORD,
     /** An HTML page. */
     GARBAGE,
-    /** The status {@code Error}, which asks for the legacy login. */
-    LEGACY
+    /**
+     * The status {@code Error}, with the machine-readable identifier and description it carries.
+     */
+    DEVICE_ERROR
   }
 
   /** How the {@code Set-Cookie} header of a successful login looks. */
@@ -554,7 +556,12 @@ public final class FakeDevice implements AutoCloseable {
                 200,
                 Resources.text(FakeDevice.class, "fake-device--login-maintenance.txt").strip(),
                 null);
-        case LEGACY -> respond(exchange, 200, auth("Error", ""), null);
+        case DEVICE_ERROR ->
+            respond(
+                exchange,
+                200,
+                Resources.text(FakeDevice.class, "fake-device--login-device-error.xml").strip(),
+                null);
         case NO_PASSWORD -> respond(exchange, 200, success(), cookieHeader());
         case CHALLENGE -> {
           if (query != null && query.contains("challenge_data=")) {

@@ -13,6 +13,7 @@ import java.net.MalformedURLException;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
+import java.util.LinkedHashMap;
 import javax.net.ssl.SSLException;
 import org.apache.http.NoHttpResponseException;
 import org.apache.http.conn.ConnectTimeoutException;
@@ -45,28 +46,52 @@ public final class FailureClassifier {
    * @param path the path the session was reached over
    * @return the error
    */
-  public static ServiceError classify(Throwable failure, boolean certificateOffered, ConnectionPath path) {
+  public static ServiceError classify(
+      Throwable failure, boolean certificateOffered, ConnectionPath path) {
     return switch (failure) {
       case InvalidArgumentException invalid -> invalid.toServiceError();
       case PasswordRejectedException rejected when rejected.isLocked() ->
           new ServiceError(
               CoreErrorCode.AUTH_LOCKED,
               describe(rejected),
-              Json.object("failedAttempts", rejected.failedAttempts()));
+              Json.object(
+                  "authRequired",
+                  "password",
+                  "locked",
+                  true,
+                  "failedAttempts",
+                  rejected.failedAttempts()));
       case PasswordRejectedException rejected ->
           new ServiceError(
               CoreErrorCode.AUTH_FAILED,
               describe(rejected),
               Json.object(
-                  "failedAttempts", rejected.failedAttempts(),
-                  "retriesRemaining", rejected.remainingAttempts(),
-                  "maxAttempts", rejected.failedAttempts() + rejected.remainingAttempts()));
+                  "authRequired",
+                  "password",
+                  "failedAttempts",
+                  rejected.failedAttempts(),
+                  "retriesRemaining",
+                  rejected.remainingAttempts(),
+                  "maxAttempts",
+                  rejected.failedAttempts() + rejected.remainingAttempts()));
       case InvalidPasswordException invalid ->
           new ServiceError(CoreErrorCode.AUTH_FAILED, describe(invalid));
       case PasswordRequiredException required ->
-          new ServiceError(LinkErrorCode.PASSWORD_REQUIRED, describe(required));
+          new ServiceError(
+              LinkErrorCode.PASSWORD_REQUIRED,
+              describe(required),
+              // certRefused is DERIVED: a certificate was offered yet the device still demanded a
+              // password, so it did not honour the certificate. It names only that fact, never a
+              // specific cause (expired pin, perimeter-password change, another host re-signing).
+              Json.object("authRequired", "password", "certRefused", certificateOffered));
       case ClockOutOfSyncException clock ->
           new ServiceError(CoreErrorCode.CLOCK_OUT_OF_SYNC, describe(clock));
+      case DeviceLoginError deviceError -> {
+        var details = new LinkedHashMap<String, Object>();
+        deviceError.identifier().ifPresent(id -> details.put("errorIdentifier", id));
+        deviceError.description().ifPresent(text -> details.put("errorDescription", text));
+        yield new ServiceError(CoreErrorCode.DEVICE_ERROR, describe(deviceError), details);
+      }
       case UnusableLoginResponseException unusable ->
           new ServiceError(
               CoreErrorCode.DEVICE_ERROR,

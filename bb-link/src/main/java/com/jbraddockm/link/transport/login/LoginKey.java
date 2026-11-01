@@ -11,7 +11,9 @@ enum LoginKey {
   CHALLENGE("Challenge", "challenge"),
   ALGORITHM("Algorithm", "algorithm"),
   ITERATION_COUNT("ICount", "icount"),
-  SALT("Salt", "salt");
+  SALT("Salt", "salt"),
+  ERROR_IDENTIFIER("ErrorIdentifier", "erroridentifier"),
+  ERROR_DESCRIPTION("ErrorDescription", "errordescription");
 
   private final String currentName;
   private final String legacyName;

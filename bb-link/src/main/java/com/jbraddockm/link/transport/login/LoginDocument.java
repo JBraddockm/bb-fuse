@@ -94,4 +94,14 @@ final class LoginDocument {
     return new PasswordRejectedException(
         integer(LoginKey.FAILED_ATTEMPTS), integer(LoginKey.RETRIES_REMAINING));
   }
+
+  /**
+   * The device's own login error, with the {@code ErrorIdentifier} and {@code ErrorDescription} it
+   * carries (either may be absent). Reported as it is, not interpreted.
+   */
+  DeviceLoginError error() {
+    return new DeviceLoginError(
+        text(LoginKey.ERROR_IDENTIFIER).orElse(null),
+        text(LoginKey.ERROR_DESCRIPTION).orElse(null));
+  }
 }

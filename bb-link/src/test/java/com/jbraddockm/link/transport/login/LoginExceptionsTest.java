@@ -15,14 +15,15 @@ import org.junit.jupiter.api.Test;
 class LoginExceptionsTest {
 
   @Test
-  @DisplayName("is sealed to five kinds, and no other")
-  void isSealedToFiveKinds() {
+  @DisplayName("is sealed to six kinds, and no other")
+  void isSealedToSixKinds() {
     assertThat(Set.of(LoginException.class.getPermittedSubclasses()))
         .containsExactlyInAnyOrder(
             PasswordRejectedException.class,
             InvalidPasswordException.class,
             ClockOutOfSyncException.class,
             PasswordRequiredException.class,
+            DeviceLoginError.class,
             UnusableLoginResponseException.class);
   }
 

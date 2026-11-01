@@ -8,7 +8,8 @@ enum LoginStatus {
   PASSWORD_CHALLENGE("PasswdChallenge"),
   SUCCESS("Success"),
   DENIED("Denied"),
-  ERROR("Error");
+  ERROR("Error"),
+  SYS_ERROR("SysErr");
 
   private final String wireName;
 

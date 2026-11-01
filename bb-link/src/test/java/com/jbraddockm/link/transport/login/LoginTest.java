@@ -233,14 +233,19 @@ class LoginTest {
     }
 
     @Test
-    @DisplayName("an answer of the legacy login is refused, as bb-link does not speak it")
-    void theLegacyLogin() {
-      device.loginMode = FakeDevice.LoginMode.LEGACY;
+    @DisplayName(
+        "a status of error is the device's own login error, with the identifier and description it"
+            + " carries, not guessed to be the legacy login")
+    void aDeviceError() {
+      device.loginMode = FakeDevice.LoginMode.DEVICE_ERROR;
 
       assertThatThrownBy(() -> Login.perform(openDevice(new Authentication.Password("secret"))))
           .isInstanceOfSatisfying(
-              UnusableLoginResponseException.class,
-              unusable -> assertThat(unusable.extra()).contains("legacy login"));
+              DeviceLoginError.class,
+              error -> {
+                assertThat(error.identifier()).contains("1013");
+                assertThat(error.description()).contains("The request could not be processed");
+              });
     }
   }
 
@@ -301,15 +306,33 @@ class LoginTest {
     }
 
     @Test
-    @DisplayName("a status of error at the first request is the legacy login")
+    @DisplayName(
+        "a status of error at the first request is the device's own login error, reported as it is"
+            + " even when it carries no identifier or description")
     void anErrorAtOnce() {
       server.answer(200, resource("login-test--error.xml"));
 
       assertThatThrownBy(
               () -> Login.perform(open(server.port(), new Authentication.Password("secret"))))
           .isInstanceOfSatisfying(
-              UnusableLoginResponseException.class,
-              unusable -> assertThat(unusable.extra()).contains("legacy login"));
+              DeviceLoginError.class,
+              error -> {
+                assertThat(error.identifier()).isEmpty();
+                assertThat(error.description()).isEmpty();
+                assertThat(error.getMessage()).isEqualTo("The device reported a login error");
+              });
+      assertThat(server.requests()).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("a system error (SysErr) is the device's own login error, named by its identifier")
+    void aSystemError() {
+      server.answer(200, resource("login-test--sys-error.xml"));
+
+      assertThatThrownBy(
+              () -> Login.perform(open(server.port(), new Authentication.Password("secret"))))
+          .isInstanceOfSatisfying(
+              DeviceLoginError.class, error -> assertThat(error.identifier()).contains("SysErr"));
     }
 
     @Test

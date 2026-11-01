@@ -5,7 +5,6 @@ import static com.jbraddockm.link.testing.Outcomes.succeeded;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.jbraddockm.core.command.CommandListener;
-import com.jbraddockm.core.command.LogLevel;
 import com.jbraddockm.core.error.CoreErrorCode;
 import com.jbraddockm.link.LinkErrorCode;
 import com.jbraddockm.link.endpoint.pairing.pki.CertificateDetails;
@@ -185,18 +184,18 @@ class CertificateSessionTest {
 
     @Test
     @DisplayName(
-        "is not answered when only the certificate was given: a warning, the commands work, and no"
-            + " share credentials come")
-    void thePasswordQuestionIsAWarning() {
+        "is PASSWORD_REQUIRED with certRefused when only the certificate was given: the device did"
+            + " not honour the certificate, and no password answer is ever sent")
+    void thePasswordQuestionWhenOnlyACertificate() {
       device.behaviour = TlsTestDevice.Behaviour.LOGIN_ASKS_FOR_PASSWORD;
-      var logs = new Logs();
 
       try (var session = sessionWith(new Authentication.Certificate(pair()))) {
-        assertThat(nameOfDevice(session, logs)).isEqualTo(subject);
+        var failure = failed(session.execute(new GetDeviceProperties(), CommandListener.SILENT));
 
-        assertThat(logs.messages(LogLevel.WARN)).hasSize(1);
-        assertThat(logs.messages(LogLevel.WARN).getFirst()).contains("asked for a password");
-        assertThat(session.smbCredentials()).isEmpty();
+        assertThat(failure.error().code()).isEqualTo(LinkErrorCode.PASSWORD_REQUIRED);
+        assertThat(failure.error().details())
+            .containsEntry("authRequired", "password")
+            .containsEntry("certRefused", true);
         assertThat(device.paths()).noneMatch(path -> path.contains("challenge_data"));
       }
     }
@@ -224,16 +223,18 @@ class CertificateSessionTest {
 
     @Test
     @DisplayName(
-        "that refuses everyone says so, in terms of the certificate: AUTH_FAILED, and no password"
-            + " is ever sent")
+        "that refuses everyone asks for a password the certificate alone cannot answer:"
+            + " PASSWORD_REQUIRED with certRefused, and no password is ever sent")
     void aRefusedCertificate() {
       device.behaviour = TlsTestDevice.Behaviour.REFUSES_EVERYONE;
 
       try (var session = sessionWith(new Authentication.Certificate(pair()))) {
         var failure = failed(session.execute(new GetDeviceProperties(), CommandListener.SILENT));
 
-        assertThat(failure.error().code()).isEqualTo(CoreErrorCode.AUTH_FAILED);
-        assertThat(failure.error().message()).contains("did not accept the client certificate");
+        assertThat(failure.error().code()).isEqualTo(LinkErrorCode.PASSWORD_REQUIRED);
+        assertThat(failure.error().details())
+            .containsEntry("authRequired", "password")
+            .containsEntry("certRefused", true);
         assertThat(device.paths()).noneMatch(path -> path.contains("challenge_data"));
       }
     }

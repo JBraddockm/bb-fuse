@@ -171,6 +171,7 @@ class FailureClassifierTest {
 
       assertThat(error.code()).isEqualTo(CoreErrorCode.AUTH_FAILED);
       assertThat(error.details())
+          .containsEntry("authRequired", "password")
           .containsEntry("failedAttempts", 2)
           .containsEntry("retriesRemaining", 8)
           .containsEntry("maxAttempts", 10);
@@ -185,7 +186,9 @@ class FailureClassifierTest {
 
       assertThat(error.code()).isEqualTo(CoreErrorCode.AUTH_LOCKED);
       assertThat(error.details())
-          .containsOnlyKeys("failedAttempts")
+          .containsOnlyKeys("authRequired", "locked", "failedAttempts")
+          .containsEntry("authRequired", "password")
+          .containsEntry("locked", true)
           .containsEntry("failedAttempts", 10);
     }
 
@@ -204,6 +207,54 @@ class FailureClassifierTest {
           FailureClassifier.classify(new UnusableLoginResponseException("Unknown status: Strange"));
       assertThat(unusable.code()).isEqualTo(CoreErrorCode.DEVICE_ERROR);
       assertThat(unusable.details()).containsEntry("extra", "Unknown status: Strange");
+    }
+
+    @Test
+    @DisplayName(
+        "a password required after a certificate was offered reports certRefused: the device did"
+            + " not honour the certificate and now wants a password")
+    void aPasswordRequiredAfterACertificate() {
+      var error = FailureClassifier.classify(new PasswordRequiredException(), true);
+
+      assertThat(error.code()).isEqualTo(LinkErrorCode.PASSWORD_REQUIRED);
+      assertThat(error.details())
+          .containsEntry("authRequired", "password")
+          .containsEntry("certRefused", true);
+    }
+
+    @Test
+    @DisplayName(
+        "a password required with no certificate offered is not a certificate refusal (certRefused"
+            + " is false)")
+    void aPasswordRequiredWithoutACertificate() {
+      var error = FailureClassifier.classify(new PasswordRequiredException(), false);
+
+      assertThat(error.code()).isEqualTo(LinkErrorCode.PASSWORD_REQUIRED);
+      assertThat(error.details())
+          .containsEntry("authRequired", "password")
+          .containsEntry("certRefused", false);
+    }
+
+    @Test
+    @DisplayName(
+        "a device login error is DEVICE_ERROR, carrying the identifier and description the device"
+            + " gave")
+    void aDeviceLoginError() {
+      var error = FailureClassifier.classify(new DeviceLoginError("1013", "busy"));
+
+      assertThat(error.code()).isEqualTo(CoreErrorCode.DEVICE_ERROR);
+      assertThat(error.details())
+          .containsEntry("errorIdentifier", "1013")
+          .containsEntry("errorDescription", "busy");
+    }
+
+    @Test
+    @DisplayName("a device login error with nothing to carry is DEVICE_ERROR with no details")
+    void aBareDeviceLoginError() {
+      var error = FailureClassifier.classify(new DeviceLoginError(null, null));
+
+      assertThat(error.code()).isEqualTo(CoreErrorCode.DEVICE_ERROR);
+      assertThat(error.details()).isEmpty();
     }
 
     @Test
