@@ -114,6 +114,23 @@ IPV4_ENABLE), the DTLS 1.0 data plane, and a macOS `utun` carrying the device UL
 client identity and the cert-derived CONNECT ULA the device marks the peer `connected` and routes
 return traffic to us, and the device surface (CGIs, WebDAV, Blend) answers over the tunnel.
 
+## Troubleshooting
+
+**Tunnel "comes up" but every connection over the ULA times out → reboot the device.** Symptom: the
+log shows `HANDSHAKE OK` *and* `DTLS HANDSHAKE OK`, routes are installed, and `CONNECT_RESP` returns
+the correct device ULA, yet a TCP connect to `[deviceULA]:8443` (or the inner IPv4) times out. On the
+device, the service **is** listening on the ULA (`netstat` shows `fdXX:…8443 LISTEN` on `bptp0`), but
+it never sees the SYN and never forms a neighbour entry for our ULA — i.e. **no data crosses the
+tunnel in the forward direction**, both IPv6 and IPv4.
+
+Because **both handshakes succeed**, the tunnel certificate is enrolled and trusted and our ULA is
+consistent — so this is **not** the certificate, the pairing, or bb-link. It is a stuck device-side
+bp2p data-plane/peer state. **Re-renewing or re-pairing does not fix it; a device restart does.**
+(Observed on a Passport `2BD63247` / SQW100-1: `CONNECT_RESP flags=0x0200` and a flood of skipped
+`NOTIFY 0x05` control messages accompanied the stuck state, but a reboot cleared it and the tunnel
+worked. Whether `flags=0x0200` / the `NOTIFY 0x05` stream is a real bb-tunnel data-gate gap or just a
+symptom of the stuck device state is **still open** — recorded here until we find the root cause.)
+
 ## Requirements
 
 - **JDK 25** (the `utun` uses the Panama FFM API) on **macOS** (the tun layer is `utun`-specific; see
