@@ -45,6 +45,17 @@ public enum BackupCategory implements WireValue {
   }
 
   /**
+   * Returns the element that reports this category's byte size in a {@code BackupStartActivity}
+   * {@code Ready} answer — the wire name with its first letter capitalised ({@code <Settings>},
+   * {@code <App>}, {@code <Media>}), beside {@code <TotalSize>}.
+   *
+   * @return for example {@code Settings}
+   */
+  String activityElement() {
+    return Character.toUpperCase(wireName.charAt(0)) + wireName.substring(1);
+  }
+
+  /**
    * Recognises a category by its wire name, without regard to case.
    *
    * @param text the wire name, such as {@code settings}
@@ -86,7 +97,8 @@ public enum BackupCategory implements WireValue {
               .orElseThrow(
                   () ->
                       new InvalidArgumentException(
-                          "categories", "must be one of app, media or settings, not '" + name + "'"));
+                          "categories",
+                          "must be one of app, media or settings, not '" + name + "'"));
       if (!selected.contains(category)) {
         selected.add(category);
       }

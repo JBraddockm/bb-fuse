@@ -18,7 +18,9 @@ import com.jbraddockm.link.transport.cgi.Step;
 import com.jbraddockm.link.transport.cgi.StepEffect;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /// The conversation of a backup: select the categories, wait while the device prepares the archive,
@@ -48,6 +50,7 @@ final class BackupStreamConversation implements Conversation<BackupStreamResult>
   private final Duration pollInterval;
   private final long maximumPolls;
   private final List<DownloadedCategory> downloaded = new ArrayList<>();
+  private final Map<BackupCategory, Long> categorySizes = new EnumMap<>(BackupCategory.class);
   private Stage stage = Stage.STARTING;
   private int index;
   private long polls;
@@ -64,19 +67,35 @@ final class BackupStreamConversation implements Conversation<BackupStreamResult>
         Math.max(1, LONGEST_PREPARE.toMillis() / Math.max(1, pollInterval.toMillis()));
   }
 
+  private static Optional<Long> parseSize(String text) {
+    try {
+      return Optional.of(Long.parseLong(text.strip()));
+    } catch (NumberFormatException _) {
+      return Optional.empty();
+    }
+  }
+
   private static long readTotalSize(ResponseEnvelope envelope) {
     return envelope
         .payload()
         .childText("TotalSize")
-        .flatMap(
-            text -> {
-              try {
-                return Optional.of(Long.parseLong(text.strip()));
-              } catch (NumberFormatException _) {
-                return Optional.empty();
-              }
-            })
+        .flatMap(BackupStreamConversation::parseSize)
         .orElse(0L);
+  }
+
+  /// Reads each selected category's byte size from the {@code Ready} activity (the device reports
+  /// them as {@code <Settings>}/{@code <App>}/{@code <Media>} beside {@code <TotalSize>}), so the
+  /// download step can report a real percentage. A category the device does not size is left out
+  /// and its download reports only 0→done, as before.
+  private void readCategorySizes(ResponseEnvelope envelope) {
+    for (var target : targets) {
+      var category = target.category();
+      envelope
+          .payload()
+          .childText(category.activityElement())
+          .flatMap(BackupStreamConversation::parseSize)
+          .ifPresent(size -> categorySizes.put(category, size));
+    }
   }
 
   @Override
@@ -105,12 +124,11 @@ final class BackupStreamConversation implements Conversation<BackupStreamResult>
   private Step<BackupStreamResult> started(CgiResponse response, ResponseEnvelope envelope) {
     return Refusals.check(response, envelope, ResponseElement.BACKUP_START)
         .map(this::fail)
-        .orElseGet(
-            () -> {
-              stage = Stage.PREPARING;
-              polls = 0;
-              return new Step.Send<>(activityPoll(), List.of(report(BackupPhase.PREPARING)));
-            });
+        .orElseGet(() -> {
+          stage = Stage.PREPARING;
+          polls = 0;
+          return new Step.Send<>(activityPoll(), List.of(report(BackupPhase.PREPARING)));
+        });
   }
 
   private Step<BackupStreamResult> prepared(CgiResponse response, ResponseEnvelope envelope) {
@@ -120,38 +138,31 @@ final class BackupStreamConversation implements Conversation<BackupStreamResult>
     }
     var status = BackupStatus.of(envelope.payload().childText("Status").orElse(""));
     return status
-        .<Step<BackupStreamResult>>map(
-            backupStatus ->
-                switch (backupStatus) {
-                  case IN_PROGRESS, READY -> {
-                    if (backupStatus == BackupStatus.READY) {
-                      totalSize = readTotalSize(envelope);
-                      stage = Stage.DOWNLOADING;
-                      index = 0;
-                      yield new Step.Send<>(
-                          download(0), List.of(report(BackupPhase.DOWNLOADING)));
-                    }
-                    yield pollAgain();
-                  }
-                  case SUCCESS -> {
-                    // Some firmware may report the archive ready as Success rather than Ready.
-                    totalSize = readTotalSize(envelope);
-                    stage = Stage.DOWNLOADING;
-                    index = 0;
-                    yield new Step.Send<>(download(0), List.of(report(BackupPhase.DOWNLOADING)));
-                  }
-                  case ERROR ->
-                      fail(
-                          ResponseFailures.notExpected(
-                              envelope, ResponseElement.BACKUP_START_ACTIVITY));
-                })
-        .orElseGet(
-            () ->
-                fail(
-                    new ServiceError(
-                        LinkErrorCode.UNEXPECTED_RESPONSE,
-                        "The device reported a backup status that this version does not know",
-                        Json.object("status", envelope.payload().childText("Status").orElse("")))));
+        .map(backupStatus ->
+            switch (backupStatus) {
+              case IN_PROGRESS, READY ->
+                  backupStatus == BackupStatus.READY ? beginDownloading(envelope) : pollAgain();
+              // Some firmware may report the archive ready as Success rather than Ready.
+              case SUCCESS -> beginDownloading(envelope);
+              case ERROR ->
+                  fail(
+                      ResponseFailures.notExpected(
+                          envelope, ResponseElement.BACKUP_START_ACTIVITY));
+            })
+        .orElseGet(() ->
+            fail(
+                new ServiceError(
+                    LinkErrorCode.UNEXPECTED_RESPONSE,
+                    "The device reported a backup status that this version does not know",
+                    Json.object("status", envelope.payload().childText("Status").orElse("")))));
+  }
+
+  private Step<BackupStreamResult> beginDownloading(ResponseEnvelope envelope) {
+    totalSize = readTotalSize(envelope);
+    readCategorySizes(envelope);
+    stage = Stage.DOWNLOADING;
+    index = 0;
+    return new Step.Send<>(download(0), List.of(report(BackupPhase.DOWNLOADING)));
   }
 
   private Step<BackupStreamResult> received(CgiResponse response, ResponseEnvelope envelope) {
@@ -163,7 +174,8 @@ final class BackupStreamConversation implements Conversation<BackupStreamResult>
                 LinkErrorCode.NO_BACKUP_DATA,
                 "The device produced no data for the "
                     + targets.get(index).category().wireName()
-                    + " category; its backup-and-restore key is missing or it is in the wrong state",
+                    + " category; its backup-and-restore key is missing or it is in the wrong"
+                    + " state",
                 Json.object("category", targets.get(index).category().wireName())));
       }
       downloaded.add(
@@ -183,14 +195,13 @@ final class BackupStreamConversation implements Conversation<BackupStreamResult>
     if (envelope != null) {
       return fail(
           ResponseFailures.reportedError(envelope)
-              .orElseGet(
-                  () ->
-                      new ServiceError(
-                          LinkErrorCode.UNEXPECTED_RESPONSE,
-                          "The device answered the data request with "
-                              + envelope.name()
-                              + " instead of the archive",
-                          Json.object("received", envelope.name()))));
+              .orElseGet(() ->
+                  new ServiceError(
+                      LinkErrorCode.UNEXPECTED_RESPONSE,
+                      "The device answered the data request with "
+                          + envelope.name()
+                          + " instead of the archive",
+                      Json.object("received", envelope.name()))));
     }
     return fail(
         new ServiceError(
@@ -204,10 +215,9 @@ final class BackupStreamConversation implements Conversation<BackupStreamResult>
   private Step<BackupStreamResult> finished(CgiResponse response, ResponseEnvelope envelope) {
     return Refusals.check(response, envelope, ResponseElement.BACKUP_END)
         .map(this::fail)
-        .orElseGet(
-            () ->
-                new Step.Finish<>(
-                    new BackupStreamResult(downloaded, totalSize, ResponseBody.of(lastAnswer))));
+        .orElseGet(() ->
+            new Step.Finish<>(
+                new BackupStreamResult(downloaded, totalSize, ResponseBody.of(lastAnswer))));
   }
 
   private Step<BackupStreamResult> pollAgain() {
@@ -220,8 +230,7 @@ final class BackupStreamConversation implements Conversation<BackupStreamResult>
               Json.object("waitedMinutes", LONGEST_PREPARE.toMinutes())));
     }
     return new Step.Send<>(
-        activityPoll(),
-        List.of(report(BackupPhase.PREPARING), new StepEffect.Pause(pollInterval)));
+        activityPoll(), List.of(report(BackupPhase.PREPARING), new StepEffect.Pause(pollInterval)));
   }
 
   private CgiRequest activityPoll() {
@@ -235,11 +244,12 @@ final class BackupStreamConversation implements Conversation<BackupStreamResult>
 
   private CgiRequest download(int at) {
     var target = targets.get(at);
+    var expectedLength = categorySizes.getOrDefault(target.category(), 0L);
     var request =
         CgiRequest.Download.to(
                 Endpoint.BACKUP,
                 target.destination(),
-                0,
+                expectedLength,
                 BackupPhase.DOWNLOADING,
                 target.category().wireName())
             .with(FormField.TYPE, target.category());

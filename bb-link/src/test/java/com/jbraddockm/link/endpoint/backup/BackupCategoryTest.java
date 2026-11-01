@@ -29,6 +29,14 @@ class BackupCategoryTest {
   }
 
   @Test
+  @DisplayName("names the activity size element for each category")
+  void activityElement() {
+    assertThat(BackupCategory.APP.activityElement()).isEqualTo("App");
+    assertThat(BackupCategory.MEDIA.activityElement()).isEqualTo("Media");
+    assertThat(BackupCategory.SETTINGS.activityElement()).isEqualTo("Settings");
+  }
+
+  @Test
   @DisplayName("selects known names, in device order and without duplicates")
   void selectsKnownNames() {
     assertThat(BackupCategory.select(List.of("settings", "app", "settings")))

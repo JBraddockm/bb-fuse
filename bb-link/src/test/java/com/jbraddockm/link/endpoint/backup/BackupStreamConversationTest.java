@@ -93,6 +93,40 @@ class BackupStreamConversationTest {
   }
 
   @Test
+  @DisplayName(
+      "threads the category's size from the Ready activity into the download, for progress")
+  void downloadCarriesCategorySize() {
+    var c = settingsBackup();
+    c.start();
+    xml(
+        c,
+        "<RimTabletResponse><BackupStart><Status>Success</Status></BackupStart></RimTabletResponse>");
+    var step =
+        xml(
+            c,
+            "<RimTabletResponse><BackupStartActivity><Status>Ready</Status><Settings>4096</Settings><TotalSize>4096</TotalSize></BackupStartActivity></RimTabletResponse>");
+    var request = (CgiRequest.Download) ((Step.Send<BackupStreamResult>) step).request();
+    assertThat(request.expectedLength()).isEqualTo(4096L);
+  }
+
+  @Test
+  @DisplayName(
+      "falls back to 0 (coarse progress) when the activity reports no size for the category")
+  void downloadFallsBackWhenSizeAbsent() {
+    var c = settingsBackup();
+    c.start();
+    xml(
+        c,
+        "<RimTabletResponse><BackupStart><Status>Success</Status></BackupStart></RimTabletResponse>");
+    var step =
+        xml(
+            c,
+            "<RimTabletResponse><BackupStartActivity><Status>Ready</Status><TotalSize>4096</TotalSize></BackupStartActivity></RimTabletResponse>");
+    var request = (CgiRequest.Download) ((Step.Send<BackupStreamResult>) step).request();
+    assertThat(request.expectedLength()).isZero();
+  }
+
+  @Test
   @DisplayName("drives a whole backup to a finish that lists the downloaded category")
   void wholeBackup() {
     var c = settingsBackup();
@@ -162,7 +196,8 @@ class BackupStreamConversationTest {
     var step =
         xml(
             c,
-            "<RimTabletResponse><BackupGet><Status>Error</Status><Error><ErrorIdentifier>515</ErrorIdentifier><ErrorDescription>stale cookie</ErrorDescription></Error></BackupGet></RimTabletResponse>");
+            "<RimTabletResponse><BackupGet><Status>Error</Status><Error><ErrorIdentifier>515</ErrorIdentifier><ErrorDescription>stale"
+                + " cookie</ErrorDescription></Error></BackupGet></RimTabletResponse>");
 
     assertThat(step).isInstanceOf(Step.Fail.class);
     assertThat(((Step.Fail<BackupStreamResult>) step).error().details())
