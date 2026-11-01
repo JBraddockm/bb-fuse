@@ -59,6 +59,14 @@
         </dependency>
         <dependency>
             <groupId>local.qconn</groupId>
+            <artifactId>httpmime</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>local.qconn</groupId>
+            <artifactId>apache-mime4j</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>local.qconn</groupId>
             <artifactId>commons-codec</artifactId>
         </dependency>
         <dependency>
