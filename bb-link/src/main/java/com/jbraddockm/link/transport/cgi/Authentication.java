@@ -18,10 +18,23 @@ import java.util.Optional;
  *       device's lock.
  *   <li>{@link Password}: logs in with the password.
  *   <li>{@link Certificate}: offers the certificate and logs in without a password: the login
- *       request is sent, and if the device asks for a password after all, the session carries on
- *       with the certificate alone and never answers the question.
+ *       request is sent, and if the device asks for a password after all, the device did not honour
+ *       the certificate; the login stops with {@code PASSWORD_REQUIRED} and no answer is sent, so
+ *       no failed attempt is counted. Recovering is the caller's decision.
  *   <li>{@link CertificateAndPassword}: offers the certificate and logs in.
  * </ul>
+ *
+ * <p>The certificate and the password are credentials at two independent layers: the certificate is
+ * presented in the TLS handshake (on every connection, whatever the login does), and the password
+ * answers a login challenge. The four variants are simply the cross-product of those two choices —
+ * certificate yes/no times password yes/no. None of them carries any fallback or recovery logic: a
+ * variant presents exactly the credentials it names, the certificate is never dropped to try a
+ * password, and the password is sent only when the device's login actually asks for one. Deciding
+ * which variant to use, and what to do when the device refuses a certificate (fall back, prompt,
+ * re-sign), is the caller's policy, not this layer's. {@link CertificateAndPassword} in particular
+ * is the only way to present the certificate and satisfy a password login in a single session,
+ * which matters because which of the device's programs gate on the certificate rather than on the
+ * login is not known.
  *
  * <p>Nothing here prints a password: the records mask it.
  */
@@ -58,7 +71,9 @@ public sealed interface Authentication {
   }
 
   /**
-   * The client offers a certificate and logs in without a password.
+   * The client offers a certificate and logs in without a password. If the device refuses the
+   * certificate and asks for a password, the login stops with {@code PASSWORD_REQUIRED} rather than
+   * sending one; whether to recover with a password is the caller's decision.
    *
    * @param certificate where the certificate and its key are
    */
