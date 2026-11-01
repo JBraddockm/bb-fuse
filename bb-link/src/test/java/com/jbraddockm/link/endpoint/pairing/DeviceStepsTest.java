@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.jbraddockm.core.error.CoreErrorCode;
 import com.jbraddockm.core.error.ServiceError;
 import com.jbraddockm.link.LinkErrorCode;
-import com.jbraddockm.link.endpoint.actions.GetPin;
+import com.jbraddockm.link.endpoint.characteristics.GetDeviceCharacteristics;
 import com.jbraddockm.link.testing.DeviceFixture;
 import com.jbraddockm.link.testing.Logs;
 import com.jbraddockm.link.testing.Resources;
@@ -67,7 +67,7 @@ class DeviceStepsTest {
     @Test
     @DisplayName("gives the result of a command that went well")
     void givesTheResult() {
-      assertThat(steps.run(new GetPin()).pin()).isNotBlank();
+      assertThat(steps.run(new GetDeviceCharacteristics()).pin()).isNotBlank();
     }
 
     @Test

@@ -8,10 +8,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.jbraddockm.link.endpoint.pairing.CertificateRetrieval;
 import com.jbraddockm.link.endpoint.pairing.Pairing;
-import com.jbraddockm.link.transport.cgi.ExchangeObserver;
-import com.jbraddockm.link.transport.cgi.TransportScheme;
 import com.jbraddockm.link.testing.FakeDevice;
 import com.jbraddockm.link.testing.Resources;
+import com.jbraddockm.link.transport.cgi.ExchangeObserver;
+import com.jbraddockm.link.transport.cgi.TransportScheme;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.AfterEach;
@@ -69,7 +69,9 @@ class DaemonConnectTest {
     daemon.done(16);
 
     daemon.send(
-        17, "request--session-command.json", Map.of("method", "getPin", "session", session));
+        17,
+        "request--session-command.json",
+        Map.of("method", "getDeviceCharacteristics", "session", session));
 
     assertThat(errorCode(daemon.done(17))).isEqualTo("UNKNOWN_SESSION");
   }
@@ -226,7 +228,7 @@ class DaemonConnectTest {
       var summary = object(daemon.data(6).get("device"));
       assertThat(summary)
           .containsEntry("name", "Test Z10")
-          .containsEntry("pin", "2C1E7583")
+          .containsEntry("pin", "2A3B4C5D")
           .containsEntry("guid", "RkFLRUdVSUQwMDAx")
           .containsEntry("osVersion", "10.3.3.2205")
           .containsEntry("radioVersion", "10.3.3.2206")
@@ -252,8 +254,8 @@ class DaemonConnectTest {
 
     @Test
     @DisplayName(
-        "describes the request for the characteristics by what it does, and never names a program of"
-            + " the device in the log")
+        "describes the request for the characteristics by what it does, and never names a program"
+            + " of the device in the log")
     void logsWhatItDoes() throws Exception {
       connect(6, "request--connect.json", "secret");
 
@@ -366,7 +368,9 @@ class DaemonConnectTest {
       var session = daemon.session(13);
 
       daemon.send(
-          14, "request--session-command.json", Map.of("method", "getPin", "session", session));
+          14,
+          "request--session-command.json",
+          Map.of("method", "getDeviceCharacteristics", "session", session));
       assertThat(daemon.done(14).get("ok")).isEqualTo(true);
       assertThat(device.cgiRequests.get()).isEqualTo(1);
 

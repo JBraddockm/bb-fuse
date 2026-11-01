@@ -157,7 +157,7 @@ class LinkServiceTest {
     void hasACommandForEachMethod() {
       assertThat(service.commands())
           .extracting(CommandSpec::wireName)
-          .hasSize(28)
+          .hasSize(27)
           .first()
           .isEqualTo("getDeviceProperties");
     }
@@ -253,7 +253,7 @@ class LinkServiceTest {
       assertThat(JsonObjects.object(described.get("device")))
           .containsEntry("name", "Test Z10")
           .containsEntry("hardwareId", "0x0a0b0c0d")
-          .containsEntry("pin", "2C1E7583")
+          .containsEntry("pin", "2A3B4C5D")
           .containsEntry("guid", "RkFLRUdVSUQwMDAx")
           .containsEntry("osVersion", "10.3.3.2205")
           .containsEntry("radioVersion", "10.3.3.2206")

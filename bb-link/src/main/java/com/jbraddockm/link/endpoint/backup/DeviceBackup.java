@@ -7,11 +7,12 @@ import com.jbraddockm.core.command.Progress;
 import com.jbraddockm.core.error.CoreErrorCode;
 import com.jbraddockm.core.error.ServiceError;
 import com.jbraddockm.core.json.Json;
-import com.jbraddockm.link.endpoint.actions.DevicePin;
-import com.jbraddockm.link.endpoint.actions.GetPin;
+import com.jbraddockm.link.endpoint.characteristics.DeviceCharacteristics;
+import com.jbraddockm.link.endpoint.characteristics.SessionCharacteristics;
 import com.jbraddockm.link.endpoint.properties.DeviceProperties;
 import com.jbraddockm.link.endpoint.properties.GetDeviceProperties;
 import com.jbraddockm.link.endpoint.properties.InstalledPackage;
+import com.jbraddockm.link.transport.cgi.Step;
 import com.jbraddockm.link.transport.session.DeviceSession;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -69,9 +70,11 @@ public final class DeviceBackup {
   }
 
   private static String readPin(DeviceSession session, CommandListener listener) {
-    return switch (session.execute(new GetPin(), listener)) {
-      case CommandOutcome.Succeeded<DevicePin>(var pin, _) -> pin.pin();
-      case CommandOutcome.Failed<DevicePin> _ -> null;
+    // The PIN comes from discovery.cgi, the same source connect uses.
+    return switch (SessionCharacteristics.read(session, listener)) {
+      case Step.Finish<DeviceCharacteristics>(var characteristics) -> characteristics.pin();
+      case Step.Fail<DeviceCharacteristics> ignored -> null;
+      case Step.Send<DeviceCharacteristics> ignored -> null;
     };
   }
 

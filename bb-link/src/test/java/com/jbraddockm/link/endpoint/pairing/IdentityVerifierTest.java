@@ -50,15 +50,13 @@ class IdentityVerifierTest {
         Resources.copyTo(TestPki.class, key, folder));
   }
 
-  private Verification verify(ClientCertificate identity, String pin) {
+  private Verification verify(ClientCertificate identity) {
     return IdentityVerifier.byLoggingIn()
-        .verify(original, identity, device.port(), pin, CommandListener.SILENT);
+        .verify(original, identity, device.port(), CommandListener.SILENT);
   }
 
   @Test
-  @DisplayName(
-      "says verified when the device takes the certificate, which it was shown on every request:"
-          + " the login and the confirmation of the PIN")
+  @DisplayName("says verified when the device takes the certificate at the login, and nothing else")
   void aCertificateThatIsTaken() throws Exception {
     var subject =
         CertificateDetails.firstCertificate(
@@ -66,22 +64,10 @@ class IdentityVerifierTest {
             .getSubjectX500Principal()
             .getName();
 
-    var verification = verify(identity("test-pki--leaf-key-pkcs8.pem"), "2A3B4C5D");
+    var verification = verify(identity("test-pki--leaf-key-pkcs8.pem"));
 
     assertThat(verification).isEqualTo(Verification.verified());
-    assertThat(device.peers()).containsExactly(subject, subject);
-  }
-
-  @Test
-  @DisplayName(
-      "says failed with PIN_MISMATCH when the device has another PIN, though it took the"
-          + " certificate")
-  void aPinThatIsNotTheDevices() {
-    var verification = verify(identity("test-pki--leaf-key-pkcs8.pem"), "FFFFFFFF");
-
-    assertThat(verification.state()).isEqualTo(Verification.State.FAILED);
-    assertThat(verification.error()).isNotNull();
-    assertThat(verification.error().code()).isEqualTo(LinkErrorCode.PIN_MISMATCH);
+    assertThat(device.peers()).containsExactly(subject);
   }
 
   @Test
@@ -90,7 +76,7 @@ class IdentityVerifierTest {
   void aCertificateThatIsRefused() {
     device.behaviour = TlsTestDevice.Behaviour.REFUSES_EVERYONE;
 
-    var verification = verify(identity("test-pki--leaf-key-pkcs8.pem"), "2A3B4C5D");
+    var verification = verify(identity("test-pki--leaf-key-pkcs8.pem"));
 
     assertThat(verification.state()).isEqualTo(Verification.State.FAILED);
     assertThat(verification.error()).isNotNull();
@@ -106,7 +92,7 @@ class IdentityVerifierTest {
   void aHandshakeThatEnds() {
     device.behaviour = TlsTestDevice.Behaviour.REJECTS_PRESENTED_CERTIFICATES;
 
-    var verification = verify(identity("test-pki--leaf-key-pkcs8.pem"), "2A3B4C5D");
+    var verification = verify(identity("test-pki--leaf-key-pkcs8.pem"));
 
     assertThat(verification.state()).isEqualTo(Verification.State.FAILED);
     assertThat(verification.error()).isNotNull();
@@ -117,7 +103,7 @@ class IdentityVerifierTest {
   @Test
   @DisplayName("says failed when the key cannot be used, and has sent nothing")
   void aKeyThatCannotBeUsed() {
-    var verification = verify(identity("test-pki--leaf-key-encrypted.pem"), "2A3B4C5D");
+    var verification = verify(identity("test-pki--leaf-key-encrypted.pem"));
 
     assertThat(verification.state()).isEqualTo(Verification.State.FAILED);
     assertThat(verification.error()).isNotNull();
@@ -127,13 +113,12 @@ class IdentityVerifierTest {
 
   @Test
   @DisplayName(
-      "does not use the session that it was given: it opens a sibling, on the other port, and"
-          + " closes it; the device is asked for its PIN once")
+      "does not use the session that it was given: it opens a sibling, on the other port, logs in"
+          + " once, and closes it")
   void theOriginalSessionIsNotUsed() {
-    verify(identity("test-pki--leaf-key-pkcs8.pem"), "2A3B4C5D");
+    verify(identity("test-pki--leaf-key-pkcs8.pem"));
 
     assertThat(original.target().port()).isEqualTo(443);
-    assertThat(device.paths())
-        .containsExactly("/cgi-bin/login.cgi?request_version=1", "/cgi-bin/wipe.cgi");
+    assertThat(device.paths()).containsExactly("/cgi-bin/login.cgi?request_version=1");
   }
 }

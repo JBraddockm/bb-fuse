@@ -15,9 +15,6 @@ public enum Endpoint {
   /** Backup and restore. */
   BACKUP("backup.cgi"),
 
-  /** Wipe, PIN and signing actions. Reading the PIN is among them. */
-  WIPE("wipe.cgi"),
-
   /** Rebooting the device. */
   RESET("reset.cgi"),
 

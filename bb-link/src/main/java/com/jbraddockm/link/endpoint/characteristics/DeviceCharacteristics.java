@@ -6,7 +6,9 @@ import java.util.Map;
 
 /**
  * What {@code discovery.cgi} reports about a device, pre-auth and cheaply (no package enumeration).
- * It is the only source of the PIN over the Wi-Fi tunnel, where {@code wipe.cgi} does not answer.
+ * It is bb-link's PIN source for every flow that needs the PIN — connect itself, the pair/renew
+ * confirmation guard, and naming a backup — read through {@link SessionCharacteristics}, which
+ * works on every path, including the Wi-Fi tunnel.
  *
  * @param pin the device PIN as 8-digit uppercase hexadecimal (from the decimal {@code BbPin}); may
  *     be {@code null}

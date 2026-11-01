@@ -7,9 +7,10 @@ import com.jbraddockm.core.error.ErrorCode;
 import com.jbraddockm.core.error.ServiceError;
 import com.jbraddockm.core.json.Json;
 import com.jbraddockm.link.LinkErrorCode;
-import com.jbraddockm.link.endpoint.actions.ConfirmedByPin;
-import com.jbraddockm.link.endpoint.actions.GetPin;
+import com.jbraddockm.link.endpoint.characteristics.DeviceCharacteristics;
+import com.jbraddockm.link.endpoint.characteristics.SessionCharacteristics;
 import com.jbraddockm.link.transport.cgi.DeviceCommand;
+import com.jbraddockm.link.transport.cgi.Step;
 import com.jbraddockm.link.transport.session.DeviceSession;
 import java.util.Locale;
 import java.util.Map;
@@ -33,14 +34,37 @@ final class DeviceSteps {
   }
 
   /**
-   * Asks the device for its PIN, which must be the one that the caller typed.
+   * Asks the device for its PIN, which must be the one that the caller typed. The PIN is read from
+   * {@code discovery.cgi} through {@link SessionCharacteristics}, the same source {@code connect}
+   * uses.
    *
    * @param typedPin what the caller typed
    * @return the PIN of the device, in capitals
    * @throws Stopped if the device cannot be asked, or says another PIN
    */
   String confirmPin(String typedPin) {
-    return run(new ConfirmedByPin<>(new GetPin(), typedPin)).pin().strip().toUpperCase(Locale.ROOT);
+    var actual =
+        switch (SessionCharacteristics.read(session, listener)) {
+          case Step.Finish<DeviceCharacteristics>(var characteristics) -> characteristics.pin();
+          case Step.Fail<DeviceCharacteristics>(var error, var ignored) -> throw new Stopped(error);
+          case Step.Send<DeviceCharacteristics> ignored ->
+              throw new Stopped(
+                  new ServiceError(
+                      LinkErrorCode.UNEXPECTED_RESPONSE,
+                      "The device characteristics could not be read"));
+        };
+    if (!normalise(actual).equals(normalise(typedPin))) {
+      throw new Stopped(
+          new ServiceError(
+              LinkErrorCode.PIN_MISMATCH,
+              "The confirmation PIN does not match the PIN of the device"));
+    }
+    return actual.strip().toUpperCase(Locale.ROOT);
+  }
+
+  private static String normalise(String pin) {
+    var upper = pin.strip().toUpperCase(Locale.ROOT);
+    return upper.startsWith("0X") ? upper.substring(2) : upper;
   }
 
   /**

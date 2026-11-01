@@ -32,7 +32,7 @@ class CertificateRetrievalRefusalsTest {
 
   private final CertificateRetrieval retrieval =
       new CertificateRetrieval(
-          (_, _, _, _, _) -> {
+          (_, _, _, _) -> {
             throw new AssertionError("a certificate that was not kept must not be tried");
           },
           Clock.systemUTC());
@@ -170,7 +170,7 @@ class CertificateRetrievalRefusalsTest {
   class Guards {
 
     private final CertificateRetrieval plain =
-        new CertificateRetrieval((_, _, _, _, _) -> Verification.skipped(), Clock.systemUTC());
+        new CertificateRetrieval((_, _, _, _) -> Verification.skipped(), Clock.systemUTC());
 
     @Test
     @DisplayName(
@@ -253,7 +253,7 @@ class CertificateRetrievalRefusalsTest {
   class Names {
 
     private final CertificateRetrieval plain =
-        new CertificateRetrieval((_, _, _, _, _) -> Verification.skipped(), Clock.systemUTC());
+        new CertificateRetrieval((_, _, _, _) -> Verification.skipped(), Clock.systemUTC());
 
     @Test
     @DisplayName("is cut to 19 characters, which keeps the request within what the device takes")

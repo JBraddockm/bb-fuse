@@ -1,1 +1,1 @@
-{"id":{{id}},"method":"getPin","params":{"session":"s1"}}
+{"id":{{id}},"method":"getDeviceCharacteristics","params":{"session":"s1"}}

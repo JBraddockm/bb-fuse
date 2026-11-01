@@ -10,7 +10,6 @@ import com.jbraddockm.core.daemon.SessionCommand;
 import com.jbraddockm.core.error.CoreErrorCode;
 import com.jbraddockm.core.error.InvalidArgumentException;
 import com.jbraddockm.core.error.ServiceError;
-import com.jbraddockm.link.endpoint.actions.GetPin;
 import com.jbraddockm.link.endpoint.backup.BackupCategory;
 import com.jbraddockm.link.endpoint.backup.BackupRequest;
 import com.jbraddockm.link.endpoint.backup.DeviceBackup;
@@ -75,9 +74,6 @@ enum LinkMethod {
 
   /** Reads the device's characteristics (identity, PIN, status) from {@code discovery.cgi}. */
   GET_DEVICE_CHARACTERISTICS("getDeviceCharacteristics"),
-
-  /** Reads the device PIN. */
-  GET_PIN("getPin"),
 
   /**
    * Returns the file share credentials of the session's latest login. Asks the device nothing: the
@@ -277,7 +273,6 @@ enum LinkMethod {
           argument == null ? Optional.of(new GetDeviceProperties()) : Optional.empty();
       case GET_DEVICE_CHARACTERISTICS ->
           argument == null ? Optional.of(new GetDeviceCharacteristics()) : Optional.empty();
-      case GET_PIN -> argument == null ? Optional.of(new GetPin()) : Optional.empty();
       case LIST_PIM_ACCOUNTS ->
           argument == null ? Optional.of(new ListPimAccounts()) : Optional.empty();
       case FIND_PIM_ACCOUNT ->
@@ -392,7 +387,6 @@ enum LinkMethod {
     return switch (this) {
       case GET_DEVICE_PROPERTIES -> onSession(_ -> new GetDeviceProperties());
       case GET_DEVICE_CHARACTERISTICS -> onSession(_ -> new GetDeviceCharacteristics());
-      case GET_PIN -> onSession(_ -> new GetPin());
       case LIST_PIM_ACCOUNTS -> onSession(_ -> new ListPimAccounts());
       case FIND_PIM_ACCOUNT ->
           onSession(params -> new FindPimAccount(params.requireString("workstationId")));

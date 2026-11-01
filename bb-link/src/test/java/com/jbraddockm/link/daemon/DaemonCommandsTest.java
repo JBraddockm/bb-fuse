@@ -88,9 +88,9 @@ class DaemonCommandsTest {
   class Reads {
 
     @Test
-    @DisplayName("getPin gives the PIN")
-    void getPin() throws Exception {
-      var id = ask("getPin");
+    @DisplayName("getDeviceCharacteristics gives the characteristics, including the PIN")
+    void getDeviceCharacteristics() throws Exception {
+      var id = ask("getDeviceCharacteristics");
 
       assertThat(daemon.done(id).get("ok")).isEqualTo(true);
       assertThat(daemon.data(id)).containsEntry("pin", "2A3B4C5D");
@@ -440,7 +440,7 @@ class DaemonCommandsTest {
       var before = String.valueOf(daemon.data(ask("getSmbCredentials")).get("password"));
 
       device.expireSessions();
-      assertThat(daemon.done(ask("getPin")).get("ok"))
+      assertThat(daemon.done(ask("getDeviceCharacteristics")).get("ok"))
           .as("the session is renewed without the client knowing")
           .isEqualTo(true);
       var after = String.valueOf(daemon.data(ask("getSmbCredentials")).get("password"));

@@ -9,7 +9,7 @@ import com.jbraddockm.core.command.CommandListener;
 import com.jbraddockm.core.command.LogLevel;
 import com.jbraddockm.core.error.CoreErrorCode;
 import com.jbraddockm.link.LinkErrorCode;
-import com.jbraddockm.link.endpoint.actions.GetPin;
+import com.jbraddockm.link.endpoint.characteristics.GetDeviceCharacteristics;
 import com.jbraddockm.link.endpoint.properties.GetDeviceProperties;
 import com.jbraddockm.link.testing.FakeDevice;
 import com.jbraddockm.link.testing.Logs;
@@ -94,9 +94,9 @@ class DeviceSessionTest {
     void oneLoginForAllTheCommands() {
       assertThat(device.loginRequests.get()).isZero();
 
-      succeeded(session.execute(new GetPin(), CommandListener.SILENT));
+      succeeded(session.execute(new GetDeviceCharacteristics(), CommandListener.SILENT));
       succeeded(session.execute(new GetDeviceProperties(), CommandListener.SILENT));
-      succeeded(session.execute(new GetPin(), CommandListener.SILENT));
+      succeeded(session.execute(new GetDeviceCharacteristics(), CommandListener.SILENT));
 
       assertThat(device.successfulLogins.get()).isEqualTo(1);
       assertThat(device.loginRequests.get()).isEqualTo(2);
@@ -105,11 +105,11 @@ class DeviceSessionTest {
     @Test
     @DisplayName("is shown in the trace of the exchanges, before the command that needed it")
     void isInTheTrace() {
-      succeeded(session.execute(new GetPin(), CommandListener.SILENT));
+      succeeded(session.execute(new GetDeviceCharacteristics(), CommandListener.SILENT));
 
       assertThat(trace).startsWith("GET /cgi-bin/login.cgi?request_version=1");
       assertThat(trace.get(1)).startsWith("GET /cgi-bin/login.cgi?challenge_data=");
-      assertThat(trace).last().isEqualTo("POST /cgi-bin/wipe.cgi");
+      assertThat(trace).last().isEqualTo("GET /cgi-bin/discovery.cgi");
     }
 
     @Test
@@ -117,9 +117,9 @@ class DeviceSessionTest {
     void tellsWhatTheCommandDoes() {
       var logs = new Logs();
 
-      succeeded(session.execute(new GetPin(), logs));
+      succeeded(session.execute(new GetDeviceCharacteristics(), logs));
 
-      assertThat(logs.messages(LogLevel.INFO)).contains("Reading the device PIN");
+      assertThat(logs.messages(LogLevel.INFO)).contains("Reading the device characteristics");
     }
   }
 
@@ -136,7 +136,7 @@ class DeviceSessionTest {
     @Test
     @DisplayName("are what the login brought, once there has been one")
     void whatTheLoginBrought() {
-      succeeded(session.execute(new GetPin(), CommandListener.SILENT));
+      succeeded(session.execute(new GetDeviceCharacteristics(), CommandListener.SILENT));
 
       assertThat(session.smbCredentials())
           .hasValueSatisfying(
@@ -151,7 +151,7 @@ class DeviceSessionTest {
     void noneWhenNoneAreOffered() {
       device.offersShare = false;
 
-      succeeded(session.execute(new GetPin(), CommandListener.SILENT));
+      succeeded(session.execute(new GetDeviceCharacteristics(), CommandListener.SILENT));
 
       assertThat(session.smbCredentials()).isEmpty();
     }
@@ -160,11 +160,11 @@ class DeviceSessionTest {
     @DisplayName(
         "are the latest ones: a new login brings a new password and the session reports it")
     void aNewLoginBringsNewOnes() {
-      succeeded(session.execute(new GetPin(), CommandListener.SILENT));
+      succeeded(session.execute(new GetDeviceCharacteristics(), CommandListener.SILENT));
       var first = session.smbCredentials().orElseThrow().password();
 
       device.expireSessions();
-      succeeded(session.execute(new GetPin(), CommandListener.SILENT));
+      succeeded(session.execute(new GetDeviceCharacteristics(), CommandListener.SILENT));
 
       assertThat(session.smbCredentials().orElseThrow().password())
           .isNotEqualTo(first)
@@ -181,7 +181,7 @@ class DeviceSessionTest {
     void aWrongPassword() {
       var wrong = sessionFor(device.port(), new Authentication.Password("wrong"));
 
-      var failure = failed(wrong.execute(new GetPin(), CommandListener.SILENT));
+      var failure = failed(wrong.execute(new GetDeviceCharacteristics(), CommandListener.SILENT));
       wrong.close();
 
       assertThat(failure.error().code()).isEqualTo(CoreErrorCode.AUTH_FAILED);
@@ -200,7 +200,7 @@ class DeviceSessionTest {
       device.failedAttempts.set(4);
       var wrong = sessionFor(device.port(), new Authentication.Password("wrong"));
 
-      var failure = failed(wrong.execute(new GetPin(), CommandListener.SILENT));
+      var failure = failed(wrong.execute(new GetDeviceCharacteristics(), CommandListener.SILENT));
       wrong.close();
 
       assertThat(failure.error().code()).isEqualTo(CoreErrorCode.AUTH_LOCKED);
@@ -215,7 +215,7 @@ class DeviceSessionTest {
     void aPasswordThatWasNotGiven() {
       var none = sessionFor(device.port(), new Authentication.NoPassword());
 
-      var failure = failed(none.execute(new GetPin(), CommandListener.SILENT));
+      var failure = failed(none.execute(new GetDeviceCharacteristics(), CommandListener.SILENT));
       none.close();
 
       assertThat(failure.error().code()).isEqualTo(LinkErrorCode.PASSWORD_REQUIRED);
@@ -230,7 +230,7 @@ class DeviceSessionTest {
       gone.close();
       var lonely = sessionFor(port, new Authentication.Password("secret"));
 
-      var failure = failed(lonely.execute(new GetPin(), CommandListener.SILENT));
+      var failure = failed(lonely.execute(new GetDeviceCharacteristics(), CommandListener.SILENT));
       lonely.close();
 
       assertThat(failure.error().code()).isEqualTo(CoreErrorCode.CONNECTION_FAILED);
@@ -242,10 +242,10 @@ class DeviceSessionTest {
         "a login that failed is tried again by the next command, with a transport of its own")
     void aFailedLoginIsTriedAgain() {
       device.cookieStyle = FakeDevice.CookieStyle.MISSING;
-      failed(session.execute(new GetPin(), CommandListener.SILENT));
+      failed(session.execute(new GetDeviceCharacteristics(), CommandListener.SILENT));
 
       device.cookieStyle = FakeDevice.CookieStyle.NORMAL;
-      succeeded(session.execute(new GetPin(), CommandListener.SILENT));
+      succeeded(session.execute(new GetDeviceCharacteristics(), CommandListener.SILENT));
 
       assertThat(device.successfulLogins.get()).isEqualTo(2);
     }
@@ -260,8 +260,8 @@ class DeviceSessionTest {
     void aCookieThatIsRescued() {
       device.cookieStyle = FakeDevice.CookieStyle.EXPIRED;
 
-      succeeded(session.execute(new GetPin(), CommandListener.SILENT));
-      succeeded(session.execute(new GetPin(), CommandListener.SILENT));
+      succeeded(session.execute(new GetDeviceCharacteristics(), CommandListener.SILENT));
+      succeeded(session.execute(new GetDeviceCharacteristics(), CommandListener.SILENT));
 
       assertThat(device.cookiesSeen().getLast()).contains("dtmauth=");
     }
@@ -284,7 +284,7 @@ class DeviceSessionTest {
     void cannotBeUsedWhenClosed() {
       session.close();
 
-      var failure = failed(session.execute(new GetPin(), CommandListener.SILENT));
+      var failure = failed(session.execute(new GetDeviceCharacteristics(), CommandListener.SILENT));
 
       assertThat(failure.error().code()).isEqualTo(CoreErrorCode.INTERNAL);
       assertThat(failure.error().message()).contains("closed");
@@ -294,7 +294,7 @@ class DeviceSessionTest {
     @Test
     @DisplayName("can be closed more than once")
     void canBeClosedTwice() {
-      succeeded(session.execute(new GetPin(), CommandListener.SILENT));
+      succeeded(session.execute(new GetDeviceCharacteristics(), CommandListener.SILENT));
 
       session.close();
       session.close();
@@ -312,7 +312,7 @@ class DeviceSessionTest {
       try {
         assertThat(sibling.target().host()).isEqualTo(session.target().host());
         assertThat(sibling.target().authentication()).isEqualTo(new Authentication.NoPassword());
-        failed(sibling.execute(new GetPin(), CommandListener.SILENT));
+        failed(sibling.execute(new GetDeviceCharacteristics(), CommandListener.SILENT));
         assertThat(trace).isNotEmpty();
       } finally {
         sibling.close();
@@ -330,7 +330,7 @@ class DeviceSessionTest {
                   TransportScheme.HTTP,
                   new Authentication.Password("secret")));
 
-      succeeded(quiet.execute(new GetPin(), CommandListener.SILENT));
+      succeeded(quiet.execute(new GetDeviceCharacteristics(), CommandListener.SILENT));
       quiet.close();
 
       assertThat(trace).isEmpty();

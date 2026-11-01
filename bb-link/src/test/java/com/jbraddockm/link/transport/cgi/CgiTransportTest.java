@@ -337,13 +337,14 @@ class CgiTransportTest {
     @DisplayName("a failed exchange is observed: the request line and the failure, but no response")
     void aFailedExchangeIsObserved() {
       server.dropConnection();
-      var form = CgiRequest.Form.to(Endpoint.WIPE).echo(FormField.WIPE);
+      var form = CgiRequest.Form.to(Endpoint.DISCOVERY).echo(FormField.ACTION);
 
       assertThatThrownBy(() -> transport.send(form)).isInstanceOf(NoHttpResponseException.class);
 
       assertThat(observed).isEmpty();
       assertThat(observedFailures).hasSize(1);
-      assertThat(observedFailures.getFirst().requestLine()).isEqualTo("POST /cgi-bin/wipe.cgi");
+      assertThat(observedFailures.getFirst().requestLine())
+          .isEqualTo("POST /cgi-bin/discovery.cgi");
       assertThat(observedFailures.getFirst().failure()).isInstanceOf(NoHttpResponseException.class);
     }
   }
@@ -382,7 +383,7 @@ class CgiTransportTest {
     void aDroppedConnectionIsNotRepeated() {
       server.dropConnection();
       server.answer(200, answerXml());
-      var form = CgiRequest.Form.to(Endpoint.WIPE).echo(FormField.WIPE);
+      var form = CgiRequest.Form.to(Endpoint.DISCOVERY).echo(FormField.ACTION);
 
       assertThatThrownBy(() -> transport.send(form)).isInstanceOf(NoHttpResponseException.class);
 

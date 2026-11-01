@@ -29,18 +29,16 @@ final class EndpointReachability {
 
   /**
    * The programs each path reaches. USB reaches the whole interface. The tunnel reaches all of it
-   * <em>except</em> {@code wipe.cgi} and {@code pimsync.cgi}: the device accepts a connection to
-   * those over the tunnel but never sends an HTTP response, so a PIN read or a PIM command made
-   * over the tunnel is refused up front with a clear message instead of being left to time out as a
-   * lost connection (observed on a Passport; {@code connect} already reads the PIN from {@code
-   * discovery.cgi} rather than {@code wipe.cgi} for the same reason). A plain Wi-Fi LAN address
-   * reaches only the login; an address of an unknown shape is not refused by its shape (it is left
-   * to the connection itself), so it is treated as reaching everything.
+   * <em>except</em> {@code pimsync.cgi}: the device accepts a connection to it over the tunnel but
+   * never sends an HTTP response, so a PIM command made over the tunnel is refused up front with a
+   * clear message instead of being left to time out as a lost connection (observed on a Passport).
+   * A plain Wi-Fi LAN address reaches only the login; an address of an unknown shape is not refused
+   * by its shape (it is left to the connection itself), so it is treated as reaching everything.
    */
   private static final Map<ConnectionPath, Set<Endpoint>> REACHABLE_BY_PATH =
       Map.of(
           ConnectionPath.USB, EnumSet.allOf(Endpoint.class),
-          ConnectionPath.TUNNEL, EnumSet.complementOf(EnumSet.of(Endpoint.WIPE, Endpoint.PIM_SYNC)),
+          ConnectionPath.TUNNEL, EnumSet.complementOf(EnumSet.of(Endpoint.PIM_SYNC)),
           ConnectionPath.LAN, EnumSet.of(Endpoint.LOGIN),
           ConnectionPath.OTHER, EnumSet.allOf(Endpoint.class));
 
@@ -55,9 +53,6 @@ final class EndpointReachability {
           // discovery.cgi is served over USB and the tunnel but not the plain Wi-Fi LAN, so the
           // same reachability guard as the other management programs applies.
           Map.entry(LinkMethod.GET_DEVICE_CHARACTERISTICS, Endpoint.DISCOVERY),
-          // wipe.cgi accepts TCP but closes without responding over the tunnel;
-          // connect skips readPin on TUNNEL by policy (see LinkService.establish).
-          Map.entry(LinkMethod.GET_PIN, Endpoint.WIPE),
           Map.entry(LinkMethod.GET_SMB_CREDENTIALS, Endpoint.LOGIN),
           Map.entry(LinkMethod.LIST_PIM_ACCOUNTS, Endpoint.PIM_SYNC),
           Map.entry(LinkMethod.FIND_PIM_ACCOUNT, Endpoint.PIM_SYNC),

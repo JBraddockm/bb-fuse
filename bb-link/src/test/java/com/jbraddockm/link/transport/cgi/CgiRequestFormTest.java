@@ -50,8 +50,8 @@ class CgiRequestFormTest {
   @Test
   @DisplayName("with writes the wire name of a value that has one")
   void withWritesTheWireName() {
-    assertThat(BASE.with(FormField.TYPE, FormField.WIPE).fields())
-        .containsExactly(Map.entry(FormField.TYPE, "wipe"));
+    assertThat(BASE.with(FormField.TYPE, FormField.MODE).fields())
+        .containsExactly(Map.entry(FormField.TYPE, "mode"));
   }
 
   @Test
@@ -123,7 +123,7 @@ class CgiRequestFormTest {
         .withMessage("endpoint");
     assertThatNullPointerException()
         .isThrownBy(
-            () -> new CgiRequest.Form(Endpoint.WIPE, new LinkedHashMap<>(), null, false, time))
+            () -> new CgiRequest.Form(Endpoint.DISCOVERY, new LinkedHashMap<>(), null, false, time))
         .withMessage("purpose");
   }
 }

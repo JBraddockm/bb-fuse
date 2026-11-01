@@ -7,15 +7,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.jbraddockm.core.command.CommandListener;
 import com.jbraddockm.core.command.LogLevel;
 import com.jbraddockm.core.error.CoreErrorCode;
-import com.jbraddockm.link.endpoint.actions.ConfirmedByPin;
-import com.jbraddockm.link.endpoint.actions.GetPin;
-import com.jbraddockm.link.endpoint.pairing.AuthenticationAnswer;
+import com.jbraddockm.link.endpoint.characteristics.GetDeviceCharacteristics;
 import com.jbraddockm.link.endpoint.pairing.GetAuthenticationCertificate;
 import com.jbraddockm.link.endpoint.properties.GetDeviceProperties;
 import com.jbraddockm.link.testing.FakeDevice;
 import com.jbraddockm.link.testing.Logs;
 import com.jbraddockm.link.testing.Resources;
-import com.jbraddockm.link.testing.TestAuthority;
 import com.jbraddockm.link.testing.TestResult;
 import com.jbraddockm.link.transport.cgi.Authentication;
 import com.jbraddockm.link.transport.cgi.CgiRequest;
@@ -108,7 +105,7 @@ class DeviceSessionRenewalTest {
             + " the renewal is logged")
     void isRenewed(FakeDevice.StaleStyle style) {
       device.staleStyle = style;
-      succeeded(session.execute(new GetPin(), CommandListener.SILENT));
+      succeeded(session.execute(new GetDeviceCharacteristics(), CommandListener.SILENT));
       device.expireSessions();
       var logs = new Logs();
 
@@ -124,7 +121,7 @@ class DeviceSessionRenewalTest {
         "is renewed once and not in a loop: a device that refuses the new login too is told"
             + " plainly, with one login more")
     void isNotRenewedInALoop() {
-      succeeded(session.execute(new GetPin(), CommandListener.SILENT));
+      succeeded(session.execute(new GetDeviceCharacteristics(), CommandListener.SILENT));
       device.alwaysRejectCookie = true;
 
       var failure = failed(session.execute(new GetDeviceProperties(), CommandListener.SILENT));
@@ -140,7 +137,7 @@ class DeviceSessionRenewalTest {
         "that is lost in the middle of a command is not renewed, and the command is not repeated:"
             + " it says that the session ended")
     void lostInTheMiddle() {
-      succeeded(session.execute(new GetPin(), CommandListener.SILENT));
+      succeeded(session.execute(new GetDeviceCharacteristics(), CommandListener.SILENT));
       var requestsBefore = device.cgiRequests.get();
       device.afterNextCgiRequest = device::expireSessions;
 
@@ -151,66 +148,6 @@ class DeviceSessionRenewalTest {
           .isEqualTo("The device ended the session while the command was running");
       assertThat(device.cgiRequests.get() - requestsBefore).isEqualTo(2);
       assertThat(device.successfulLogins.get()).isEqualTo(1);
-    }
-
-    @Test
-    @DisplayName(
-        "before a command that changes the device is renewed before anything is sent: the PIN that"
-            + " is read first meets it, the renewal is logged, and the request goes out once")
-    void beforeACommandThatChangesTheDevice() throws Exception {
-      device.authority = new TestAuthority();
-      succeeded(session.execute(new GetPin(), CommandListener.SILENT));
-      device.expireSessions();
-      var logs = new Logs();
-
-      var outcome = succeeded(session.execute(confirmedRequest(), logs));
-
-      assertThat(outcome.certificate()).isPresent();
-      assertThat(logs.messages(LogLevel.DEBUG))
-          .containsExactly("The device forgot the session; logging in again");
-      assertThat(device.authenticationRequests()).as("the request was sent once").hasSize(1);
-    }
-
-    @Test
-    @DisplayName(
-        "between the PIN and the request ends the command, plainly, and the request that was sent"
-            + " is not sent again")
-    void betweenThePinAndTheRequest() throws Exception {
-      device.authority = new TestAuthority();
-      succeeded(session.execute(new GetPin(), CommandListener.SILENT));
-      device.afterNextCgiRequest = device::expireSessions;
-
-      var outcome = failed(session.execute(confirmedRequest(), CommandListener.SILENT));
-
-      assertThat(outcome.error().code()).isEqualTo(CoreErrorCode.AUTH_FAILED);
-      assertThat(outcome.error().message()).contains("while the command was running");
-      assertThat(device.authenticationRequests()).as("the request was not repeated").hasSize(1);
-    }
-
-    @Test
-    @DisplayName(
-        "is not what ends a request on a dropped connection: CONNECTION_LOST after the PIN and one"
-            + " request, and nothing more")
-    void aConnectionDroppedOnTheRequest() throws Exception {
-      device.authority = new TestAuthority();
-      succeeded(session.execute(new GetPin(), CommandListener.SILENT));
-      var before = device.cgiRequests.get();
-      device.afterNextCgiRequest = () -> device.dropNext.set(1);
-
-      var outcome = failed(session.execute(confirmedRequest(), CommandListener.SILENT));
-
-      assertThat(outcome.error().code()).isEqualTo(CoreErrorCode.CONNECTION_LOST);
-      assertThat(device.cgiRequests.get())
-          .as("the PIN and one request, nothing more")
-          .isEqualTo(before + 2);
-      assertThat(device.authenticationRequests()).as("the request was not repeated").hasSize(1);
-    }
-
-    private ConfirmedByPin<AuthenticationAnswer> confirmedRequest() {
-      return new ConfirmedByPin<>(
-          new GetAuthenticationCertificate(
-              Resources.text(DeviceSessionRenewalTest.class, "device-session--real-request.pem")),
-          "2A3B4C5D");
     }
   }
 
@@ -223,7 +160,7 @@ class DeviceSessionRenewalTest {
         "is opened again for a command that only reads, once, and logged in again: the read goes"
             + " through")
     void aReadIsRepeated() {
-      succeeded(session.execute(new GetPin(), CommandListener.SILENT));
+      succeeded(session.execute(new GetDeviceCharacteristics(), CommandListener.SILENT));
       device.dropNext.set(1);
       var logs = new Logs();
 
@@ -237,7 +174,7 @@ class DeviceSessionRenewalTest {
     @Test
     @DisplayName("is opened again only once: a second drop is a lost connection, told as such")
     void aReadIsRepeatedOnce() {
-      succeeded(session.execute(new GetPin(), CommandListener.SILENT));
+      succeeded(session.execute(new GetDeviceCharacteristics(), CommandListener.SILENT));
       var before = device.cgiRequests.get();
       device.dropNext.set(2);
 
@@ -252,7 +189,7 @@ class DeviceSessionRenewalTest {
         "is not opened again for a command that changes the device: it is sent once, and the loss"
             + " is told")
     void aWriteIsNeverRepeated() {
-      succeeded(session.execute(new GetPin(), CommandListener.SILENT));
+      succeeded(session.execute(new GetDeviceCharacteristics(), CommandListener.SILENT));
       var before = device.cgiRequests.get();
       device.dropNext.set(1);
       var request = Resources.text(DeviceSessionRenewalTest.class, "device-session--request.pem");
@@ -275,7 +212,7 @@ class DeviceSessionRenewalTest {
     void aRenewedCookie() {
       device.cgiCookie = FakeDevice.CgiCookie.RENEW;
 
-      succeeded(session.execute(new GetPin(), CommandListener.SILENT));
+      succeeded(session.execute(new GetDeviceCharacteristics(), CommandListener.SILENT));
       succeeded(session.execute(new GetDeviceProperties(), CommandListener.SILENT));
 
       assertThat(device.successfulLogins.get()).isEqualTo(1);
@@ -288,7 +225,7 @@ class DeviceSessionRenewalTest {
     void anExpiredCookie() {
       device.cgiCookie = FakeDevice.CgiCookie.EXPIRED;
 
-      succeeded(session.execute(new GetPin(), CommandListener.SILENT));
+      succeeded(session.execute(new GetDeviceCharacteristics(), CommandListener.SILENT));
       succeeded(session.execute(new GetDeviceProperties(), CommandListener.SILENT));
 
       assertThat(device.successfulLogins.get()).isEqualTo(2);

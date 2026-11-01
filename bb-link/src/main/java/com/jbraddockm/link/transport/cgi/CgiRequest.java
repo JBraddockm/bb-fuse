@@ -21,8 +21,8 @@ public sealed interface CgiRequest {
 
   /**
    * Describes the request for log messages by what it does, not by the name of the device's CGI
-   * program, which can be misleading: the PIN is read through a program called {@code wipe.cgi}.
-   * Values are never included.
+   * program, which can be misleading (the PIN, for one, comes from a program called {@code
+   * discovery.cgi}). Values are never included.
    *
    * @return the purpose, for example {@code Reading the device PIN}; a request without a purpose is
    *     described as {@code POST} and the program's file name

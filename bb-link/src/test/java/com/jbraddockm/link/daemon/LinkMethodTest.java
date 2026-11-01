@@ -8,7 +8,6 @@ import com.jbraddockm.core.daemon.CommandSpec;
 import com.jbraddockm.core.daemon.Reply;
 import com.jbraddockm.core.daemon.RequestParams;
 import com.jbraddockm.core.error.InvalidArgumentException;
-import com.jbraddockm.link.endpoint.actions.GetPin;
 import com.jbraddockm.link.endpoint.pairing.CertificateRetrieval;
 import com.jbraddockm.link.endpoint.pairing.GetAuthenticationCertificate;
 import com.jbraddockm.link.endpoint.pairing.PairWithDevice;
@@ -80,7 +79,8 @@ class LinkMethodTest {
     void refusesOverLan() {
       var scoped =
           (CommandSpec.SessionScoped<DeviceSession>)
-              LinkMethod.GET_PIN.spec(_ -> {}, new Pairing(), new CertificateRetrieval());
+              LinkMethod.GET_DEVICE_PROPERTIES.spec(
+                  _ -> {}, new Pairing(), new CertificateRetrieval());
       var session =
           DeviceSession.forTarget(
               new DeviceTarget(
@@ -91,7 +91,7 @@ class LinkMethodTest {
       scoped.factory().apply(new RequestParams(java.util.Map.of())).run(session, reply);
 
       var written = output.toString(StandardCharsets.UTF_8);
-      assertThat(written).contains("COMMAND_FAILED").contains("getPin");
+      assertThat(written).contains("COMMAND_FAILED").contains("getDeviceProperties");
     }
 
     @Test
@@ -157,7 +157,6 @@ class LinkMethodTest {
     @CsvSource({
       "GET_DEVICE_PROPERTIES, getDeviceProperties",
       "GET_DEVICE_CHARACTERISTICS, getDeviceCharacteristics",
-      "GET_PIN, getPin",
       "GET_SMB_CREDENTIALS, getSmbCredentials",
       "LIST_PIM_ACCOUNTS, listPimAccounts",
       "FIND_PIM_ACCOUNT, findPimAccount",
@@ -190,9 +189,9 @@ class LinkMethodTest {
 
     @Test
     @DisplayName("are 28, and distinct")
-    void areTwentyEightAndDistinct() {
+    void areTwentySevenAndDistinct() {
       assertThat(Arrays.stream(LinkMethod.values()).map(LinkMethod::wireName))
-          .hasSize(28)
+          .hasSize(27)
           .doesNotHaveDuplicates();
     }
 
@@ -213,10 +212,8 @@ class LinkMethodTest {
     void theReadsThatTakeNoArgument() {
       assertThat(replay(LinkMethod.GET_DEVICE_PROPERTIES))
           .containsInstanceOf(GetDeviceProperties.class);
-      assertThat(replay(LinkMethod.GET_PIN)).containsInstanceOf(GetPin.class);
       assertThat(replay(LinkMethod.LIST_PIM_ACCOUNTS)).containsInstanceOf(ListPimAccounts.class);
       assertThat(replay(LinkMethod.GET_DEVICE_PROPERTIES, "x")).isEmpty();
-      assertThat(replay(LinkMethod.GET_PIN, "x")).isEmpty();
       assertThat(replay(LinkMethod.LIST_PIM_ACCOUNTS, "x")).isEmpty();
     }
 
@@ -392,7 +389,6 @@ class LinkMethodTest {
     @ValueSource(
         strings = {
           "GET_DEVICE_PROPERTIES",
-          "GET_PIN",
           "GET_SMB_CREDENTIALS",
           "LIST_PIM_ACCOUNTS",
           "FIND_PIM_ACCOUNT",

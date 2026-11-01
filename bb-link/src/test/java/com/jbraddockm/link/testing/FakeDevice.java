@@ -42,9 +42,6 @@ public final class FakeDevice implements AutoCloseable {
   public static final String PROPERTIES_BODY =
       "Get%20Dynamic%20Properties=Get%20Dynamic%20Properties";
 
-  /** The form body that requests the PIN of the device. */
-  public static final String PIN_BODY = "wipe=getpin";
-
   /** The properties that the device answers by default. */
   public static final String DEFAULT_PROPERTIES =
       Resources.text(FakeDevice.class, "fake-device--properties.xml");
@@ -55,9 +52,6 @@ public final class FakeDevice implements AutoCloseable {
    */
   public static final String UNAUTHENTICATED_PIM_SYNC =
       Resources.text(FakeDevice.class, "fake-device--pim-unauthenticated.json").strip();
-
-  /** The PIN answer that the device gives by default. */
-  public static final String DEFAULT_PIN = Resources.text(FakeDevice.class, "fake-device--pin.xml");
 
   /** The {@code discovery.cgi} answer that the device gives by default. */
   public static final String DEFAULT_DISCOVERY =
@@ -160,9 +154,6 @@ public final class FakeDevice implements AutoCloseable {
   /** The properties answer of the device. */
   public volatile String propertiesXml = DEFAULT_PROPERTIES;
 
-  /** The PIN answer of the device. */
-  public volatile String pinXml = DEFAULT_PIN;
-
   /** The {@code discovery.cgi} answer of the device. */
   public volatile String discoveryXml = DEFAULT_DISCOVERY;
 
@@ -261,7 +252,6 @@ public final class FakeDevice implements AutoCloseable {
     server.createContext("/cgi-bin/pairing.cgi", new PairingEndpoint()::handle);
     server.createContext(
         "/cgi-bin/dynamicProperties.cgi", exchange -> cgi(exchange, PROPERTIES_BODY));
-    server.createContext("/cgi-bin/wipe.cgi", exchange -> cgi(exchange, PIN_BODY));
     server.createContext("/cgi-bin/discovery.cgi", this::discovery);
     server.createContext("/cgi-bin/pimsync.cgi", new PimSyncEndpoint()::handle);
     server.createContext("/cgi-bin/update.cgi", new UpdateEndpoint()::handle);
@@ -419,7 +409,7 @@ public final class FakeDevice implements AutoCloseable {
       answer = "unexpected request: " + exchange.getRequestMethod() + " " + body;
     } else {
       renewal = "dtmauth=" + token + "; " + (cgiCookie == CgiCookie.RENEW ? FUTURE : PAST);
-      answer = expectedBody.equals(PIN_BODY) ? pinXml : propertiesXml;
+      answer = propertiesXml;
     }
     fireHook();
     respond(exchange, status, answer, renewal);

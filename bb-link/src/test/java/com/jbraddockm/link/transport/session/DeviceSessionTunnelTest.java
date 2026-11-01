@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.jbraddockm.core.command.CommandListener;
 import com.jbraddockm.core.command.CommandOutcome;
-import com.jbraddockm.link.endpoint.actions.GetPin;
+import com.jbraddockm.link.endpoint.characteristics.GetDeviceCharacteristics;
 import com.jbraddockm.link.testing.FakeDevice;
 import com.jbraddockm.link.transport.cgi.Authentication;
 import com.jbraddockm.link.transport.cgi.ConnectionPath;
@@ -105,7 +105,7 @@ class DeviceSessionTunnelTest {
         var session = tunnelled("10.255.255.1", device.port(), new FakeConnector(binding));
 
         session.establishTunnel(CommandListener.SILENT);
-        succeeded(session.execute(new GetPin(), CommandListener.SILENT));
+        succeeded(session.execute(new GetDeviceCharacteristics(), CommandListener.SILENT));
 
         assertThat(session.target().host()).isEqualTo("10.255.255.1"); // the ULA stays hidden
         session.close();
@@ -176,7 +176,7 @@ class DeviceSessionTunnelTest {
       session.establishTunnel(CommandListener.SILENT);
       binding.down = true;
 
-      var outcome = session.execute(new GetPin(), CommandListener.SILENT);
+      var outcome = session.execute(new GetDeviceCharacteristics(), CommandListener.SILENT);
 
       assertThat(outcome).isInstanceOf(CommandOutcome.Failed.class);
       assertThat(((CommandOutcome.Failed<?>) outcome).error().message()).contains("dropped");

@@ -18,7 +18,6 @@ class EndpointTest {
     "DISCOVERY, discovery.cgi",
     "UPDATE, update.cgi",
     "BACKUP, backup.cgi",
-    "WIPE, wipe.cgi",
     "RESET, reset.cgi",
     "SUPPORT, support.cgi",
     "LOGIN, login.cgi",
@@ -33,9 +32,9 @@ class EndpointTest {
 
   @Test
   @DisplayName("there is no endpoint that this table does not know")
-  void thereAreTenEndpoints() {
+  void thereAreNineEndpoints() {
     assertThat(Arrays.stream(Endpoint.values()).map(Endpoint::fileName))
         .doesNotHaveDuplicates()
-        .hasSize(10);
+        .hasSize(9);
   }
 }

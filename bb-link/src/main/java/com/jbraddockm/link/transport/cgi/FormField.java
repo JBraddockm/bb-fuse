@@ -15,9 +15,6 @@ public enum FormField implements WireValue {
   /** A property value. */
   VALUE("value"),
 
-  /** A wipe-endpoint command such as reading the PIN. */
-  WIPE("wipe"),
-
   /** What an update conversation is about: installing applications or firmware, or uninstalling. */
   MODE("mode"),
 

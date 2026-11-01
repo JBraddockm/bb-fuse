@@ -16,12 +16,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 /**
- * Keeps the two tiers of bb-link layered. {@code endpoint.*} packages are domains that sit on top of
- * the {@code transport.*} plumbing; they do not reach sideways into one another (save a short,
+ * Keeps the two tiers of bb-link layered. {@code endpoint.*} packages are domains that sit on top
+ * of the {@code transport.*} plumbing; they do not reach sideways into one another (save a short,
  * approved allow-list), the plumbing never reaches up into a domain, and nothing but {@link
  * Launcher} depends on the {@code daemon} composition root. The two leaf plumbing packages that
- * could one day move to {@code bb-core} ({@code transport.xml}, {@code transport.internal}) are held
- * to the JDK only. The test reads the sources and is skipped when they are not found.
+ * could one day move to {@code bb-core} ({@code transport.xml}, {@code transport.internal}) are
+ * held to the JDK only. The test reads the sources and is skipped when they are not found.
  *
  * <p>The companion {@code PairingBoundaryTest} holds the tighter line for {@code pairing.pki} and
  * {@code pairing.store}.
@@ -41,8 +41,10 @@ class ArchitectureBoundaryTest {
   private static final Set<String> APPROVED_DOMAIN_EDGES =
       Set.of(
           "pairing->actions",
+          "pairing->characteristics",
           "update->properties",
           "backup->actions",
+          "backup->characteristics",
           "backup->properties");
 
   private record JavaFile(String pkg, String name, List<String> imports) {}
@@ -190,7 +192,10 @@ class ArchitectureBoundaryTest {
               .filter(path -> path.toString().endsWith(".java"))
               .flatMap(
                   path ->
-                      ABSOLUTE_RESOURCE.matcher(readString(path)).results().map(match -> match.group(1)))
+                      ABSOLUTE_RESOURCE
+                          .matcher(readString(path))
+                          .results()
+                          .map(match -> match.group(1)))
               .distinct()
               .filter(resource -> getClass().getResource(resource) == null)
               .toList();

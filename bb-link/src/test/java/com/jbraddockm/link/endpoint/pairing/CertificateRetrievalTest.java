@@ -11,10 +11,10 @@ import com.jbraddockm.link.endpoint.pairing.pki.Pem;
 import com.jbraddockm.link.endpoint.pairing.pki.SignatureScheme;
 import com.jbraddockm.link.endpoint.pairing.store.IdentityDirectory;
 import com.jbraddockm.link.endpoint.pairing.store.StoredIdentity;
-import com.jbraddockm.link.transport.tls.ClientCertificate;
 import com.jbraddockm.link.testing.DeviceFixture;
 import com.jbraddockm.link.testing.Logs;
 import com.jbraddockm.link.testing.TestDer;
+import com.jbraddockm.link.transport.tls.ClientCertificate;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -48,7 +48,7 @@ class CertificateRetrievalTest {
   private static final String COMMON_NAME = "BBCGIAUTH [2A3B4C5D] workstation";
   private static final String LOGGED_NAME = "BBCGIAUTH [***] workstation";
 
-  private record Trial(ClientCertificate identity, int port, String pin, boolean filesExisted) {}
+  private record Trial(ClientCertificate identity, int port, boolean filesExisted) {}
 
   @TempDir private Path devices;
   private DeviceFixture fixture;
@@ -61,12 +61,11 @@ class CertificateRetrievalTest {
 
   private CertificateRetrieval retrieval() {
     return new CertificateRetrieval(
-        (_, identity, port, pin, _) -> {
+        (_, identity, port, _) -> {
           trials.add(
               new Trial(
                   identity,
                   port,
-                  pin,
                   Files.exists(identity.certificateFile()) && Files.exists(identity.keyFile())));
           return trialOutcome;
         },
@@ -175,7 +174,6 @@ class CertificateRetrievalTest {
       assertThat(trial.identity())
           .isEqualTo(new ClientCertificate(directory.certificateFile(), directory.keyFile()));
       assertThat(trial.port()).isEqualTo(8443);
-      assertThat(trial.pin()).isEqualTo("2A3B4C5D");
       assertThat(result.verification()).isEqualTo(Verification.verified());
     }
 

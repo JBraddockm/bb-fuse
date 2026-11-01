@@ -46,7 +46,6 @@ class EndpointReachabilityTest {
         value = LinkMethod.class,
         mode = EnumSource.Mode.EXCLUDE,
         names = {
-          "GET_PIN",
           "LIST_PIM_ACCOUNTS",
           "FIND_PIM_ACCOUNT",
           "GET_PIM_ITEMS",
@@ -72,7 +71,6 @@ class EndpointReachabilityTest {
         value = LinkMethod.class,
         mode = EnumSource.Mode.INCLUDE,
         names = {
-          "GET_PIN",
           "LIST_PIM_ACCOUNTS",
           "FIND_PIM_ACCOUNT",
           "GET_PIM_ITEMS",
@@ -124,7 +122,6 @@ class EndpointReachabilityTest {
         value = LinkMethod.class,
         names = {
           "GET_DEVICE_PROPERTIES",
-          "GET_PIN",
           "LIST_PIM_ACCOUNTS",
           "FIND_PIM_ACCOUNT",
           "GET_PIM_ITEMS",

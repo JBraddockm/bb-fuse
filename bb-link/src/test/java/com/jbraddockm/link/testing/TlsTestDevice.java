@@ -216,9 +216,6 @@ public final class TlsTestDevice implements AutoCloseable {
       // what a real device answers a request that has no valid session
       return FakeDevice.UNAUTHORIZED_PROPERTIES;
     }
-    if (path.startsWith("/cgi-bin/wipe.cgi")) {
-      return Resources.text(TlsTestDevice.class, "tls-test-device--pin.xml").strip();
-    }
     // the name of the device is what the client certificate said, so a test can read it back
     return Resources.text(
             TlsTestDevice.class,

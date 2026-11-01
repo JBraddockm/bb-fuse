@@ -8,7 +8,6 @@ import com.jbraddockm.core.error.ErrorCode;
 import com.jbraddockm.core.error.ServiceError;
 import com.jbraddockm.core.json.Json;
 import com.jbraddockm.link.LinkErrorCode;
-import com.jbraddockm.link.transport.internal.Scrub;
 import com.jbraddockm.link.endpoint.pairing.pki.CertificateRequest;
 import com.jbraddockm.link.endpoint.pairing.pki.CertificateRequest.Rdn;
 import com.jbraddockm.link.endpoint.pairing.pki.RsaKeys;
@@ -16,8 +15,9 @@ import com.jbraddockm.link.endpoint.pairing.pki.SignatureScheme;
 import com.jbraddockm.link.endpoint.pairing.store.FilesExistException;
 import com.jbraddockm.link.endpoint.pairing.store.IdentityDirectory;
 import com.jbraddockm.link.endpoint.pairing.store.StoredIdentity;
-import com.jbraddockm.link.transport.tls.ClientCertificate;
+import com.jbraddockm.link.transport.internal.Scrub;
 import com.jbraddockm.link.transport.session.DeviceSession;
+import com.jbraddockm.link.transport.tls.ClientCertificate;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
@@ -110,7 +110,7 @@ public final class CertificateRetrieval {
                 identity.certificateFile(),
                 identity.keyFile(),
                 issued.details(),
-                verify(session, request, identity, pin, listener),
+                verify(session, request, identity, listener),
                 clock.instant()));
       }
     } catch (DeviceSteps.Stopped stopped) {
@@ -165,7 +165,6 @@ public final class CertificateRetrieval {
       DeviceSession session,
       CertificateRetrievalRequest request,
       IdentityDirectory identity,
-      String pin,
       CommandListener listener) {
     if (!request.verify()) {
       return Verification.skipped();
@@ -176,7 +175,6 @@ public final class CertificateRetrieval {
             session,
             new ClientCertificate(identity.certificateFile(), identity.keyFile()),
             request.verifyPort(),
-            pin,
             listener);
     if (verification.state() == Verification.State.FAILED) {
       listener.onLog(
