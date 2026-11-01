@@ -55,8 +55,11 @@ class DaemonConnectTest {
     return daemon.done(id);
   }
 
-  private Map<String, Object> connectWithoutPassword(long id, String resource) throws Exception {
-    daemon.send(id, resource, Map.of("port", String.valueOf(device.port())));
+  private Map<String, Object> connectWithoutPassword(long id) throws Exception {
+    daemon.send(
+        id,
+        "request--connect-without-password.json",
+        Map.of("port", String.valueOf(device.port())));
     return daemon.done(id);
   }
 
@@ -312,8 +315,7 @@ class DaemonConnectTest {
     void aDeviceWithoutAPassword() throws Exception {
       device.loginMode = FakeDevice.LoginMode.NO_PASSWORD;
 
-      assertThat(connectWithoutPassword(11, "request--connect-without-password.json").get("ok"))
-          .isEqualTo(true);
+      assertThat(connectWithoutPassword(11).get("ok")).isEqualTo(true);
 
       assertThat(daemon.data(11)).containsEntry("authentication", "none");
     }
@@ -323,7 +325,7 @@ class DaemonConnectTest {
         "with no password to a device that asks for one is PASSWORD_REQUIRED: the login stops at"
             + " the challenge and no attempt is counted")
     void aPasswordIsNeededAndNoneIsGiven() throws Exception {
-      var done = connectWithoutPassword(12, "request--connect-without-password.json");
+      var done = connectWithoutPassword(12);
 
       assertThat(errorCode(done)).isEqualTo("PASSWORD_REQUIRED");
       assertThat(device.loginRequests.get()).isEqualTo(1);

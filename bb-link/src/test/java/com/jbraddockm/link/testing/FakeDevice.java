@@ -250,8 +250,7 @@ public final class FakeDevice implements AutoCloseable {
     server.setExecutor(Executors.newCachedThreadPool());
     server.createContext("/cgi-bin/login.cgi", new LoginEndpoint()::handle);
     server.createContext("/cgi-bin/pairing.cgi", new PairingEndpoint()::handle);
-    server.createContext(
-        "/cgi-bin/dynamicProperties.cgi", exchange -> cgi(exchange, PROPERTIES_BODY));
+    server.createContext("/cgi-bin/dynamicProperties.cgi", this::cgi);
     server.createContext("/cgi-bin/discovery.cgi", this::discovery);
     server.createContext("/cgi-bin/pimsync.cgi", new PimSyncEndpoint()::handle);
     server.createContext("/cgi-bin/update.cgi", new UpdateEndpoint()::handle);
@@ -379,7 +378,7 @@ public final class FakeDevice implements AutoCloseable {
     return SHARE_PASSWORD_PREFIX + successfulLogins.get();
   }
 
-  private void cgi(HttpExchange exchange, String expectedBody) throws IOException {
+  private void cgi(HttpExchange exchange) throws IOException {
     cgiRequests.incrementAndGet();
     var body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.US_ASCII);
     var cookie = exchange.getRequestHeaders().getFirst("Cookie");
@@ -404,7 +403,7 @@ public final class FakeDevice implements AutoCloseable {
                 Resources.text(FakeDevice.class, "fake-device--stale-auth-challenge.xml").strip();
         default -> throw new IllegalStateException();
       }
-    } else if (!"POST".equals(exchange.getRequestMethod()) || !expectedBody.equals(body)) {
+    } else if (!"POST".equals(exchange.getRequestMethod()) || !PROPERTIES_BODY.equals(body)) {
       status = 400;
       answer = "unexpected request: " + exchange.getRequestMethod() + " " + body;
     } else {

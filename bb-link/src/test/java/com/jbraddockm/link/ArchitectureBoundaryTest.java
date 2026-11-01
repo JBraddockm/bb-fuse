@@ -90,8 +90,8 @@ class ArchitectureBoundaryTest {
   }
 
   /** The domain of a package under a tier, e.g. {@code endpoint.pairing.pki} → {@code pairing}. */
-  private static String domainUnder(String prefix, String name) {
-    return name.substring(prefix.length()).split("\\.", 2)[0];
+  private static String domainUnder(String name) {
+    return name.substring(ENDPOINT.length()).split("\\.", 2)[0];
   }
 
   @Test
@@ -102,10 +102,10 @@ class ArchitectureBoundaryTest {
             .filter(file -> file.pkg().startsWith(ENDPOINT))
             .flatMap(
                 file -> {
-                  var from = domainUnder(ENDPOINT, file.pkg());
+                  var from = domainUnder(file.pkg());
                   return file.imports().stream()
                       .filter(imported -> imported.startsWith(ENDPOINT))
-                      .map(imported -> from + "->" + domainUnder(ENDPOINT, imported))
+                      .map(imported -> from + "->" + domainUnder(imported))
                       .filter(edge -> !edge.startsWith(from + "->" + from))
                       .filter(edge -> !APPROVED_DOMAIN_EDGES.contains(edge))
                       .map(edge -> file.name() + ": " + edge);

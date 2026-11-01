@@ -61,7 +61,7 @@ public final class CertificateRetrieval {
    * @param verifier how the identity is tried
    * @param clock where the time comes from
    */
-  public CertificateRetrieval(IdentityVerifier verifier, Clock clock) {
+  CertificateRetrieval(IdentityVerifier verifier, Clock clock) {
     this.verifier = verifier;
     this.clock = clock;
   }

@@ -165,7 +165,14 @@ public final class TlsTestDevice implements AutoCloseable {
         contentLength = Integer.parseInt(line.substring(line.indexOf(':') + 1).strip());
       }
     }
-    reader.skip(contentLength);
+    var remaining = (long) contentLength;
+    while (remaining > 0) {
+      var skipped = reader.skip(remaining);
+      if (skipped <= 0) {
+        break;
+      }
+      remaining -= skipped;
+    }
     var peer = peerSubject(socket);
     peers.add(peer);
     var path = requestLine.split(" ")[1];

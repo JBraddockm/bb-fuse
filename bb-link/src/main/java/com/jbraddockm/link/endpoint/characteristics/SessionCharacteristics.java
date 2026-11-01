@@ -45,9 +45,9 @@ public final class SessionCharacteristics {
       }
     }
     return switch (session.execute(new GetDeviceCharacteristics(), listener)) {
-      case CommandOutcome.Succeeded<DeviceCharacteristics>(var characteristics, var ignored) ->
+      case CommandOutcome.Succeeded<DeviceCharacteristics>(var characteristics, _) ->
           new Step.Finish<>(characteristics);
-      case CommandOutcome.Failed<DeviceCharacteristics>(var error, var body, var raw) ->
+      case CommandOutcome.Failed<DeviceCharacteristics>(var error, _, _) ->
           new Step.Fail<>(error, Optional.empty());
     };
   }

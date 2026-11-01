@@ -30,7 +30,6 @@ import org.junit.jupiter.api.io.TempDir;
  * Tests for {@link CgiTransport} against a {@link ScriptedServer}: requests, cookies, uploads and
  * failures.
  */
-@SuppressWarnings("deprecation")
 @DisplayName("CgiTransport: what goes over the wire to a device")
 class CgiTransportTest {
 
@@ -258,7 +257,7 @@ class CgiTransportTest {
       assertThat(request.header("Content-Type")).isEqualTo("application/octet-stream");
       assertThat(request.header("Content-Length")).isEqualTo(String.valueOf(data.length));
       assertThat(counted).isNotEmpty().isSorted();
-      assertThat(counted.getLast()).isLessThanOrEqualTo((long) data.length);
+      assertThat(counted.getLast()).isLessThanOrEqualTo(data.length);
     }
   }
 
@@ -309,7 +308,7 @@ class CgiTransportTest {
       transport.send(form);
 
       assertThat(observed).hasSize(2);
-      assertThat(observed.get(0).requestLine())
+      assertThat(observed.getFirst().requestLine())
           .isEqualTo("GET /cgi-bin/login.cgi?request_version=1");
       assertThat(observed.get(0).requestBody()).isEmpty();
       assertThat(observed.get(0).cookieNames()).isEmpty();

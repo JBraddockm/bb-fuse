@@ -12,6 +12,7 @@ import com.jbraddockm.link.endpoint.characteristics.SessionCharacteristics;
 import com.jbraddockm.link.transport.cgi.DeviceCommand;
 import com.jbraddockm.link.transport.cgi.Step;
 import com.jbraddockm.link.transport.session.DeviceSession;
+import java.io.Serial;
 import java.util.Locale;
 import java.util.Map;
 
@@ -103,7 +104,7 @@ final class DeviceSteps {
   /** The end of a workflow, with the error that it answers. */
   static final class Stopped extends RuntimeException {
 
-    private static final long serialVersionUID = 1L;
+    @Serial private static final long serialVersionUID = 1L;
 
     private final transient ServiceError error;
 

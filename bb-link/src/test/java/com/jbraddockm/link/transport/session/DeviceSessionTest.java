@@ -307,33 +307,28 @@ class DeviceSessionTest {
         "has a sibling for another port, scheme and authentication, to the same host, that shares"
             + " the observer")
     void hasASibling() {
-      var sibling =
-          session.sibling(TransportScheme.HTTP, device.port(), new Authentication.NoPassword());
-      try {
+      try (var sibling =
+          session.sibling(TransportScheme.HTTP, device.port(), new Authentication.NoPassword())) {
         assertThat(sibling.target().host()).isEqualTo(session.target().host());
         assertThat(sibling.target().authentication()).isEqualTo(new Authentication.NoPassword());
         failed(sibling.execute(new GetDeviceCharacteristics(), CommandListener.SILENT));
         assertThat(trace).isNotEmpty();
-      } finally {
-        sibling.close();
       }
     }
 
     @Test
     @DisplayName("can be made without an observer")
     void canBeMadeWithoutAnObserver() {
-      var quiet =
+      try (var quiet =
           DeviceSession.forTarget(
               new DeviceTarget(
                   "127.0.0.1",
                   device.port(),
                   TransportScheme.HTTP,
-                  new Authentication.Password("secret")));
-
-      succeeded(quiet.execute(new GetDeviceCharacteristics(), CommandListener.SILENT));
-      quiet.close();
-
-      assertThat(trace).isEmpty();
+                  new Authentication.Password("secret")))) {
+        succeeded(quiet.execute(new GetDeviceCharacteristics(), CommandListener.SILENT));
+        assertThat(trace).isEmpty();
+      }
     }
   }
 
@@ -355,19 +350,23 @@ class DeviceSessionTest {
     @Test
     @DisplayName("over the tunnel defaults to 169.254.1.1 when none is given")
     void tunnelDefaultsToTheStableAddress() {
-      assertThat(tunnelSession(null).smbHost()).isEqualTo("169.254.1.1");
+      try (var session = tunnelSession(null)) {
+        assertThat(session.smbHost()).isEqualTo("169.254.1.1");
+      }
     }
 
     @Test
     @DisplayName("over the tunnel uses the per-session inner IPv4 when given")
     void tunnelUsesTheGivenInnerAddress() {
-      assertThat(tunnelSession("169.254.9.1").smbHost()).isEqualTo("169.254.9.1");
+      try (var session = tunnelSession("169.254.9.1")) {
+        assertThat(session.smbHost()).isEqualTo("169.254.9.1");
+      }
     }
 
     @Test
     @DisplayName("over USB is the connection address, ignoring any tunnel override")
     void usbIsTheConnectionAddress() {
-      var usb =
+      try (var usb =
           DeviceSession.forTarget(
               new DeviceTarget(
                   "169.254.0.1",
@@ -375,9 +374,9 @@ class DeviceSessionTest {
                   TransportScheme.HTTPS,
                   new Authentication.Password("secret")),
               ExchangeObserver.NONE,
-              "169.254.9.1");
-
-      assertThat(usb.smbHost()).isEqualTo("169.254.0.1");
+              "169.254.9.1")) {
+        assertThat(usb.smbHost()).isEqualTo("169.254.0.1");
+      }
     }
   }
 }

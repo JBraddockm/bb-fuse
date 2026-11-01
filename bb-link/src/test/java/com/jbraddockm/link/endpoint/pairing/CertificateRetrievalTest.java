@@ -121,7 +121,7 @@ class CertificateRetrievalTest {
     @DisplayName(
         "keeps three files: the certificate, the key, and the identity file with the name and the"
             + " time")
-    void keepsThreeFiles() throws Exception {
+    void keepsThreeFiles() {
       assertThat(directory.existingFiles())
           .containsExactly(
               directory.certificateFile(), directory.keyFile(), directory.metadataFile());
@@ -268,7 +268,7 @@ class CertificateRetrievalTest {
               .children();
       var publicKey =
           KeyFactory.getInstance("RSA")
-              .generatePublic(new X509EncodedKeySpec(parts.get(0).children().get(2).encoded()));
+              .generatePublic(new X509EncodedKeySpec(parts.getFirst().children().get(2).encoded()));
 
       var verifier = Signature.getInstance("SHA1withRSA");
       verifier.initVerify(publicKey);

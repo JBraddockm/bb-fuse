@@ -97,20 +97,15 @@ class DeviceSessionTunnelTest {
     @Test
     @DisplayName("connects over the tunnel ULA, not the address the user gave")
     void connectsOverTheUla() throws IOException {
-      var device = new FakeDevice("secret");
-      try {
-        // The configured host is an unreachable LAN address; only the redirect to the binding's ULA
-        // (the loopback the fake device listens on) lets the command reach the device.
-        var binding = new FakeBinding("127.0.0.1", "169.254.7.1");
-        var session = tunnelled("10.255.255.1", device.port(), new FakeConnector(binding));
-
+      // The configured host is an unreachable LAN address; only the redirect to the binding's ULA
+      // (the loopback the fake device listens on) lets the command reach the device.
+      var binding = new FakeBinding("127.0.0.1", "169.254.7.1");
+      try (var device = new FakeDevice("secret");
+          var session = tunnelled("10.255.255.1", device.port(), new FakeConnector(binding))) {
         session.establishTunnel(CommandListener.SILENT);
         succeeded(session.execute(new GetDeviceCharacteristics(), CommandListener.SILENT));
 
         assertThat(session.target().host()).isEqualTo("10.255.255.1"); // the ULA stays hidden
-        session.close();
-      } finally {
-        device.close();
       }
     }
 

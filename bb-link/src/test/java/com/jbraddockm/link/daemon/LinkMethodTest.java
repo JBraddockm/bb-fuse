@@ -110,7 +110,7 @@ class LinkMethodTest {
       // A Wi-Fi LAN address the user gave, redirected to the tunnel's ULA. pimsync is not served
       // over the tunnel, so it is refused — but judged by the tunnel it runs over, not the LAN
       // address shown back: the message names the tunnel and USB, never "Wi-Fi LAN".
-      session.useTunnel(() -> new StubBinding());
+      session.useTunnel(StubBinding::new);
       session.establishTunnel(CommandListener.SILENT);
       assertThat(session.connectionPath()).isEqualTo(ConnectionPath.TUNNEL);
       var output = new ByteArrayOutputStream();
