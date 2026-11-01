@@ -13,6 +13,11 @@ import java.util.Map;
  * to tell whether the device accepted the request. The body can contain personal data of the
  * device's owner.
  *
+ * <p>Beside the device's own code and message, the JSON carries an {@code explanation}: bb-link's
+ * plain-language account of what the code means ({@link PimStatusCode}), present when the code is
+ * one this version knows. The device's terse code and message are kept as they are — the
+ * explanation only adds to them.
+ *
  * @param command the command that was sent
  * @param service the kind of items asked for, or {@code null} for a command that has none
  * @param httpStatus the HTTP status code
@@ -47,6 +52,8 @@ public record PimAnswer(
         code,
         "message",
         message,
+        "explanation",
+        PimStatusCode.explain(code).orElse(null),
         "bodyFormat",
         body.format().wireName(),
         "body",

@@ -13,7 +13,6 @@ import com.jbraddockm.link.transport.cgi.CgiRequest;
 import com.jbraddockm.link.transport.cgi.CgiResponse;
 import com.jbraddockm.link.transport.cgi.QueryParameter;
 import com.jbraddockm.link.transport.cgi.Step;
-import java.util.Map;
 import java.util.function.UnaryOperator;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -128,6 +127,24 @@ class PimSyncConversationTest {
     }
 
     @Test
+    @DisplayName("explains a code it knows, beside the device's own code and message")
+    void explainsAKnownCode() {
+      var result = finished(answer("pim--no-changes.json"));
+
+      assertThat(result.toJson())
+          .containsEntry("code", 1016)
+          .containsEntry("message", "No Changes");
+      assertThat(result.toJson())
+          .containsEntry("explanation", PimStatusCode.explain(1016).orElseThrow());
+    }
+
+    @Test
+    @DisplayName("adds no explanation for a code it does not know")
+    void doesNotExplainAnUnknownCode() {
+      assertThat(finished(answer("pim--other-error.json")).toJson().get("explanation")).isNull();
+    }
+
+    @Test
     @DisplayName(
         "of 1016 No Changes is a normal result, not a refusal — it is how a quiet round ends")
     void noChangesIsAnAnswer() {
@@ -187,7 +204,8 @@ class PimSyncConversationTest {
       var error = failed(step);
       assertThat(error.code()).isEqualTo(CoreErrorCode.COMMAND_FAILED);
       assertThat(error.message()).isEqualTo(message);
-      assertThat(error.details()).isEqualTo(Map.of("code", code));
+      assertThat(error.details()).containsEntry("code", code);
+      assertThat(error.details().get("explanation")).asString().isNotBlank();
       assertThat(partial(step)).hasValueSatisfying(kept -> assertThat(kept.code()).isEqualTo(code));
     }
 

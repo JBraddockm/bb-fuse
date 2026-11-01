@@ -103,7 +103,11 @@ public final class PimSyncConversation implements Conversation<PimAnswer> {
           new ServiceError(
               CoreErrorCode.COMMAND_FAILED,
               message == null || message.isBlank() ? "The device rejected the request" : message,
-              Json.object("code", status.get().code())),
+              Json.object(
+                  "code",
+                  status.get().code(),
+                  "explanation",
+                  PimStatusCode.explain(status.get().code()).orElse(null))),
           Optional.of(answer));
     }
     return new Step.Finish<>(answer);
