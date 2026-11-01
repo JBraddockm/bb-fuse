@@ -3,6 +3,7 @@ package com.jbraddockm.link.endpoint.pimsync.item;
 import com.jbraddockm.core.error.InvalidArgumentException;
 import com.jbraddockm.core.json.Json;
 import com.jbraddockm.link.endpoint.pimsync.PimAnswer;
+import com.jbraddockm.link.endpoint.pimsync.PimArguments;
 import com.jbraddockm.link.endpoint.pimsync.PimCommand;
 import com.jbraddockm.link.endpoint.pimsync.PimService;
 import com.jbraddockm.link.endpoint.pimsync.PimSyncConversation;
@@ -36,9 +37,7 @@ public record FinishPimSync(String workstationId, PimService service, Map<String
    *     a sync round covers, or the payload is empty
    */
   public FinishPimSync {
-    if (workstationId == null || workstationId.isBlank()) {
-      throw new InvalidArgumentException("workstationId", "is required");
-    }
+    PimArguments.required("workstationId", workstationId);
     Objects.requireNonNull(service, "service");
     if (service == PimService.CALENDARS) {
       throw new InvalidArgumentException("service", "must be contacts or events for a sync round");

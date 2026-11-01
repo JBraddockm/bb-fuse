@@ -3,6 +3,7 @@ package com.jbraddockm.link.endpoint.pimsync.item;
 import com.jbraddockm.core.error.InvalidArgumentException;
 import com.jbraddockm.core.json.Json;
 import com.jbraddockm.link.endpoint.pimsync.PimAnswer;
+import com.jbraddockm.link.endpoint.pimsync.PimArguments;
 import com.jbraddockm.link.endpoint.pimsync.PimCommand;
 import com.jbraddockm.link.endpoint.pimsync.PimService;
 import com.jbraddockm.link.endpoint.pimsync.PimSyncConversation;
@@ -19,14 +20,9 @@ import java.util.Objects;
 
 /**
  * Creates or updates one item — a contact, event or calendar — in a workstation's account. The
- * item's fields are the client's own and bb-link does not interpret them, but the body
- * <em>shape</em> is the device's and differs by service: the {@code contacts} and {@code events}
- * endpoints are <em>batches</em> that expect a JSON <em>array</em> of items (contacts even paginate
- * by slicing the body), so the one item is sent as a single-element array {@code [item]}; the
- * {@code calendars} endpoint takes a single calendar <em>object</em>, so it is sent as the bare
- * object. Sending the wrong shape makes the backend raise (a slice {@code TypeError} for contacts,
- * or {@code .get} on a list for calendars) and answer a generic 404. Changes the device, so it is
- * never repeated after a dropped connection.
+ * item's fields are the client's own; bb-link forwards them without interpreting them. Only the
+ * body shape is bb-link's concern, and it differs by service (see {@link #conversation()}). Changes
+ * the device, so it is never repeated after a dropped connection.
  *
  * @param workstationId the client identifier whose account holds the item
  * @param service the kind of item
@@ -42,9 +38,7 @@ public record PutPimItem(String workstationId, PimService service, Map<String, O
    * @throws InvalidArgumentException if the workstation is missing or blank, or the item is empty
    */
   public PutPimItem {
-    if (workstationId == null || workstationId.isBlank()) {
-      throw new InvalidArgumentException("workstationId", "is required");
-    }
+    PimArguments.required("workstationId", workstationId);
     Objects.requireNonNull(service, "service");
     Objects.requireNonNull(item, "item");
     if (item.isEmpty()) {

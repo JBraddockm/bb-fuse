@@ -2,6 +2,7 @@ package com.jbraddockm.link.endpoint.pimsync.item;
 
 import com.jbraddockm.core.error.InvalidArgumentException;
 import com.jbraddockm.link.endpoint.pimsync.PimAnswer;
+import com.jbraddockm.link.endpoint.pimsync.PimArguments;
 import com.jbraddockm.link.endpoint.pimsync.PimCommand;
 import com.jbraddockm.link.endpoint.pimsync.PimFilters;
 import com.jbraddockm.link.endpoint.pimsync.PimService;
@@ -29,9 +30,7 @@ public record GetPimItems(String workstationId, PimService service, PimFilters f
    * @throws InvalidArgumentException if the workstation identifier is missing or blank
    */
   public GetPimItems {
-    if (workstationId == null || workstationId.isBlank()) {
-      throw new InvalidArgumentException("workstationId", "is required");
-    }
+    PimArguments.required("workstationId", workstationId);
     Objects.requireNonNull(service, "service");
     Objects.requireNonNull(filters, "filters");
   }

@@ -2,6 +2,7 @@ package com.jbraddockm.link.endpoint.pimsync.photo;
 
 import com.jbraddockm.core.error.InvalidArgumentException;
 import com.jbraddockm.core.json.Json;
+import com.jbraddockm.link.endpoint.pimsync.PimArguments;
 import com.jbraddockm.link.endpoint.pimsync.PimCommand;
 import com.jbraddockm.link.transport.cgi.CgiRequest;
 import com.jbraddockm.link.transport.cgi.Conversation;
@@ -13,14 +14,10 @@ import java.util.Objects;
 
 /**
  * Sends one contact photo to the device. The multipart body carries two parts: the image (as the
- * {@code upload_filename} part) and a {@code data} form field with the contact descriptor. The
- * device reads {@code data} from the body (not the query, the way it reads command/service),
- * renames the upload, and wraps the descriptor as {@code [{<data>,"filepath":"…"}]}; the backend
- * iterates that array and finds the contact by its {@code id}. So {@code data} is the descriptor's
- * inner fields with no enclosing braces ({@code "id":…,"account_id":…}) — a bare object, or {@code
- * data} placed in the query, yields a malformed {@code [{…}]} / {@code [{,…}]} and a 404. The
- * device generates the size variants from this one image. It refuses a photo over its size limit
- * with status 1004. Changes the device, so it is never repeated after a dropped connection.
+ * {@code upload_filename} part) and a {@code data} field with the contact descriptor, in the exact
+ * shape the device expects (see {@link #conversation()}). The device generates the stored size
+ * variants from this one image, and refuses a photo over its size limit with status 1004. Changes
+ * the device, so it is never repeated after a dropped connection.
  *
  * @param workstationId the client identifier whose account the photo belongs to
  * @param accountId the account the photo is stored under
@@ -40,15 +37,9 @@ public record PutPimPhoto(String workstationId, String accountId, String objectI
    *     blank
    */
   public PutPimPhoto {
-    if (workstationId == null || workstationId.isBlank()) {
-      throw new InvalidArgumentException("workstationId", "is required");
-    }
-    if (accountId == null || accountId.isBlank()) {
-      throw new InvalidArgumentException("accountId", "is required");
-    }
-    if (objectId == null || objectId.isBlank()) {
-      throw new InvalidArgumentException("objectId", "is required");
-    }
+    PimArguments.required("workstationId", workstationId);
+    PimArguments.required("accountId", accountId);
+    PimArguments.required("objectId", objectId);
     Objects.requireNonNull(file, "file");
   }
 

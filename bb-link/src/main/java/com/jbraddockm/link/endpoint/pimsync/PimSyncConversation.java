@@ -1,8 +1,5 @@
 package com.jbraddockm.link.endpoint.pimsync;
 
-import com.jbraddockm.core.error.CoreErrorCode;
-import com.jbraddockm.core.error.ServiceError;
-import com.jbraddockm.core.json.Json;
 import com.jbraddockm.link.transport.cgi.CgiRequest;
 import com.jbraddockm.link.transport.cgi.CgiResponse;
 import com.jbraddockm.link.transport.cgi.Conversation;
@@ -11,8 +8,6 @@ import com.jbraddockm.link.transport.cgi.QueryParameter;
 import com.jbraddockm.link.transport.cgi.ResponseBody;
 import com.jbraddockm.link.transport.cgi.ResponseEnvelope;
 import com.jbraddockm.link.transport.cgi.Step;
-import java.util.Optional;
-import java.util.Set;
 import java.util.function.UnaryOperator;
 
 /**
@@ -27,14 +22,6 @@ import java.util.function.UnaryOperator;
  * and 1015 are **[RESEARCH]**. Any other answer is a result.
  */
 public final class PimSyncConversation implements Conversation<PimAnswer> {
-
-  private static final int INVALID_PARAMETERS = 1001;
-  private static final int UNAUTHORIZED = 1013;
-  private static final int UNSUPPORTED = 1015;
-
-  /** The statuses with which the device says no. */
-  private static final Set<Integer> REJECTIONS =
-      Set.of(INVALID_PARAMETERS, UNAUTHORIZED, UNSUPPORTED);
 
   private final CgiRequest request;
   private final PimCommand command;
@@ -87,29 +74,16 @@ public final class PimSyncConversation implements Conversation<PimAnswer> {
 
   @Override
   public Step<PimAnswer> onAnswer(CgiResponse response, ResponseEnvelope envelope) {
-    var status = PimStatus.read(response.body());
+    var status = PimStatus.read(response.body()).orElse(null);
     var answer =
         new PimAnswer(
             command,
             service,
             response.statusCode(),
             response.contentType(),
-            status.map(PimStatus::code).orElse(null),
-            status.map(PimStatus::message).orElse(null),
+            status == null ? null : status.code(),
+            status == null ? null : status.message(),
             ResponseBody.of(response.body()));
-    if (status.isPresent() && REJECTIONS.contains(status.get().code())) {
-      var message = status.get().message();
-      return new Step.Fail<>(
-          new ServiceError(
-              CoreErrorCode.COMMAND_FAILED,
-              message == null || message.isBlank() ? "The device rejected the request" : message,
-              Json.object(
-                  "code",
-                  status.get().code(),
-                  "explanation",
-                  PimStatusCode.explain(status.get().code()).orElse(null))),
-          Optional.of(answer));
-    }
-    return new Step.Finish<>(answer);
+    return PimOutcome.resultOrRejection(status, answer);
   }
 }

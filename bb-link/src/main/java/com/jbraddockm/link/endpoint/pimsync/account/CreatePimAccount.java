@@ -2,6 +2,7 @@ package com.jbraddockm.link.endpoint.pimsync.account;
 
 import com.jbraddockm.core.error.InvalidArgumentException;
 import com.jbraddockm.link.endpoint.pimsync.PimAnswer;
+import com.jbraddockm.link.endpoint.pimsync.PimArguments;
 import com.jbraddockm.link.endpoint.pimsync.PimCommand;
 import com.jbraddockm.link.endpoint.pimsync.PimSyncConversation;
 import com.jbraddockm.link.transport.cgi.Conversation;
@@ -29,12 +30,8 @@ public record CreatePimAccount(String workstationId, String workstationName)
    * @throws InvalidArgumentException if either value is missing or blank
    */
   public CreatePimAccount {
-    if (workstationId == null || workstationId.isBlank()) {
-      throw new InvalidArgumentException("workstationId", "is required");
-    }
-    if (workstationName == null || workstationName.isBlank()) {
-      throw new InvalidArgumentException("workstationName", "is required");
-    }
+    PimArguments.required("workstationId", workstationId);
+    PimArguments.required("workstationName", workstationName);
   }
 
   @Override

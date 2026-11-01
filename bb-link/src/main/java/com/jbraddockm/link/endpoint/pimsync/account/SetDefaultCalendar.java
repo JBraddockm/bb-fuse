@@ -2,6 +2,7 @@ package com.jbraddockm.link.endpoint.pimsync.account;
 
 import com.jbraddockm.core.error.InvalidArgumentException;
 import com.jbraddockm.link.endpoint.pimsync.PimAnswer;
+import com.jbraddockm.link.endpoint.pimsync.PimArguments;
 import com.jbraddockm.link.endpoint.pimsync.PimCommand;
 import com.jbraddockm.link.endpoint.pimsync.PimService;
 import com.jbraddockm.link.endpoint.pimsync.PimSyncConversation;
@@ -27,12 +28,8 @@ public record SetDefaultCalendar(String workstationId, String objectId)
    * @throws InvalidArgumentException if either value is missing or blank
    */
   public SetDefaultCalendar {
-    if (workstationId == null || workstationId.isBlank()) {
-      throw new InvalidArgumentException("workstationId", "is required");
-    }
-    if (objectId == null || objectId.isBlank()) {
-      throw new InvalidArgumentException("objectId", "is required");
-    }
+    PimArguments.required("workstationId", workstationId);
+    PimArguments.required("objectId", objectId);
   }
 
   @Override

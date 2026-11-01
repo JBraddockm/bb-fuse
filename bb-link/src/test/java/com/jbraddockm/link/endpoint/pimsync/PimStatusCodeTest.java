@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 /** Tests for {@link PimStatusCode}: the plain-language meaning bb-link adds to a device code. */
 @DisplayName("PimStatusCode: what a pimsync.cgi status code means")
@@ -43,6 +44,31 @@ class PimStatusCodeTest {
     @DisplayName("has nothing to say when there is no code at all")
     void noCodeHasNoMeaning() {
       assertThat(PimStatusCode.explain(null)).isEmpty();
+    }
+  }
+
+  @Nested
+  @DisplayName("telling a refusal apart")
+  class Rejections {
+
+    @ParameterizedTest(name = "code {0}")
+    @ValueSource(ints = {1001, 1013, 1015})
+    @DisplayName("1001, 1013 and 1015 are refusals")
+    void refusalCodes(int code) {
+      assertThat(PimStatusCode.isRejection(code)).isTrue();
+    }
+
+    @ParameterizedTest(name = "code {0}")
+    @ValueSource(ints = {0, 1002, 1008, 1016, -1, 2000})
+    @DisplayName("success, other errors, No Changes and an unknown code are not refusals")
+    void nonRefusalCodes(int code) {
+      assertThat(PimStatusCode.isRejection(code)).isFalse();
+    }
+
+    @Test
+    @DisplayName("no code is not a refusal")
+    void noCodeIsNotARefusal() {
+      assertThat(PimStatusCode.isRejection(null)).isFalse();
     }
   }
 }

@@ -2,6 +2,7 @@ package com.jbraddockm.link.endpoint.pimsync.photo;
 
 import com.jbraddockm.core.command.CommandResult;
 import com.jbraddockm.core.json.Json;
+import com.jbraddockm.link.endpoint.pimsync.PimStatusCode;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
@@ -10,7 +11,9 @@ import java.util.Optional;
  * What a contact-photo command produced. A successful {@code get} streamed an image to {@link
  * #file} and the binary never passed through a string; a {@code get} of an unchanged photo, and
  * every {@code put}, carries no file and reports the device's status {@link #code} and {@link
- * #message} instead. The image bytes themselves are on disk, not here.
+ * #message} instead. The JSON also carries an {@code explanation} of the code ({@link
+ * PimStatusCode}), as {@link com.jbraddockm.link.endpoint.pimsync.PimAnswer} does. The image bytes
+ * themselves are on disk, not here.
  *
  * @param httpStatus the HTTP status code
  * @param contentType the {@code Content-Type} the device answered with, or {@code null} if absent
@@ -43,6 +46,8 @@ public record PimPhoto(
         "code",
         code,
         "message",
-        message);
+        message,
+        "explanation",
+        PimStatusCode.explain(code).orElse(null));
   }
 }

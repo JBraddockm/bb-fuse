@@ -1,6 +1,7 @@
 package com.jbraddockm.link.endpoint.pimsync.photo;
 
 import com.jbraddockm.core.error.InvalidArgumentException;
+import com.jbraddockm.link.endpoint.pimsync.PimArguments;
 import com.jbraddockm.link.endpoint.pimsync.PimCommand;
 import com.jbraddockm.link.transport.cgi.CgiRequest;
 import com.jbraddockm.link.transport.cgi.Conversation;
@@ -33,12 +34,8 @@ public record GetPimPhoto(
    * @throws InvalidArgumentException if the workstation or the path is missing or blank
    */
   public GetPimPhoto {
-    if (workstationId == null || workstationId.isBlank()) {
-      throw new InvalidArgumentException("workstationId", "is required");
-    }
-    if (path == null || path.isBlank()) {
-      throw new InvalidArgumentException("path", "is required");
-    }
+    PimArguments.required("workstationId", workstationId);
+    PimArguments.required("path", path);
     Objects.requireNonNull(destination, "destination");
     Objects.requireNonNull(updatedTime, "updatedTime");
   }

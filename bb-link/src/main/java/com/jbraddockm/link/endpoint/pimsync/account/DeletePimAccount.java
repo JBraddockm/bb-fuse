@@ -2,6 +2,7 @@ package com.jbraddockm.link.endpoint.pimsync.account;
 
 import com.jbraddockm.core.error.InvalidArgumentException;
 import com.jbraddockm.link.endpoint.pimsync.PimAnswer;
+import com.jbraddockm.link.endpoint.pimsync.PimArguments;
 import com.jbraddockm.link.endpoint.pimsync.PimCommand;
 import com.jbraddockm.link.endpoint.pimsync.PimSyncConversation;
 import com.jbraddockm.link.transport.cgi.Conversation;
@@ -22,9 +23,7 @@ public record DeletePimAccount(String workstationId) implements DeviceCommand<Pi
    * @throws InvalidArgumentException if the identifier is missing or blank
    */
   public DeletePimAccount {
-    if (workstationId == null || workstationId.isBlank()) {
-      throw new InvalidArgumentException("workstationId", "is required");
-    }
+    PimArguments.required("workstationId", workstationId);
   }
 
   @Override

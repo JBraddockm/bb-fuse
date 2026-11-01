@@ -3,6 +3,7 @@ package com.jbraddockm.link.endpoint.pimsync.item;
 import com.jbraddockm.core.error.InvalidArgumentException;
 import com.jbraddockm.core.json.Json;
 import com.jbraddockm.link.endpoint.pimsync.PimAnswer;
+import com.jbraddockm.link.endpoint.pimsync.PimArguments;
 import com.jbraddockm.link.endpoint.pimsync.PimCommand;
 import com.jbraddockm.link.endpoint.pimsync.PimService;
 import com.jbraddockm.link.endpoint.pimsync.PimSyncConversation;
@@ -17,17 +18,10 @@ import java.util.Objects;
 
 /**
  * Removes one item — a contact, event or calendar — from a workstation's account, named by its
- * object identifier. Every delete is a POST carrying a {@code data} field, but what {@code data}
- * holds differs by service. For {@code contacts} and {@code events} the endpoint is a
- * <em>batch</em> that reads the ids from {@code data} as {@code {"type":"id","ids":[…]}} (the
- * {@code type} selects whether an id is the device's own object id or a sync id), so the one object
- * id is posted as a one-element {@code ids} array. For {@code calendars} there is no batch delete:
- * the device removes a calendar only through {@code DELETE /bblink/calendar/<account>/<id>} (the id
- * in the path, no body), and the CGI builds that path by formatting the {@code data} value straight
- * in — so {@code data} is the bare object id, not a JSON object. (Confirmed from the CGI: {@code
- * extract_data_param} feeds the calendar-delete path builder, which does {@code snprintf("/%s",
- * data)} with an HTTP {@code DELETE}.) Changes the device, so it is never repeated after a dropped
- * connection.
+ * object identifier. The {@code data} the device expects differs by service (see {@link
+ * #conversation()}): a batch {@code {"type":"id","ids":[…]}} for contacts and events, and the bare
+ * id for calendars, which have no batch delete. Changes the device, so it is never repeated after a
+ * dropped connection.
  *
  * @param workstationId the client identifier whose account holds the item
  * @param service the kind of item
@@ -43,13 +37,9 @@ public record DeletePimItem(String workstationId, PimService service, String obj
    *     blank
    */
   public DeletePimItem {
-    if (workstationId == null || workstationId.isBlank()) {
-      throw new InvalidArgumentException("workstationId", "is required");
-    }
+    PimArguments.required("workstationId", workstationId);
     Objects.requireNonNull(service, "service");
-    if (objectId == null || objectId.isBlank()) {
-      throw new InvalidArgumentException("objectId", "is required");
-    }
+    PimArguments.required("objectId", objectId);
   }
 
   @Override
