@@ -2,7 +2,6 @@ package com.jbraddockm.link.endpoint.backup;
 
 import com.jbraddockm.core.command.CommandListener;
 import com.jbraddockm.core.command.CommandOutcome;
-import com.jbraddockm.core.command.LogLevel;
 import com.jbraddockm.core.command.Progress;
 import com.jbraddockm.core.error.CoreErrorCode;
 import com.jbraddockm.core.error.ServiceError;
@@ -12,22 +11,24 @@ import com.jbraddockm.link.endpoint.characteristics.SessionCharacteristics;
 import com.jbraddockm.link.endpoint.properties.DeviceProperties;
 import com.jbraddockm.link.endpoint.properties.GetDeviceProperties;
 import com.jbraddockm.link.endpoint.properties.InstalledPackage;
+import com.jbraddockm.link.transport.cgi.DeviceCommand;
 import com.jbraddockm.link.transport.cgi.Step;
 import com.jbraddockm.link.transport.session.DeviceSession;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Backs the device up into a {@code .bbb} file: it reads the categories, downloads the selected
  * ones to temporary files, records the device's PIN and software version, and writes the archive.
  * The temporary files are removed whether it succeeds or fails.
  *
- * <p>The device must hold a backup-and-restore key in its session for the data to stream; how the
- * key gets there is outside bb-link (see the backup analysis). Without it, a category streams empty
- * and the command fails with {@code NO_BACKUP_DATA}.
+ * <p>The device does the crypto; bb-link stores its encrypted archives verbatim and never handles
+ * the key (see {@code analysis/endpoints/BackupCGI.md}).
  */
 public final class DeviceBackup {
 
@@ -40,7 +41,7 @@ public final class DeviceBackup {
    *
    * @return a fresh read-only command
    */
-  public static com.jbraddockm.link.transport.cgi.DeviceCommand<?> replayCommand() {
+  public static DeviceCommand<?> replayCommand() {
     return new ListCategories();
   }
 
@@ -73,8 +74,8 @@ public final class DeviceBackup {
     // The PIN comes from discovery.cgi, the same source connect uses.
     return switch (SessionCharacteristics.read(session, listener)) {
       case Step.Finish<DeviceCharacteristics>(var characteristics) -> characteristics.pin();
-      case Step.Fail<DeviceCharacteristics> ignored -> null;
-      case Step.Send<DeviceCharacteristics> ignored -> null;
+      case Step.Fail<DeviceCharacteristics> _ -> null;
+      case Step.Send<DeviceCharacteristics> _ -> null;
     };
   }
 
@@ -84,23 +85,6 @@ public final class DeviceBackup {
           properties.operatingSystem().map(InstalledPackage::version).orElse(null);
       case CommandOutcome.Failed<DeviceProperties> _ -> null;
     };
-  }
-
-  private static void deleteQuietly(List<Path> files, Path directory, CommandListener listener) {
-    for (var file : files) {
-      try {
-        Files.deleteIfExists(file);
-      } catch (IOException failure) {
-        listener.onLog(
-            LogLevel.DEBUG, "Could not remove a temporary backup file: " + failure.getMessage());
-      }
-    }
-    try {
-      Files.deleteIfExists(directory);
-    } catch (IOException failure) {
-      listener.onLog(
-          LogLevel.DEBUG, "Could not remove the temporary backup folder: " + failure.getMessage());
-    }
   }
 
   /**
@@ -179,15 +163,16 @@ public final class DeviceBackup {
       var categoryBytes =
           streamed.categories().stream()
               .collect(
-                  java.util.stream.Collectors.toMap(
+                  Collectors.toMap(
                       downloaded -> downloaded.category().wireName(),
                       DownloadedCategory::bytes,
                       (a, _) -> a,
-                      java.util.LinkedHashMap::new));
+                      LinkedHashMap::new));
       return CommandOutcome.succeeded(
           new BackupResult(request.outputFile(), totalBytes, pin, softwareVersion, categoryBytes));
     } finally {
-      deleteQuietly(targets.stream().map(CategoryTarget::destination).toList(), tempDir, listener);
+      TempFiles.deleteQuietly(
+          targets.stream().map(CategoryTarget::destination).toList(), tempDir, listener, "backup");
     }
   }
 

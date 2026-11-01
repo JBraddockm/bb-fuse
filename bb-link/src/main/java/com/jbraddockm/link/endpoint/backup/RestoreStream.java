@@ -7,8 +7,7 @@ import java.util.List;
 
 /**
  * Uploads the categories of a {@code .bbb} back to the device, one form-and-upload conversation on
- * one connection. The device decrypts each category with its backup-and-restore key and applies it,
- * then resets.
+ * one connection. The device decrypts and applies each category, then resets.
  *
  * <p>Destructive: it overwrites the device's data and ends in a reset. It is never replayed after a
  * dropped connection.

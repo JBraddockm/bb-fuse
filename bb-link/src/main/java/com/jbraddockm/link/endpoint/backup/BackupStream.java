@@ -13,11 +13,11 @@ import java.util.Objects;
  * category. The conversation does no file handling of its own; each category is streamed to the
  * destination its {@link CategoryTarget} names.
  *
- * <p>When {@code appPackageTypes} is non-empty the conversation runs the rev2 variant: the
- * {@code mode=} start carries {@code opt=rev2} and the {@code app} data step carries
- * {@code pkgtype}, so only those package types of the app category are streamed. {@code opt=rev2}
- * is not repeated on the activity/data steps (that empties the stream on this firmware). Other
- * categories are unaffected.
+ * <p>When {@code appPackageTypes} is non-empty the conversation runs the rev2 variant: the {@code
+ * mode=} start carries {@code opt=rev2} and the {@code app} data step carries {@code pkgtype}, so
+ * only those package types of the app category are streamed. {@code opt=rev2} is not repeated on
+ * the activity/data steps (that breaks the data stream on this firmware). Other categories are
+ * unaffected.
  *
  * <p>The command changes nothing on the device, but it is not marked read-only: the cookie-stateful
  * backup session must not be replayed from the start after a dropped connection.

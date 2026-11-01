@@ -5,8 +5,6 @@
  * into a {@code .bbb} file ({@link com.jbraddockm.link.endpoint.backup.DeviceBackup}); a restore
  * uploads those archives back and the device resets to apply them ({@link
  * com.jbraddockm.link.endpoint.backup.DeviceRestore}). The device does all the encryption: bb-link
- * stores and returns its archives verbatim and never looks inside them. The device must already
- * hold a backup-and-restore key in its session for the data to move; supplying that key is outside
- * bb-link.
+ * stores and returns its archives verbatim and never looks inside them.
  */
 package com.jbraddockm.link.endpoint.backup;

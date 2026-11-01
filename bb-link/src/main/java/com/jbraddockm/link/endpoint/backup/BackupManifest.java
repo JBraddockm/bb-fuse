@@ -6,7 +6,6 @@ import com.jbraddockm.link.transport.xml.XmlParser;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 /**
  * The manifest of a {@code .bbb} archive. This is bb-link's own, simple format — it is not meant to
@@ -97,28 +96,13 @@ record BackupManifest(String pin, String softwareVersion, List<Entry> archives) 
           new Entry(
               category.get(),
               fileName,
-              longAttribute(element),
+              BackupNumbers.attributeOrZero(element, "bytesize"),
               element.attribute("pkgtype").orElse(null)));
     }
     if (entries.isEmpty()) {
       throw new IllegalArgumentException("the manifest lists no categories");
     }
     return new BackupManifest(pin, softwareVersion, entries);
-  }
-
-  private static long longAttribute(XmlElement element) {
-    return element
-        .attribute("bytesize")
-        .map(String::strip)
-        .flatMap(
-            text -> {
-              try {
-                return Optional.of(Long.parseLong(text));
-              } catch (NumberFormatException _) {
-                return Optional.empty();
-              }
-            })
-        .orElse(0L);
   }
 
   private static void attribute(StringBuilder builder, String name, String value) {

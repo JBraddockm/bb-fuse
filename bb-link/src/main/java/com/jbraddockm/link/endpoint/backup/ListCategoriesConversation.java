@@ -11,7 +11,6 @@ import com.jbraddockm.link.transport.cgi.XmlConversation;
 import com.jbraddockm.link.transport.xml.XmlElement;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Asks the device for the categories it can back up: a form post of {@code query=list&opt=rev2},
@@ -37,26 +36,11 @@ final class ListCategoriesConversation extends XmlConversation<BackupInventory> 
                       new SubPackage(
                           pkgid,
                           type,
-                          longAttribute(element, "bytesize"),
-                          (int) longAttribute(element, "count"),
+                          BackupNumbers.attributeOrZero(element, "bytesize"),
+                          (int) BackupNumbers.attributeOrZero(element, "count"),
                           element.attribute("name").orElse(""))));
     }
     return packages;
-  }
-
-  private static long longAttribute(XmlElement element, String name) {
-    return element
-        .attribute(name)
-        .map(String::strip)
-        .flatMap(
-            text -> {
-              try {
-                return Optional.of(Long.parseLong(text));
-              } catch (NumberFormatException _) {
-                return Optional.empty();
-              }
-            })
-        .orElse(0L);
   }
 
   @Override
@@ -90,8 +74,8 @@ final class ListCategoriesConversation extends XmlConversation<BackupInventory> 
                   categories.add(
                       new AvailableCategory(
                           category,
-                          longAttribute(element, "bytesize"),
-                          (int) longAttribute(element, "count"),
+                          BackupNumbers.attributeOrZero(element, "bytesize"),
+                          (int) BackupNumbers.attributeOrZero(element, "count"),
                           element.attribute("readystate").orElse("").strip().equals("1"),
                           element.attribute("perimetertype").orElse(null),
                           subPackagesOf(element))));

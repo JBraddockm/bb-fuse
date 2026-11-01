@@ -2,11 +2,11 @@ package com.jbraddockm.link.endpoint.backup;
 
 import com.jbraddockm.core.command.CommandListener;
 import com.jbraddockm.core.command.CommandOutcome;
-import com.jbraddockm.core.command.LogLevel;
 import com.jbraddockm.core.error.CoreErrorCode;
 import com.jbraddockm.core.error.ServiceError;
 import com.jbraddockm.core.json.Json;
 import com.jbraddockm.link.LinkErrorCode;
+import com.jbraddockm.link.transport.cgi.DeviceCommand;
 import com.jbraddockm.link.transport.session.DeviceSession;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -20,8 +20,7 @@ import java.util.List;
  * resets.
  *
  * <p>Destructive. Nothing is sent to the device unless the request confirms the restore; the
- * confirmation is checked before the archive is even opened. The device must hold the same
- * backup-and-restore key the archive was made with, or it cannot decrypt what is uploaded.
+ * confirmation is checked before the archive is even opened.
  */
 public final class DeviceRestore {
 
@@ -35,8 +34,9 @@ public final class DeviceRestore {
    *
    * @return a fresh command
    */
-  public static com.jbraddockm.link.transport.cgi.DeviceCommand<?> replayCommand() {
-    return RestoreStream.of(List.of(new UploadTarget(BackupCategory.SETTINGS, Path.of("replay.tar"), 0)));
+  public static DeviceCommand<?> replayCommand() {
+    return RestoreStream.of(
+        List.of(new UploadTarget(BackupCategory.SETTINGS, Path.of("replay.tar"), 0)));
   }
 
   /**
@@ -97,8 +97,7 @@ public final class DeviceRestore {
         } catch (IllegalArgumentException bad) {
           return CommandOutcome.failed(
               new ServiceError(
-                  LinkErrorCode.BBB_UNREADABLE,
-                  "Could not read the backup: " + bad.getMessage()));
+                  LinkErrorCode.BBB_UNREADABLE, "Could not read the backup: " + bad.getMessage()));
         } catch (IOException failure) {
           return CommandOutcome.failed(
               new ServiceError(
@@ -110,13 +109,13 @@ public final class DeviceRestore {
 
       return switch (session.execute(RestoreStream.of(targets), listener)) {
         case CommandOutcome.Succeeded<RestoreStreamResult>(var result, _) ->
-            CommandOutcome.succeeded(
-                new RestoreResult(result.restored(), result.resetRequired()));
+            CommandOutcome.succeeded(new RestoreResult(result.restored(), result.resetRequired()));
         case CommandOutcome.Failed<RestoreStreamResult>(var error, _, _) ->
             CommandOutcome.failed(error);
       };
     } finally {
-      deleteQuietly(targets.stream().map(UploadTarget::file).toList(), tempDir, listener);
+      TempFiles.deleteQuietly(
+          targets.stream().map(UploadTarget::file).toList(), tempDir, listener, "restore");
     }
   }
 
@@ -141,23 +140,6 @@ public final class DeviceRestore {
             .filter(entry -> request.categories().contains(entry.category()))
             .toList();
     return new Resolution.Selected(selected);
-  }
-
-  private static void deleteQuietly(List<Path> files, Path directory, CommandListener listener) {
-    for (var file : files) {
-      try {
-        Files.deleteIfExists(file);
-      } catch (IOException failure) {
-        listener.onLog(
-            LogLevel.DEBUG, "Could not remove a temporary restore file: " + failure.getMessage());
-      }
-    }
-    try {
-      Files.deleteIfExists(directory);
-    } catch (IOException failure) {
-      listener.onLog(
-          LogLevel.DEBUG, "Could not remove the temporary restore folder: " + failure.getMessage());
-    }
   }
 
   /** The outcome of choosing which categories to restore. */
