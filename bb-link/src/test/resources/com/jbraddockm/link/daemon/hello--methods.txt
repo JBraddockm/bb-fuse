@@ -19,6 +19,8 @@ getPimPhoto
 putPimPhoto
 pairDevice
 removePairing
+pinSmbHost
+unpinSmbHost
 getAuthenticationCertificate
 renewPairing
 listDevices

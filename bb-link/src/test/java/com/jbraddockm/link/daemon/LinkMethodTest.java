@@ -70,6 +70,27 @@ class LinkMethodTest {
     return method.replayCommand(argument);
   }
 
+  /** A tunnel binding with canned coordinates, for the guard-over-tunnel test. */
+  private static final class StubBinding implements TunnelBinding {
+    @Override
+    public String ula() {
+      return "fd00::1";
+    }
+
+    @Override
+    public String smbHost() {
+      return "169.254.1.1";
+    }
+
+    @Override
+    public boolean isDown() {
+      return false;
+    }
+
+    @Override
+    public void close() {}
+  }
+
   @Nested
   @DisplayName("the reachability guard")
   class ReachabilityGuard {
@@ -128,27 +149,6 @@ class LinkMethodTest {
     }
   }
 
-  /** A tunnel binding with canned coordinates, for the guard-over-tunnel test. */
-  private static final class StubBinding implements TunnelBinding {
-    @Override
-    public String ula() {
-      return "fd00::1";
-    }
-
-    @Override
-    public String smbHost() {
-      return "169.254.1.1";
-    }
-
-    @Override
-    public boolean isDown() {
-      return false;
-    }
-
-    @Override
-    public void close() {}
-  }
-
   @Nested
   @DisplayName("the names")
   class Names {
@@ -172,6 +172,8 @@ class LinkMethodTest {
       "GET_PIM_PHOTO, getPimPhoto",
       "PUT_PIM_PHOTO, putPimPhoto",
       "PAIR_DEVICE, pairDevice",
+      "PIN_SMB_HOST, pinSmbHost",
+      "UNPIN_SMB_HOST, unpinSmbHost",
       "GET_AUTHENTICATION_CERTIFICATE, getAuthenticationCertificate",
       "LIST_DEVICES, listDevices",
       "INSPECT_PACKAGE, inspectPackage",
@@ -188,10 +190,10 @@ class LinkMethodTest {
     }
 
     @Test
-    @DisplayName("are 28, and distinct")
-    void areTwentySevenAndDistinct() {
+    @DisplayName("are 29, and distinct")
+    void areTwentyNineAndDistinct() {
       assertThat(Arrays.stream(LinkMethod.values()).map(LinkMethod::wireName))
-          .hasSize(27)
+          .hasSize(29)
           .doesNotHaveDuplicates();
     }
 
@@ -265,13 +267,12 @@ class LinkMethodTest {
     @Test
     @DisplayName("a photo is replayed with made-up identifiers, and takes no argument")
     void photos() {
+      Path destination = Path.of("replay.jpg");
       assertThat(replay(LinkMethod.GET_PIM_PHOTO))
-          .contains(
-              new GetPimPhoto("replay", "replay.path", Path.of("replay.jpg"), Optional.empty()));
+          .contains(new GetPimPhoto("replay", "replay.path", destination, Optional.empty()));
       assertThat(replay(LinkMethod.GET_PIM_PHOTO, "x")).isEmpty();
       assertThat(replay(LinkMethod.PUT_PIM_PHOTO))
-          .contains(
-              new PutPimPhoto("replay", "replay.account", "replay.object", Path.of("replay.jpg")));
+          .contains(new PutPimPhoto("replay", "replay.account", "replay.object", destination));
       assertThat(replay(LinkMethod.PUT_PIM_PHOTO, "x")).isEmpty();
     }
 
@@ -348,7 +349,14 @@ class LinkMethodTest {
 
     @ParameterizedTest(name = "{0}")
     @ValueSource(
-        strings = {"GET_SMB_CREDENTIALS", "LIST_DEVICES", "INSPECT_PACKAGE", "INSPECT_CERTIFICATE"})
+        strings = {
+          "GET_SMB_CREDENTIALS",
+          "LIST_DEVICES",
+          "INSPECT_PACKAGE",
+          "INSPECT_CERTIFICATE",
+          "PIN_SMB_HOST",
+          "UNPIN_SMB_HOST"
+        })
     @DisplayName("the methods that do not talk to a device by a recording cannot be replayed")
     void notReplayable(String name) {
       var method = LinkMethod.valueOf(name);
@@ -378,7 +386,14 @@ class LinkMethodTest {
     }
 
     @ParameterizedTest(name = "{0}")
-    @ValueSource(strings = {"LIST_DEVICES", "INSPECT_PACKAGE", "INSPECT_CERTIFICATE"})
+    @ValueSource(
+        strings = {
+          "LIST_DEVICES",
+          "INSPECT_PACKAGE",
+          "INSPECT_CERTIFICATE",
+          "PIN_SMB_HOST",
+          "UNPIN_SMB_HOST"
+        })
     @DisplayName("works on its own, with no session, when it looks at a file or at the network")
     void worksOnItsOwn(String name) {
       assertThat(LinkMethod.valueOf(name).spec(_ -> {}, new Pairing(), new CertificateRetrieval()))

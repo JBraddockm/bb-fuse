@@ -26,6 +26,7 @@ import com.jbraddockm.link.endpoint.pairing.InspectCertificate;
 import com.jbraddockm.link.endpoint.pairing.PairWithDevice;
 import com.jbraddockm.link.endpoint.pairing.Pairing;
 import com.jbraddockm.link.endpoint.pairing.PairingRequest;
+import com.jbraddockm.link.endpoint.pairing.PinSmbHost;
 import com.jbraddockm.link.endpoint.pairing.RemovePairing;
 import com.jbraddockm.link.endpoint.pairing.RenewPairing;
 import com.jbraddockm.link.endpoint.pairing.RenewRequest;
@@ -132,6 +133,18 @@ enum LinkMethod {
    * removed there. Needs no session or device.
    */
   REMOVE_PAIRING("removePairing"),
+
+  /**
+   * Pins an SMB host for a device, writing it to {@code device.json} in the device folder so later
+   * tunnel connects propose it. Purely local — it sends nothing to the device. Needs no session.
+   */
+  PIN_SMB_HOST("pinSmbHost"),
+
+  /**
+   * Clears a device's pinned SMB host, removing it from {@code device.json}. Purely local — it
+   * sends nothing to the device. Needs no session.
+   */
+  UNPIN_SMB_HOST("unpinSmbHost"),
 
   /**
    * Asks the device to sign a certificate for this computer, for the certificate login on port
@@ -351,6 +364,8 @@ enum LinkMethod {
           INSPECT_PACKAGE,
           INSPECT_CERTIFICATE,
           REMOVE_PAIRING,
+          PIN_SMB_HOST,
+          UNPIN_SMB_HOST,
           RENEW_PAIRING ->
           Optional.empty();
     };
@@ -478,6 +493,24 @@ enum LinkMethod {
                 var devices = params.requirePath("devicesDirectory");
                 var pin = params.requireString("pin");
                 return reply -> reply.complete(wireName, RemovePairing.remove(devices, pin), false);
+              });
+      case PIN_SMB_HOST ->
+          new CommandSpec.Standalone<>(
+              wireName,
+              params -> {
+                var devices = params.requirePath("devicesDirectory");
+                var pin = params.requireString("pin");
+                var smbHost = params.requireString("smbHost");
+                return reply ->
+                    reply.complete(wireName, PinSmbHost.pin(devices, pin, smbHost), false);
+              });
+      case UNPIN_SMB_HOST ->
+          new CommandSpec.Standalone<>(
+              wireName,
+              params -> {
+                var devices = params.requirePath("devicesDirectory");
+                var pin = params.requireString("pin");
+                return reply -> reply.complete(wireName, PinSmbHost.unpin(devices, pin), false);
               });
       case INSTALL_PACKAGES ->
           new CommandSpec.SessionScoped<>(
