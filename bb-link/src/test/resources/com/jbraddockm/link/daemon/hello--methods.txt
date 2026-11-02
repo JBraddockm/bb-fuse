@@ -2,6 +2,7 @@ connect
 disconnect
 shutdown
 getDeviceProperties
+setDeviceName
 getDeviceCharacteristics
 getSmbCredentials
 listPimAccounts

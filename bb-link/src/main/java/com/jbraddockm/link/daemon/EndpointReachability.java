@@ -50,6 +50,7 @@ final class EndpointReachability {
   private static final Map<LinkMethod, Endpoint> ENDPOINT_BY_METHOD =
       Map.ofEntries(
           Map.entry(LinkMethod.GET_DEVICE_PROPERTIES, Endpoint.DYNAMIC_PROPERTIES),
+          Map.entry(LinkMethod.SET_DEVICE_NAME, Endpoint.DYNAMIC_PROPERTIES),
           // discovery.cgi is served over USB and the tunnel but not the plain Wi-Fi LAN, so the
           // same reachability guard as the other management programs applies.
           Map.entry(LinkMethod.GET_DEVICE_CHARACTERISTICS, Endpoint.DISCOVERY),

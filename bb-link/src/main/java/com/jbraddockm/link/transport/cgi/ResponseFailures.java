@@ -122,4 +122,25 @@ public final class ResponseFailures {
                         + response.name(),
                     Json.object("expected", expected.elementName(), "received", response.name())));
   }
+
+  /**
+   * Finds why a response is not a usable answer of the expected kind: the error the device
+   * reported, or, when there is none, that the answer is a different element than the one awaited.
+   *
+   * @param response what the device answered
+   * @param expected the element a successful answer carries
+   * @return the error to fail with, or empty when the response is the expected element and reports
+   *     no error
+   */
+  public static Optional<ServiceError> failureFor(
+      ResponseEnvelope response, ResponseElement expected) {
+    var reported = reportedError(response);
+    if (reported.isPresent()) {
+      return reported;
+    }
+    if (response.element().orElse(null) != expected) {
+      return Optional.of(notExpected(response, expected));
+    }
+    return Optional.empty();
+  }
 }

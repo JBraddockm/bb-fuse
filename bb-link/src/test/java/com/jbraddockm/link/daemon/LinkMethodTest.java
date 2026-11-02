@@ -28,6 +28,7 @@ import com.jbraddockm.link.endpoint.pimsync.item.SummarizePimSync;
 import com.jbraddockm.link.endpoint.pimsync.photo.GetPimPhoto;
 import com.jbraddockm.link.endpoint.pimsync.photo.PutPimPhoto;
 import com.jbraddockm.link.endpoint.properties.GetDeviceProperties;
+import com.jbraddockm.link.endpoint.properties.SetDeviceName;
 import com.jbraddockm.link.endpoint.update.InstallPackages;
 import com.jbraddockm.link.endpoint.update.UninstallPackages;
 import com.jbraddockm.link.transport.cgi.Authentication;
@@ -156,6 +157,7 @@ class LinkMethodTest {
     @ParameterizedTest(name = "{0} is \"{1}\"")
     @CsvSource({
       "GET_DEVICE_PROPERTIES, getDeviceProperties",
+      "SET_DEVICE_NAME, setDeviceName",
       "GET_DEVICE_CHARACTERISTICS, getDeviceCharacteristics",
       "GET_SMB_CREDENTIALS, getSmbCredentials",
       "LIST_PIM_ACCOUNTS, listPimAccounts",
@@ -190,10 +192,10 @@ class LinkMethodTest {
     }
 
     @Test
-    @DisplayName("are 29, and distinct")
-    void areTwentyNineAndDistinct() {
+    @DisplayName("are 30, and distinct")
+    void areThirtyAndDistinct() {
       assertThat(Arrays.stream(LinkMethod.values()).map(LinkMethod::wireName))
-          .hasSize(29)
+          .hasSize(30)
           .doesNotHaveDuplicates();
     }
 
@@ -217,6 +219,13 @@ class LinkMethodTest {
       assertThat(replay(LinkMethod.LIST_PIM_ACCOUNTS)).containsInstanceOf(ListPimAccounts.class);
       assertThat(replay(LinkMethod.GET_DEVICE_PROPERTIES, "x")).isEmpty();
       assertThat(replay(LinkMethod.LIST_PIM_ACCOUNTS, "x")).isEmpty();
+    }
+
+    @Test
+    @DisplayName("setting the device name is replayed with a made-up name, and takes no argument")
+    void settingTheDeviceName() {
+      assertThat(replay(LinkMethod.SET_DEVICE_NAME)).contains(new SetDeviceName("Replay"));
+      assertThat(replay(LinkMethod.SET_DEVICE_NAME, "x")).isEmpty();
     }
 
     @Test
@@ -404,6 +413,7 @@ class LinkMethodTest {
     @ValueSource(
         strings = {
           "GET_DEVICE_PROPERTIES",
+          "SET_DEVICE_NAME",
           "GET_SMB_CREDENTIALS",
           "LIST_PIM_ACCOUNTS",
           "FIND_PIM_ACCOUNT",

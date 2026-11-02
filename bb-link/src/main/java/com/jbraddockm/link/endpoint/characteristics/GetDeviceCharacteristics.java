@@ -4,13 +4,13 @@ import com.jbraddockm.core.error.ServiceError;
 import com.jbraddockm.link.LinkErrorCode;
 import com.jbraddockm.link.transport.cgi.CgiRequest;
 import com.jbraddockm.link.transport.cgi.Conversation;
+import com.jbraddockm.link.transport.cgi.DeviceCommand;
 import com.jbraddockm.link.transport.cgi.Endpoint;
 import com.jbraddockm.link.transport.cgi.ResponseElement;
 import com.jbraddockm.link.transport.cgi.ResponseEnvelope;
 import com.jbraddockm.link.transport.cgi.ResponseFailures;
 import com.jbraddockm.link.transport.cgi.Step;
 import com.jbraddockm.link.transport.cgi.XmlConversation;
-import com.jbraddockm.link.transport.cgi.DeviceCommand;
 
 /**
  * Reads the device's characteristics from {@code discovery.cgi}: one GET, one answer. Cheaper than
@@ -31,13 +31,9 @@ public record GetDeviceCharacteristics() implements DeviceCommand<DeviceCharacte
    *     Step.Fail}
    */
   static Step<DeviceCharacteristics> interpret(ResponseEnvelope response) {
-    var reported = ResponseFailures.reportedError(response);
-    if (reported.isPresent()) {
-      return new Step.Fail<>(reported.get());
-    }
-    if (response.element().orElse(null) != ResponseElement.DEVICE_CHARACTERISTICS) {
-      return new Step.Fail<>(
-          ResponseFailures.notExpected(response, ResponseElement.DEVICE_CHARACTERISTICS));
+    var failure = ResponseFailures.failureFor(response, ResponseElement.DEVICE_CHARACTERISTICS);
+    if (failure.isPresent()) {
+      return new Step.Fail<>(failure.get());
     }
     return DeviceCharacteristicsParser.parse(response.payload())
         .<Step<DeviceCharacteristics>>map(Step.Finish::new)

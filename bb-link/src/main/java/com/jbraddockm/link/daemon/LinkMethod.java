@@ -46,6 +46,7 @@ import com.jbraddockm.link.endpoint.pimsync.item.SummarizePimSync;
 import com.jbraddockm.link.endpoint.pimsync.photo.GetPimPhoto;
 import com.jbraddockm.link.endpoint.pimsync.photo.PutPimPhoto;
 import com.jbraddockm.link.endpoint.properties.GetDeviceProperties;
+import com.jbraddockm.link.endpoint.properties.SetDeviceName;
 import com.jbraddockm.link.endpoint.update.BarSelection;
 import com.jbraddockm.link.endpoint.update.InspectPackage;
 import com.jbraddockm.link.endpoint.update.InstallPackages;
@@ -72,6 +73,9 @@ enum LinkMethod {
 
   /** Reads the device's identity and installed packages. */
   GET_DEVICE_PROPERTIES("getDeviceProperties"),
+
+  /** Sets the device's name. Changes the device. */
+  SET_DEVICE_NAME("setDeviceName"),
 
   /** Reads the device's characteristics (identity, PIN, status) from {@code discovery.cgi}. */
   GET_DEVICE_CHARACTERISTICS("getDeviceCharacteristics"),
@@ -284,6 +288,8 @@ enum LinkMethod {
     return switch (this) {
       case GET_DEVICE_PROPERTIES ->
           argument == null ? Optional.of(new GetDeviceProperties()) : Optional.empty();
+      case SET_DEVICE_NAME ->
+          argument == null ? Optional.of(new SetDeviceName("Replay")) : Optional.empty();
       case GET_DEVICE_CHARACTERISTICS ->
           argument == null ? Optional.of(new GetDeviceCharacteristics()) : Optional.empty();
       case LIST_PIM_ACCOUNTS ->
@@ -401,6 +407,7 @@ enum LinkMethod {
       DeviceScanner scanner, Pairing pairing, CertificateRetrieval retrieval) {
     return switch (this) {
       case GET_DEVICE_PROPERTIES -> onSession(_ -> new GetDeviceProperties());
+      case SET_DEVICE_NAME -> onSession(params -> new SetDeviceName(params.requireString("name")));
       case GET_DEVICE_CHARACTERISTICS -> onSession(_ -> new GetDeviceCharacteristics());
       case LIST_PIM_ACCOUNTS -> onSession(_ -> new ListPimAccounts());
       case FIND_PIM_ACCOUNT ->

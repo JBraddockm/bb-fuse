@@ -4,6 +4,7 @@ import com.jbraddockm.core.error.ServiceError;
 import com.jbraddockm.link.LinkErrorCode;
 import com.jbraddockm.link.transport.cgi.CgiRequest;
 import com.jbraddockm.link.transport.cgi.Conversation;
+import com.jbraddockm.link.transport.cgi.DeviceCommand;
 import com.jbraddockm.link.transport.cgi.Endpoint;
 import com.jbraddockm.link.transport.cgi.FormField;
 import com.jbraddockm.link.transport.cgi.ResponseElement;
@@ -11,7 +12,6 @@ import com.jbraddockm.link.transport.cgi.ResponseEnvelope;
 import com.jbraddockm.link.transport.cgi.ResponseFailures;
 import com.jbraddockm.link.transport.cgi.Step;
 import com.jbraddockm.link.transport.cgi.XmlConversation;
-import com.jbraddockm.link.transport.cgi.DeviceCommand;
 
 /** Reads the device's identity and installed packages. One request, one answer. */
 public record GetDeviceProperties() implements DeviceCommand<DeviceProperties> {
@@ -36,13 +36,9 @@ public record GetDeviceProperties() implements DeviceCommand<DeviceProperties> {
    *     Step.Fail}
    */
   public static Step<DeviceProperties> interpret(ResponseEnvelope response) {
-    var reported = ResponseFailures.reportedError(response);
-    if (reported.isPresent()) {
-      return new Step.Fail<>(reported.get());
-    }
-    if (response.element().orElse(null) != ResponseElement.DYNAMIC_PROPERTIES) {
-      return new Step.Fail<>(
-          ResponseFailures.notExpected(response, ResponseElement.DYNAMIC_PROPERTIES));
+    var failure = ResponseFailures.failureFor(response, ResponseElement.DYNAMIC_PROPERTIES);
+    if (failure.isPresent()) {
+      return new Step.Fail<>(failure.get());
     }
     return DevicePropertiesParser.parse(response.payload())
         .<Step<DeviceProperties>>map(Step.Finish::new)
