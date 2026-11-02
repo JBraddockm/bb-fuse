@@ -69,7 +69,7 @@ public final class TunnelManager implements Tunnels {
     Objects.requireNonNull(identity, "identity");
     var entry = byHost.get(host);
     if (entry == null) {
-      var inner = stable ? pool.allocateStable() : pool.allocate();
+      var inner = stable ? pool.allocate(1) : pool.allocate();
       Connection connection;
       try {
         connection = opener.open(host, inner, identity, cause -> evict(host, cause));

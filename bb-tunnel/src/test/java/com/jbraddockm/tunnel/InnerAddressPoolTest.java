@@ -10,7 +10,8 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 /**
- * Tests for {@link InnerAddressPool}: distinct per-session inner-IPv4 pairs with a stable override.
+ * Tests for {@link InnerAddressPool}: distinct per-session inner-IPv4 pairs, with a proposed octet
+ * honoured when free and countered when not.
  */
 @DisplayName("InnerAddressPool: per-session inner-IPv4 allocation")
 class InnerAddressPoolTest {
@@ -30,7 +31,7 @@ class InnerAddressPoolTest {
     }
 
     @Test
-    @DisplayName("never hands out the USB (k=0) or stable (k=1) blocks")
+    @DisplayName("with no preference never hands out k=0, k=1, or k=255")
     void neverHandsOutReservedBlocks() {
       InnerAddressPool pool = new InnerAddressPool();
 
@@ -49,7 +50,7 @@ class InnerAddressPoolTest {
     }
 
     @Test
-    @DisplayName("throws once all 253 non-stable blocks are in use")
+    @DisplayName("throws once all 253 no-preference blocks are in use")
     void throwsWhenExhausted() {
       InnerAddressPool pool = new InnerAddressPool();
       for (int i = 0; i < 253; i++) {
@@ -63,37 +64,45 @@ class InnerAddressPoolTest {
   }
 
   @Nested
-  @DisplayName("allocateStable, for a constant external-app SMB address")
-  class AllocateStable {
+  @DisplayName("allocate(preferredK), proposing a specific octet")
+  class Propose {
 
     @Test
-    @DisplayName("grants 169.254.1.1/.2 and keeps it out of allocate()")
-    void grantsTheStablePair() {
+    @DisplayName("honours a free proposed octet and keeps it out of later no-preference allocation")
+    void honoursAFreeProposal() {
       InnerAddressPool pool = new InnerAddressPool();
 
-      assertThat(pool.allocateStable()).isEqualTo(new InnerIpv4("169.254.1.2", "169.254.1.1"));
+      assertThat(pool.allocate(5)).isEqualTo(new InnerIpv4("169.254.5.2", "169.254.5.1"));
       assertThat(pool.allocate()).isEqualTo(new InnerIpv4("169.254.2.2", "169.254.2.1"));
     }
 
     @Test
-    @DisplayName("is available even after other sessions have allocated")
-    void staysAvailableAlongsideOtherSessions() {
+    @DisplayName("grants the constant k=1 only when proposed, never from allocate()")
+    void grantsTheConstantOnlyWhenProposed() {
       InnerAddressPool pool = new InnerAddressPool();
-      pool.allocate();
-      pool.allocate();
 
-      assertThat(pool.allocateStable()).isEqualTo(new InnerIpv4("169.254.1.2", "169.254.1.1"));
+      assertThat(pool.allocate()).isEqualTo(new InnerIpv4("169.254.2.2", "169.254.2.1"));
+      assertThat(pool.allocate(1)).isEqualTo(new InnerIpv4("169.254.1.2", "169.254.1.1"));
     }
 
     @Test
-    @DisplayName("throws if the stable pair is already in use")
-    void throwsWhenStableAlreadyTaken() {
+    @DisplayName("counter-offers the next free octet when the proposed one is taken")
+    void countersWhenTaken() {
       InnerAddressPool pool = new InnerAddressPool();
-      pool.allocateStable();
+      pool.allocate(); // takes k=2
 
-      assertThatThrownBy(pool::allocateStable)
-          .isInstanceOf(IllegalStateException.class)
-          .hasMessageContaining("already in use");
+      assertThat(pool.allocate(2)).isEqualTo(new InnerIpv4("169.254.3.2", "169.254.3.1"));
+    }
+
+    @Test
+    @DisplayName("counter-offers for an out-of-range or reserved proposal")
+    void countersForInvalidProposal() {
+      assertThat(new InnerAddressPool().allocate(0))
+          .isEqualTo(new InnerIpv4("169.254.2.2", "169.254.2.1"));
+      assertThat(new InnerAddressPool().allocate(255))
+          .isEqualTo(new InnerIpv4("169.254.2.2", "169.254.2.1"));
+      assertThat(new InnerAddressPool().allocate(999))
+          .isEqualTo(new InnerIpv4("169.254.2.2", "169.254.2.1"));
     }
   }
 
@@ -114,14 +123,14 @@ class InnerAddressPoolTest {
     }
 
     @Test
-    @DisplayName("frees the stable pair so it can be taken again")
-    void freesTheStablePair() {
+    @DisplayName("frees a proposed pair so it can be proposed again")
+    void freesAProposedPair() {
       InnerAddressPool pool = new InnerAddressPool();
-      InnerIpv4 stable = pool.allocateStable();
+      InnerIpv4 proposed = pool.allocate(1);
 
-      pool.release(stable);
+      pool.release(proposed);
 
-      assertThat(pool.allocateStable()).isEqualTo(stable);
+      assertThat(pool.allocate(1)).isEqualTo(proposed);
     }
 
     @Test
