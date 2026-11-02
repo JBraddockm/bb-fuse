@@ -78,7 +78,10 @@ final class EndpointReachability {
           // backup.cgi is served over USB and the tunnel but not the plain Wi-Fi LAN.
           Map.entry(LinkMethod.GET_BACKUP_INVENTORY, Endpoint.BACKUP),
           Map.entry(LinkMethod.BACKUP_DEVICE, Endpoint.BACKUP),
-          Map.entry(LinkMethod.RESTORE_DEVICE, Endpoint.BACKUP));
+          Map.entry(LinkMethod.RESTORE_DEVICE, Endpoint.BACKUP),
+          // reset.cgi is served over USB and the tunnel but not the plain Wi-Fi LAN.
+          Map.entry(LinkMethod.REBOOT, Endpoint.RESET),
+          Map.entry(LinkMethod.SHUTDOWN, Endpoint.RESET));
 
   private EndpointReachability() {}
 

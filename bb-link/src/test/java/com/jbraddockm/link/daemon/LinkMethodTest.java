@@ -30,6 +30,8 @@ import com.jbraddockm.link.endpoint.pimsync.photo.GetPimPhoto;
 import com.jbraddockm.link.endpoint.pimsync.photo.PutPimPhoto;
 import com.jbraddockm.link.endpoint.properties.GetDeviceProperties;
 import com.jbraddockm.link.endpoint.properties.SetDeviceName;
+import com.jbraddockm.link.endpoint.reset.ResetDevice;
+import com.jbraddockm.link.endpoint.reset.ResetMode;
 import com.jbraddockm.link.endpoint.update.InstallPackages;
 import com.jbraddockm.link.endpoint.update.UninstallPackages;
 import com.jbraddockm.link.transport.cgi.Authentication;
@@ -185,7 +187,9 @@ class LinkMethodTest {
       "INSPECT_CERTIFICATE, inspectCertificate",
       "GET_BACKUP_INVENTORY, getBackupInventory",
       "BACKUP_DEVICE, backupDevice",
-      "RESTORE_DEVICE, restoreDevice"
+      "RESTORE_DEVICE, restoreDevice",
+      "REBOOT, reboot",
+      "SHUTDOWN, powerOff"
     })
     @DisplayName("each method has the name that the protocol gives it, and is found by it")
     void eachMethodHasItsName(LinkMethod method, String name) {
@@ -194,10 +198,10 @@ class LinkMethodTest {
     }
 
     @Test
-    @DisplayName("are 31, and distinct")
-    void areThirtyOneAndDistinct() {
+    @DisplayName("are 33, and distinct")
+    void areThirtyThreeAndDistinct() {
       assertThat(Arrays.stream(LinkMethod.values()).map(LinkMethod::wireName))
-          .hasSize(31)
+          .hasSize(33)
           .doesNotHaveDuplicates();
     }
 
@@ -230,6 +234,15 @@ class LinkMethodTest {
     void settingTheDeviceName() {
       assertThat(replay(LinkMethod.SET_DEVICE_NAME)).contains(new SetDeviceName("Replay"));
       assertThat(replay(LinkMethod.SET_DEVICE_NAME, "x")).isEmpty();
+    }
+
+    @Test
+    @DisplayName("reboot and shutdown replay as their reset modes, and take no argument")
+    void rebootAndShutdown() {
+      assertThat(replay(LinkMethod.REBOOT)).contains(new ResetDevice(ResetMode.REBOOT));
+      assertThat(replay(LinkMethod.SHUTDOWN)).contains(new ResetDevice(ResetMode.SHUTDOWN));
+      assertThat(replay(LinkMethod.REBOOT, "x")).isEmpty();
+      assertThat(replay(LinkMethod.SHUTDOWN, "x")).isEmpty();
     }
 
     @Test
@@ -426,7 +439,9 @@ class LinkMethodTest {
           "GET_AUTHENTICATION_CERTIFICATE",
           "INSTALL_PACKAGES",
           "UNINSTALL_PACKAGES",
-          "GET_BACKUP_INVENTORY"
+          "GET_BACKUP_INVENTORY",
+          "REBOOT",
+          "SHUTDOWN"
         })
     @DisplayName("works on the session of a device when it talks to one")
     void worksOnASession(String name) {

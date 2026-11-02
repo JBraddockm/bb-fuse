@@ -48,6 +48,8 @@ import com.jbraddockm.link.endpoint.pimsync.photo.GetPimPhoto;
 import com.jbraddockm.link.endpoint.pimsync.photo.PutPimPhoto;
 import com.jbraddockm.link.endpoint.properties.GetDeviceProperties;
 import com.jbraddockm.link.endpoint.properties.SetDeviceName;
+import com.jbraddockm.link.endpoint.reset.ResetDevice;
+import com.jbraddockm.link.endpoint.reset.ResetMode;
 import com.jbraddockm.link.endpoint.update.BarSelection;
 import com.jbraddockm.link.endpoint.update.InspectPackage;
 import com.jbraddockm.link.endpoint.update.InstallPackages;
@@ -206,7 +208,20 @@ enum LinkMethod {
    * nothing unless the request confirms it. Reaches {@code backup.cgi}, so only over USB or the
    * tunnel.
    */
-  RESTORE_DEVICE("restoreDevice");
+  RESTORE_DEVICE("restoreDevice"),
+
+  /**
+   * Reboots the device through {@code reset.cgi}. The device answers, then restarts and the
+   * connection drops. Changes the device; reachable over USB or the tunnel.
+   */
+  REBOOT("reboot"),
+
+  /**
+   * Powers the device off through {@code reset.cgi}. The device answers, then shuts down. Changes
+   * the device; reachable over USB or the tunnel. Named {@code powerOff}, not {@code shutdown},
+   * because {@code shutdown} is the daemon's own reserved control method (it stops the daemon).
+   */
+  SHUTDOWN("powerOff");
 
   /** The package that a replayed installation is attributed to; what the recording says is kept. */
   private static final BarInfo REPLAY_BAR =
@@ -374,6 +389,10 @@ enum LinkMethod {
           argument == null ? Optional.of(DeviceBackup.replayCommand()) : Optional.empty();
       case RESTORE_DEVICE ->
           argument == null ? Optional.of(DeviceRestore.replayCommand()) : Optional.empty();
+      case REBOOT ->
+          argument == null ? Optional.of(new ResetDevice(ResetMode.REBOOT)) : Optional.empty();
+      case SHUTDOWN ->
+          argument == null ? Optional.of(new ResetDevice(ResetMode.SHUTDOWN)) : Optional.empty();
       case GET_SMB_CREDENTIALS,
           LIST_DEVICES,
           INSPECT_PACKAGE,
@@ -627,6 +646,8 @@ enum LinkMethod {
                     reply.complete(
                         wireName, new DeviceRestore().run(session, request, reply), includeRaw);
               });
+      case REBOOT -> onSession(_ -> new ResetDevice(ResetMode.REBOOT));
+      case SHUTDOWN -> onSession(_ -> new ResetDevice(ResetMode.SHUTDOWN));
     };
   }
 

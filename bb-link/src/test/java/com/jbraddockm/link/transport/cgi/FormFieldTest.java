@@ -44,9 +44,9 @@ class FormFieldTest {
 
   @Test
   @DisplayName("no two fields have the same name, and there are no others than these")
-  void thereAreTwentyTwoDistinctFields() {
+  void thereAreTwentyThreeDistinctFields() {
     assertThat(Arrays.stream(FormField.values()).map(FormField::wireName))
         .doesNotHaveDuplicates()
-        .hasSize(22);
+        .hasSize(23);
   }
 }

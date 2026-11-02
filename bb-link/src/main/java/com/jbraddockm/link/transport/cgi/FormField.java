@@ -9,6 +9,9 @@ public enum FormField implements WireValue {
   /** The action to perform. */
   ACTION("action"),
 
+  /** The kind of reset {@code reset.cgi} performs ({@code reset}/{@code shutdown}). */
+  RESET("reset"),
+
   /** A property name. */
   NAME("name"),
 

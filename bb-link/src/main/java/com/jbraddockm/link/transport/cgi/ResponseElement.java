@@ -18,6 +18,9 @@ public enum ResponseElement {
   /** The device characteristics from {@code discovery.cgi}. */
   DEVICE_CHARACTERISTICS("DeviceCharacteristics"),
 
+  /** The device's answer to a reboot or power-off through {@code reset.cgi}. */
+  RESET("Reset"),
+
   /** The device wants the client to authenticate again. */
   AUTH_CHALLENGE("AuthChallenge"),
 

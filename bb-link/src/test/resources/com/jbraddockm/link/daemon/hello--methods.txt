@@ -32,3 +32,5 @@ inspectCertificate
 getBackupInventory
 backupDevice
 restoreDevice
+reboot
+powerOff
