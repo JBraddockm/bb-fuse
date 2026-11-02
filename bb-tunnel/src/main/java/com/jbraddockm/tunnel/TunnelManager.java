@@ -52,24 +52,29 @@ public final class TunnelManager implements Tunnels {
 
   /**
    * The tunnel for the device reached at {@code host}: opened if it is not already up, or the
-   * existing one with its reference count raised. {@code stable} pins the preferred {@code
-   * 169.254.1.1/.2} (for a single-device or external-app mount that wants a constant SMB address);
-   * otherwise a free pair is allocated. The caller closes the returned {@link Lease} when done.
+   * existing one with its reference count raised. {@code proposedSmbHost} (an inner {@code
+   * 169.254.x.1} address, or {@code null} for no preference) is honoured when it is free and valid,
+   * otherwise a free pair is allocated; the lease's {@link Lease#deviceIpv4()} is the granted
+   * address. The caller closes the returned {@link Lease} when done.
    *
    * @param host the transport address the tunnel is opened with (USB host−1, or the Wi-Fi LAN
    *     address)
-   * @param stable whether to pin the preferred stable inner-IPv4 pair
+   * @param proposedSmbHost the inner {@code 169.254.x.1} address to prefer, or {@code null} for
+   *     none
    * @return a hold on the tunnel, carrying the coordinates to connect with
    * @throws Exception if the tunnel cannot be opened; the allocated pair is returned to the pool
    */
   @Override
-  public synchronized Lease acquire(String host, boolean stable, Identity identity)
+  public synchronized Lease acquire(String host, String proposedSmbHost, Identity identity)
       throws Exception {
     Objects.requireNonNull(host, "host");
     Objects.requireNonNull(identity, "identity");
     var entry = byHost.get(host);
     if (entry == null) {
-      var inner = stable ? pool.allocate(1) : pool.allocate();
+      var inner =
+          proposedSmbHost == null
+              ? pool.allocate()
+              : pool.allocate(preferredOctet(proposedSmbHost));
       Connection connection;
       try {
         connection = opener.open(host, inner, identity, cause -> evict(host, cause));
@@ -82,6 +87,22 @@ public final class TunnelManager implements Tunnels {
     }
     entry.refs++;
     return new Lease(host, entry);
+  }
+
+  /**
+   * The device third octet of a proposed inner SMB host ({@code 169.254.<k>.1}), or {@code 0} — an
+   * octet the pool counters — when the host is not a {@code 169.254.x.y} address.
+   */
+  private static int preferredOctet(String smbHost) {
+    var parts = smbHost.split("\\.");
+    if (parts.length == 4 && parts[0].equals("169") && parts[1].equals("254")) {
+      try {
+        return Integer.parseInt(parts[2]);
+      } catch (NumberFormatException _) {
+        return 0;
+      }
+    }
+    return 0;
   }
 
   @Override
@@ -129,6 +150,9 @@ public final class TunnelManager implements Tunnels {
     }
   }
 
+  // The Tunnel outlives this method: it is held by the returned Connection and closed on lease
+  // release, not here, so it is deliberately not a try-with-resources.
+  @SuppressWarnings("resource")
   private Connection liveOpen(
       String host, InnerIpv4 inner, Identity identity, Consumer<Throwable> onDrop)
       throws Exception {

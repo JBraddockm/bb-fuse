@@ -12,8 +12,11 @@ public interface Tunnels {
 
   /**
    * The tunnel for the device reached at {@code host}, opened if it is not already up or the
-   * existing one with its reference count raised. {@code stable} pins the constant {@code
-   * 169.254.1.1} SMB address; otherwise a free inner-IPv4 pair is allocated.
+   * existing one with its reference count raised. {@code proposedSmbHost} (an inner {@code
+   * 169.254.x.1} address, or {@code null} for no preference) is honoured when it is free and valid,
+   * otherwise a free pair is allocated; either way the lease's {@link Lease#deviceIpv4()} is the
+   * granted address. A proposal applies only when the tunnel is opened — a joiner of an
+   * already-open tunnel keeps the opener's address.
    *
    * <p>{@code identity} is the client certificate the tunnel presents — a device's own cert loaded
    * from disk, never embedded in the binary. It is used only when the tunnel is <b>opened</b>; a
@@ -24,7 +27,7 @@ public interface Tunnels {
    * @throws TunnelCertificateException if {@code identity} cannot be loaded (missing/malformed PEM)
    * @throws Exception if the tunnel cannot be opened
    */
-  Lease acquire(String host, boolean stable, Identity identity) throws Exception;
+  Lease acquire(String host, String proposedSmbHost, Identity identity) throws Exception;
 
   /**
    * The client identity a tunnel presents: a certificate chain (leaf first) and its PKCS#8 private

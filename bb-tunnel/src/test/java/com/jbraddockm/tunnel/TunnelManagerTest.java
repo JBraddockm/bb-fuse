@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
  * Tests for {@link TunnelManager}: one shared, ref-counted tunnel per device, with a fake opener.
  */
 @DisplayName("TunnelManager: one shared, ref-counted tunnel per device")
+@SuppressWarnings("resource") // leases are closed by hand to exercise ref-counting
 class TunnelManagerTest {
 
   private static final Tunnels.Identity ID =
@@ -62,8 +63,8 @@ class TunnelManagerTest {
     @Test
     @DisplayName("gives each device a distinct inner IPv4 and reports its ULA")
     void distinctPerDevice() throws Exception {
-      var a = manager.acquire("169.254.0.1", false, ID);
-      var b = manager.acquire("192.168.1.50", false, ID);
+      var a = manager.acquire("169.254.0.1", null, ID);
+      var b = manager.acquire("192.168.1.50", null, ID);
 
       assertThat(a.deviceIpv4()).isEqualTo("169.254.2.1");
       assertThat(b.deviceIpv4()).isEqualTo("169.254.3.1");
@@ -72,9 +73,18 @@ class TunnelManagerTest {
     }
 
     @Test
-    @DisplayName("stable pins 169.254.1.1 for the external-app mount")
-    void stablePinsTheConstantAddress() throws Exception {
-      assertThat(manager.acquire("169.254.0.1", true, ID).deviceIpv4()).isEqualTo("169.254.1.1");
+    @DisplayName("honours a proposed SMB host")
+    void honoursAProposedHost() throws Exception {
+      assertThat(manager.acquire("169.254.0.1", "169.254.7.1", ID).deviceIpv4())
+          .isEqualTo("169.254.7.1");
+    }
+
+    @Test
+    @DisplayName("counter-offers when the proposed host is already taken")
+    void countersATakenProposal() throws Exception {
+      manager.acquire("169.254.0.1", "169.254.2.1", ID); // takes 169.254.2.1
+      assertThat(manager.acquire("192.168.1.50", "169.254.2.1", ID).deviceIpv4())
+          .isEqualTo("169.254.3.1");
     }
   }
 
@@ -85,8 +95,8 @@ class TunnelManagerTest {
     @Test
     @DisplayName("a second acquire of the same device reuses the tunnel, does not reopen it")
     void reusesTheTunnel() throws Exception {
-      var first = manager.acquire("169.254.0.1", false, ID);
-      var second = manager.acquire("169.254.0.1", false, ID);
+      var first = manager.acquire("169.254.0.1", null, ID);
+      var second = manager.acquire("169.254.0.1", null, ID);
 
       assertThat(second.deviceIpv4()).isEqualTo(first.deviceIpv4());
       assertThat(opener.opened).hasSize(1);
@@ -96,8 +106,8 @@ class TunnelManagerTest {
     @Test
     @DisplayName("stays up until the last lease closes, then comes down")
     void refCounted() throws Exception {
-      var first = manager.acquire("169.254.0.1", false, ID);
-      var second = manager.acquire("169.254.0.1", false, ID);
+      var first = manager.acquire("169.254.0.1", null, ID);
+      var second = manager.acquire("169.254.0.1", null, ID);
 
       first.close();
       assertThat(opener.closed).isEmpty();
@@ -109,21 +119,21 @@ class TunnelManagerTest {
     }
 
     @Test
-    @DisplayName("a joiner's stable flag is ignored — the open tunnel's address is kept")
-    void joinerStableFlagIgnored() throws Exception {
-      var first = manager.acquire("169.254.0.1", false, ID); // pooled -> 169.254.2.1
+    @DisplayName("a joiner's proposed host is ignored — the open tunnel's address is kept")
+    void joinerProposalIgnored() throws Exception {
+      var first = manager.acquire("169.254.0.1", null, ID); // pooled -> 169.254.2.1
       var second =
-          manager.acquire("169.254.0.1", true, ID); // asks for stable, but joins the tunnel
+          manager.acquire("169.254.0.1", "169.254.1.1", ID); // proposes, but joins the tunnel
 
       assertThat(second.deviceIpv4()).isEqualTo("169.254.2.1");
       assertThat(second.deviceIpv4()).isEqualTo(first.deviceIpv4());
-      assertThat(opener.opened).hasSize(1); // not reopened; the stable pair is never allocated
+      assertThat(opener.opened).hasSize(1); // not reopened; the proposed pair is never allocated
     }
 
     @Test
     @DisplayName("close is idempotent")
     void closeIsIdempotent() throws Exception {
-      var lease = manager.acquire("169.254.0.1", false, ID);
+      var lease = manager.acquire("169.254.0.1", null, ID);
 
       lease.close();
       lease.close();
@@ -139,20 +149,20 @@ class TunnelManagerTest {
     @Test
     @DisplayName("a closed tunnel's address is reused by the next device")
     void addressIsReused() throws Exception {
-      manager.acquire("169.254.0.1", false, ID).close();
+      manager.acquire("169.254.0.1", null, ID).close();
 
-      assertThat(manager.acquire("192.168.1.50", false, ID).deviceIpv4()).isEqualTo("169.254.2.1");
+      assertThat(manager.acquire("192.168.1.50", null, ID).deviceIpv4()).isEqualTo("169.254.2.1");
     }
 
     @Test
     @DisplayName("a failed open returns the pair to the pool")
     void failedOpenReturnsThePair() throws Exception {
       opener.fail = true;
-      assertThatThrownBy(() -> manager.acquire("169.254.0.1", false, ID))
+      assertThatThrownBy(() -> manager.acquire("169.254.0.1", null, ID))
           .isInstanceOf(IllegalStateException.class);
 
       opener.fail = false;
-      assertThat(manager.acquire("192.168.1.50", false, ID).deviceIpv4()).isEqualTo("169.254.2.1");
+      assertThat(manager.acquire("192.168.1.50", null, ID).deviceIpv4()).isEqualTo("169.254.2.1");
     }
 
     @Test
@@ -160,13 +170,13 @@ class TunnelManagerTest {
     void dropEvictsNotifiesAndFrees() throws Exception {
       var dropped = new ArrayList<String>();
       manager.onDrop((host, _) -> dropped.add(host));
-      manager.acquire("169.254.0.1", false, ID);
+      manager.acquire("169.254.0.1", null, ID);
 
       opener.dropCallbacks.get("169.254.0.1").accept(new IllegalStateException("link lost"));
 
       assertThat(dropped).containsExactly("169.254.0.1");
       assertThat(manager.isOpen("169.254.0.1")).isFalse();
-      assertThat(manager.acquire("192.168.1.50", false, ID).deviceIpv4()).isEqualTo("169.254.2.1");
+      assertThat(manager.acquire("192.168.1.50", null, ID).deviceIpv4()).isEqualTo("169.254.2.1");
     }
 
     @Test
@@ -175,7 +185,7 @@ class TunnelManagerTest {
       var dropped = new ArrayList<String>();
       manager.onDrop((host, _) -> dropped.add(host));
 
-      manager.acquire("169.254.0.1", false, ID).close();
+      manager.acquire("169.254.0.1", null, ID).close();
 
       assertThat(dropped).isEmpty();
       assertThat(opener.closed).containsExactly("169.254.0.1");

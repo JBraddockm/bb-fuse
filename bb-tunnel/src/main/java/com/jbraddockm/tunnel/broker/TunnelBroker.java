@@ -50,16 +50,19 @@ final class TunnelBroker {
   private final Map<String, String> hostByGuid = new HashMap<>();
   private final Map<String, EventSink> connections = new HashMap<>();
 
-  /** Wraps the tunnel service with no daemon-side identity fallback (every acquire must carry one). */
+  /**
+   * Wraps the tunnel service with no daemon-side identity fallback (every acquire must carry one).
+   */
   TunnelBroker(Tunnels tunnels) {
     this(tunnels, _ -> Optional.empty());
   }
 
   /**
    * Wraps the tunnel service and subscribes to its drop notifications. {@code fallbackIdentity}
-   * supplies the client identity for an {@code acquire} that does not carry {@code certificate}/{@code
-   * key} paths of its own — the daemon's own resolution (CLI args, env, or the {@code devices/<PIN>/}
-   * convention beside the binary); it may yield nothing, in which case such an acquire is refused.
+   * supplies the client identity for an {@code acquire} that does not carry {@code
+   * certificate}/{@code key} paths of its own — the daemon's own resolution (CLI args, env, or the
+   * {@code devices/<PIN>/} convention beside the binary); it may yield nothing, in which case such
+   * an acquire is refused.
    */
   TunnelBroker(Tunnels tunnels, IdentityResolver fallbackIdentity) {
     this.tunnels = Objects.requireNonNull(tunnels, "tunnels");
@@ -107,7 +110,10 @@ final class TunnelBroker {
    */
   Map<String, Object> acquire(String connection, RequestParams params) throws Exception {
     var consumer = params.optionalString("consumer").orElse("unknown");
-    var stable = params.flag("stable");
+    // A proposed SMB host is honoured when free; the legacy "stable" flag maps to proposing the
+    // constant 169.254.1.1.
+    var proposedSmb =
+        params.optionalString("smbHost").orElse(params.flag("stable") ? "169.254.1.1" : null);
     var guid = params.optionalString("guid");
     String host;
     if (guid.isPresent()) {
@@ -125,7 +131,7 @@ final class TunnelBroker {
     Tunnels.Lease lease;
     try {
       // may block on bring-up; no broker lock held
-      lease = tunnels.acquire(host, stable, identity);
+      lease = tunnels.acquire(host, proposedSmb, identity);
     } catch (TunnelCertificateException certFailure) {
       throw new BrokerException(certFailure.code(), certFailure.getMessage());
     }
@@ -142,8 +148,9 @@ final class TunnelBroker {
 
   /**
    * The client identity an {@code acquire} opens the tunnel with: the request's {@code
-   * certificate}/{@code key} paths when it carries them (the consumer resolved the device's identity
-   * and points the daemon at it), otherwise the daemon's own {@link IdentityResolver} fallback.
+   * certificate}/{@code key} paths when it carries them (the consumer resolved the device's
+   * identity and points the daemon at it), otherwise the daemon's own {@link IdentityResolver}
+   * fallback.
    */
   private Tunnels.Identity resolveIdentity(RequestParams params) {
     var cert = params.optionalString("certificate");
@@ -319,8 +326,9 @@ final class TunnelBroker {
 
   /**
    * The daemon's own resolution of a client identity for an {@code acquire} that carries no {@code
-   * certificate}/{@code key} of its own: CLI args, an env-named device, or the {@code devices/<PIN>/}
-   * convention beside the binary. Returns empty when the daemon has no identity configured.
+   * certificate}/{@code key} of its own: CLI args, an env-named device, or the {@code
+   * devices/<PIN>/} convention beside the binary. Returns empty when the daemon has no identity
+   * configured.
    */
   @FunctionalInterface
   interface IdentityResolver {

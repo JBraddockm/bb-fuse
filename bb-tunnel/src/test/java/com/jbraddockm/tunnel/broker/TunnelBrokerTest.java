@@ -45,10 +45,13 @@ class TunnelBrokerTest {
     private BiConsumer<String, Throwable> onDrop;
 
     @Override
-    public synchronized Lease acquire(String host, boolean stable, Identity identity) {
+    public synchronized Lease acquire(String host, String proposedSmbHost, Identity identity) {
       var info =
           up.computeIfAbsent(
-              host, h -> new Info("fd00::" + h, stable ? "169.254.1.1" : "169.254.9.1"));
+              host,
+              h ->
+                  new Info(
+                      "fd00::" + h, proposedSmbHost != null ? proposedSmbHost : "169.254.9.1"));
       refs.merge(host, 1, Integer::sum);
       return new FakeLease(host, info);
     }
@@ -156,6 +159,14 @@ class TunnelBrokerTest {
       broker.connected("c1", new Events());
       var lease = broker.acquire("c1", params("host", "192.168.1.118", "stable", true));
       assertThat(lease.get("innerIpv4")).isEqualTo("169.254.1.1");
+    }
+
+    @Test
+    @DisplayName("a proposed smbHost is honoured and reported in the lease")
+    void proposesSmbHost() throws Exception {
+      broker.connected("c1", new Events());
+      var lease = broker.acquire("c1", params("host", "192.168.1.118", "smbHost", "169.254.7.1"));
+      assertThat(lease.get("innerIpv4")).isEqualTo("169.254.7.1");
     }
 
     @Test

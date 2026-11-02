@@ -28,7 +28,8 @@ public final class Cli {
       return;
     }
     // The demo opens a tunnel for one identity, resolved from the environment and the devices/
-    // convention (BB_TUNNEL_CERT/KEY, BB_DEVICE, BB_DEVICES_DIR). No cert is embedded in the binary.
+    // convention (BB_TUNNEL_CERT/KEY, BB_DEVICE, BB_DEVICES_DIR). No cert is embedded in the
+    // binary.
     var identity = DeviceIdentitySources.fromEnvironment().resolve(java.util.Optional.empty());
     if (identity.isEmpty()) {
       IO.println(
@@ -43,8 +44,8 @@ public final class Cli {
       for (String host : hosts) {
         TunnelManager.Lease lease;
         try {
-          // The first device that opens takes the stable pair; the rest get pooled pairs.
-          lease = manager.acquire(host, leases.isEmpty(), identity.get());
+          // The first device proposes the stable 169.254.1.1; the rest take pooled pairs.
+          lease = manager.acquire(host, leases.isEmpty() ? "169.254.1.1" : null, identity.get());
         } catch (Throwable failure) {
           IO.println();
           IO.println("could not open a tunnel to " + host + ": " + rootCause(failure));
@@ -84,8 +85,8 @@ public final class Cli {
 
   /**
    * {@code bb-tunnel serve [socket] [--cert P --key P] [--device PIN] [--devices DIR]} — run the
-   * broker daemon. The identity options set the fallback the daemon presents when an acquire carries
-   * no {@code certificate}/{@code key} of its own (the environment and the {@code devices/}
+   * broker daemon. The identity options set the fallback the daemon presents when an acquire
+   * carries no {@code certificate}/{@code key} of its own (the environment and the {@code devices/}
    * convention fill the rest).
    */
   private static void serve(String[] args) throws Throwable {
