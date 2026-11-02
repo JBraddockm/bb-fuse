@@ -63,7 +63,8 @@ public final class TunnelManager implements Tunnels {
    * @throws Exception if the tunnel cannot be opened; the allocated pair is returned to the pool
    */
   @Override
-  public synchronized Lease acquire(String host, boolean stable, Identity identity) throws Exception {
+  public synchronized Lease acquire(String host, boolean stable, Identity identity)
+      throws Exception {
     Objects.requireNonNull(host, "host");
     Objects.requireNonNull(identity, "identity");
     var entry = byHost.get(host);
@@ -138,8 +139,10 @@ public final class TunnelManager implements Tunnels {
     try {
       tunnel = Tunnel.open(cfg, onDrop);
     } catch (Exception e) {
-      throw e;
+      throw e; // a normal failure propagates unwrapped
     } catch (Throwable t) {
+      // Wrap a non-Exception Throwable (an Error) as an Exception so acquire()'s catch (Exception)
+      // still runs and returns the inner-IPv4 pair to the pool.
       throw new IllegalStateException("tunnel bring-up failed for " + host, t);
     }
     return new Connection() {
@@ -164,8 +167,8 @@ public final class TunnelManager implements Tunnels {
     /**
      * Opens the transport to {@code host} with {@code inner}, presenting {@code identity} as the
      * client certificate. The opener wires the connection's <b>spontaneous</b> drop (the link
-     * failing on its own, not a {@link Connection#close}) to call {@code onDrop}, so the manager can
-     * evict the tunnel and tell its consumers.
+     * failing on its own, not a {@link Connection#close}) to call {@code onDrop}, so the manager
+     * can evict the tunnel and tell its consumers.
      */
     Connection open(String host, InnerIpv4 inner, Identity identity, Consumer<Throwable> onDrop)
         throws Exception;

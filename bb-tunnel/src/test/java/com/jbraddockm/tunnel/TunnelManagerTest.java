@@ -109,6 +109,18 @@ class TunnelManagerTest {
     }
 
     @Test
+    @DisplayName("a joiner's stable flag is ignored — the open tunnel's address is kept")
+    void joinerStableFlagIgnored() throws Exception {
+      var first = manager.acquire("169.254.0.1", false, ID); // pooled -> 169.254.2.1
+      var second =
+          manager.acquire("169.254.0.1", true, ID); // asks for stable, but joins the tunnel
+
+      assertThat(second.deviceIpv4()).isEqualTo("169.254.2.1");
+      assertThat(second.deviceIpv4()).isEqualTo(first.deviceIpv4());
+      assertThat(opener.opened).hasSize(1); // not reopened; the stable pair is never allocated
+    }
+
+    @Test
     @DisplayName("close is idempotent")
     void closeIsIdempotent() throws Exception {
       var lease = manager.acquire("169.254.0.1", false, ID);

@@ -1,5 +1,6 @@
 package com.jbraddockm.tunnel;
 
+import com.jbraddockm.tunnel.internal.Trace;
 import java.io.IOException;
 import java.util.Hashtable;
 import java.util.List;
@@ -109,7 +110,7 @@ final class TunnelTlsClient extends DefaultTlsClient {
       /** Accept the device cert unconditionally — trust is from pairing, not the chain. */
       @Override
       public void notifyServerCertificate(TlsServerCertificate c) {
-        IO.println(
+        Trace.line(
             (dtls ? "DTLS" : "TLS")
                 + " server sent "
                 + c.getCertificate().getCertificateList().length

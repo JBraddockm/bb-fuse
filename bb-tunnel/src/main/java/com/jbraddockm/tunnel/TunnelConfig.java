@@ -43,13 +43,10 @@ record TunnelConfig(
   private static final int CONTROL_PORT = 1111;
 
   // Inner-IPv4 for the tunnel's IPv4 sub-protocol (IPV4_ENABLE). The device only accepts addresses
-  // in
-  // 169.254.0.0/16 (its AddressAllocator validates that prefix) and then binds DEVICE_IPV4 to its
-  // bptp0
-  // interface, so SMB (smbd, bound to bptp0) becomes reachable at [DEVICE_IPV4]:445 over the
-  // tunnel.
-  // Loopback here is why bptp0 previously fell back to inet 127.0.0.1 and smbd stayed unreachable.
-  // Avoids the first/last /24 of the range (RFC 3927-reserved).
+  // in 169.254.0.0/16 (its AddressAllocator validates that prefix) and then binds DEVICE_IPV4 to
+  // its bptp0 interface, so SMB (smbd, bound to bptp0) becomes reachable at [DEVICE_IPV4]:445 over
+  // the tunnel. Loopback here is why bptp0 previously fell back to inet 127.0.0.1 and smbd stayed
+  // unreachable. Avoids the first/last /24 of the range (RFC 3927-reserved).
   private static final String PC_IPV4 = "169.254.1.2";
   private static final String DEVICE_IPV4 = "169.254.1.1";
 
@@ -58,7 +55,8 @@ record TunnelConfig(
    * with the default stable inner-IPv4 ({@code 169.254.1.1/.2}).
    *
    * <p><b>Demo/test only.</b> These resources are <i>not</i> embedded in the native binary (it must
-   * stay portable); production always loads a device's own identity from disk via {@link #fromFiles}.
+   * stay portable); production always loads a device's own identity from disk via {@link
+   * #fromFiles}.
    */
   static TunnelConfig fromClasspath(String host) {
     return fromClasspath(host, PC_IPV4, DEVICE_IPV4);
@@ -93,8 +91,8 @@ record TunnelConfig(
 
   /**
    * A client identity read from PEM files on disk with an explicit inner-IPv4 pair. This is the
-   * portable path — the identity is a device's own cert on disk, never embedded in the binary — so a
-   * missing or malformed file is reported as a typed {@link TunnelCertificateException} (with a
+   * portable path — the identity is a device's own cert on disk, never embedded in the binary — so
+   * a missing or malformed file is reported as a typed {@link TunnelCertificateException} (with a
    * machine {@code code}) rather than crashing the daemon.
    */
   static TunnelConfig fromFiles(
@@ -133,7 +131,9 @@ record TunnelConfig(
           return sec1ToPkcs8(block.der());
         } catch (RuntimeException | IOException malformed) {
           throw new TunnelCertificateException(
-              "key_malformed", "the EC private key in " + keyPem + " could not be parsed", malformed);
+              "key_malformed",
+              "the EC private key in " + keyPem + " could not be parsed",
+              malformed);
         }
       }
     }
@@ -142,7 +142,9 @@ record TunnelConfig(
         "no private key (a BEGIN PRIVATE KEY or BEGIN EC PRIVATE KEY block) in " + keyPem);
   }
 
-  /** Wraps a SEC1 EC private key (OpenSSL's traditional form) as a PKCS#8 {@code PrivateKeyInfo}. */
+  /**
+   * Wraps a SEC1 EC private key (OpenSSL's traditional form) as a PKCS#8 {@code PrivateKeyInfo}.
+   */
   private static byte[] sec1ToPkcs8(byte[] sec1Der) throws IOException {
     var ec = ECPrivateKey.getInstance(sec1Der);
     var algorithm =
@@ -150,7 +152,9 @@ record TunnelConfig(
     return new PrivateKeyInfo(algorithm, ec).getEncoded("DER");
   }
 
-  /** Reads PEM blocks of {@code type} from {@code pem}, mapping each failure to a typed cert code. */
+  /**
+   * Reads PEM blocks of {@code type} from {@code pem}, mapping each failure to a typed cert code.
+   */
   private static List<byte[]> loadBlocks(Path pem, String type, String which)
       throws TunnelCertificateException {
     List<byte[]> blocks;

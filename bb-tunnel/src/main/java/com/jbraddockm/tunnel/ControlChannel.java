@@ -1,6 +1,7 @@
 package com.jbraddockm.tunnel;
 
 import com.jbraddockm.tunnel.internal.Hex;
+import com.jbraddockm.tunnel.internal.Trace;
 import java.io.*;
 
 /**
@@ -33,7 +34,7 @@ final class ControlChannel {
    */
   static void parseIpv4Restrictions(byte[] body) {
     int count = ((body[0] & 0xff) << 8) | (body[1] & 0xff);
-    IO.println("IPV4 restrictions (" + count + "):");
+    Trace.line("IPV4 restrictions (" + count + "):");
     int p = 2;
     for (int i = 0; i < count; i++) {
       int m =
@@ -41,7 +42,7 @@ final class ControlChannel {
               | ((body[p + 5] & 0xff) << 16)
               | ((body[p + 6] & 0xff) << 8)
               | (body[p + 7] & 0xff);
-      IO.println(
+      Trace.line(
           "  " + Hex.ipv4ToString(body, p) + "/" + Integer.bitCount(m)); // mask → prefix length
       p += 8;
     }
@@ -69,12 +70,12 @@ final class ControlChannel {
       int len = ((h[2] & 0xff) << 8) | (h[3] & 0xff);
       byte[] body = readExactly(len);
       if (cmd == 0x05) { // async NOTIFY (keepalive / service-change) — skip and keep reading
-        IO.println("  (NOTIFY 0x05, " + len + "B, skipped)");
+        Trace.line("  (NOTIFY 0x05, " + len + "B, skipped)");
         continue;
       }
       if (cmd == 0x04) throw new IOException("device sent ERROR (0x04): " + Hex.toHex(body));
       if (wantCmd >= 0 && cmd != wantCmd)
-        IO.println("  (unexpected cmd 0x" + Integer.toHexString(cmd) + ", using anyway)");
+        Trace.line("  (unexpected cmd 0x" + Integer.toHexString(cmd) + ", using anyway)");
       return new Frame(cmd, body);
     }
   }

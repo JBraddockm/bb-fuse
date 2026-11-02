@@ -1,6 +1,7 @@
 package com.jbraddockm.tunnel;
 
 import com.jbraddockm.tunnel.internal.Hex;
+import com.jbraddockm.tunnel.internal.Trace;
 import java.net.*;
 import java.security.SecureRandom;
 import java.time.Duration;
@@ -177,9 +178,9 @@ final class Tunnel implements AutoCloseable {
   private static void runCmd(String... args) {
     try {
       int rc = new ProcessBuilder(args).inheritIO().start().waitFor();
-      if (rc != 0) IO.println("cmd rc=" + rc + ": " + String.join(" ", args));
+      if (rc != 0) Trace.line("cmd rc=" + rc + ": " + String.join(" ", args));
     } catch (Throwable t) {
-      IO.println("cmd failed: " + String.join(" ", args) + " : " + t);
+      Trace.line("cmd failed: " + String.join(" ", args) + " : " + t);
     }
   }
 
@@ -281,18 +282,18 @@ final class Tunnel implements AutoCloseable {
         new TlsClientProtocol(controlSocket.getInputStream(), controlSocket.getOutputStream());
     controlProto.connect(
         new TunnelTlsClient(crypto, false, cfg.certChainDer(), cfg.privateKeyDer()));
-    IO.println("HANDSHAKE OK");
+    Trace.line("HANDSHAKE OK");
     ControlChannel ctl =
         new ControlChannel(controlProto.getOutputStream(), controlProto.getInputStream());
 
     ctl.send(0x00, Hex.fromHex("2405200300010000")); // INIT (fixed version/capability token)
-    IO.println("INIT_RESP  body=" + Hex.toHex(ctl.read(0x01).body()));
+    Trace.line("INIT_RESP  body=" + Hex.toHex(ctl.read(0x01).body()));
 
     // CONNECT: bind our UDP data socket, advertise its port + our identity ULA; CONNECT_RESP then
     // hands back the device's own ULA and the per-session DTLS port.
     udp = new DatagramSocket(0);
     int hostUdpPort = udp.getLocalPort();
-    IO.println("host UDP port = " + hostUdpPort);
+    Trace.line("host UDP port = " + hostUdpPort);
     byte[] connectBody = new byte[20]; // [16B our ULA][u16 UDP port][00 01]
     System.arraycopy(ourUlaBytes, 0, connectBody, 0, 16);
     connectBody[16] = (byte) (hostUdpPort >> 8); // u16 UDP data port (htons)
@@ -306,7 +307,7 @@ final class Tunnel implements AutoCloseable {
         Arrays.copyOfRange(b, 0, 16); // CONNECT_RESP body[0:16] = device inner tunnel ULA
     deviceUla = Hex.ipv6ToString(deviceUlaBytes, 0);
     int dtlsPort = ((b[16] & 0xff) << 8) | (b[17] & 0xff); // per-session DTLS port = body[16:18]
-    IO.println(
+    Trace.line(
         "CONNECT_RESP device ULA="
             + deviceUla
             + " DTLS port="
@@ -333,13 +334,13 @@ final class Tunnel implements AutoCloseable {
             | ((en.body()[1] & 0xff) << 16)
             | ((en.body()[2] & 0xff) << 8)
             | (en.body()[3] & 0xff);
-    IO.println(
+    Trace.line(
         "IPV4_ENABLE_RESP status=0x"
             + String.format("%08x", enStatus)
             + (enStatus == 0 ? "  (configured)" : "  (conflict, proceeding)"));
 
     // ---------- data plane: DTLS 1.0 to the per-session port ----------
-    IO.println("  dialing DTLS...");
+    Trace.line("  dialing DTLS...");
     udp.connect(InetAddress.getByName(cfg.host()), dtlsPort);
     DatagramTransport transport = new UdpDatagramTransport(udp, 1500);
     long t0 = System.currentTimeMillis();
@@ -348,7 +349,7 @@ final class Tunnel implements AutoCloseable {
             .connect(
                 new TunnelTlsClient(crypto, true, cfg.certChainDer(), cfg.privateKeyDer()),
                 transport);
-    IO.println("DTLS HANDSHAKE OK (" + (System.currentTimeMillis() - t0) + "ms)");
+    Trace.line("DTLS HANDSHAKE OK (" + (System.currentTimeMillis() - t0) + "ms)");
 
     startDataPlane();
   }
@@ -366,7 +367,7 @@ final class Tunnel implements AutoCloseable {
    */
   private void startDataPlane() throws Throwable {
     tun = new TunDevice();
-    IO.println("tun up: " + tun.name());
+    Trace.line("tun up: " + tun.name());
 
     runCmd("ifconfig", tun.name(), "inet6", "fe80::2", "prefixlen", "64");
     runCmd("ifconfig", tun.name(), "mtu", "1356");
@@ -412,7 +413,7 @@ final class Tunnel implements AutoCloseable {
                   if (running) stop(State.FAILED, e, true); // link dropped (not our own close)
                   break;
                 } catch (Exception e) {
-                  if (running) IO.println("recv ex: " + e);
+                  if (running) Trace.line("recv ex: " + e);
                   continue;
                 }
                 if (r <= 0) continue;
@@ -424,6 +425,7 @@ final class Tunnel implements AutoCloseable {
                         byte[] reply = RimPacket.keepAliveReply(Arrays.copyOf(rx, r));
                         dtls.send(reply, 0, reply.length);
                       } catch (Throwable ignore) {
+                        // best-effort keepalive reply; a failed send must not kill the recv pump
                       }
                     }
                   }
@@ -432,6 +434,7 @@ final class Tunnel implements AutoCloseable {
                     try {
                       tun.write(rx, 2, r - 2);
                     } catch (Throwable ignore) {
+                      // best-effort delivery; a bad inbound frame must not kill the recv pump
                     }
                   }
                   default -> {} // unknown tag: ignore
@@ -468,7 +471,7 @@ final class Tunnel implements AutoCloseable {
                   dtls.send(f, 0, f.length);
                 }
               } catch (Throwable e) {
-                if (running) IO.println("tun->dtls ended: " + e);
+                if (running) Trace.line("tun->dtls ended: " + e);
               }
             },
             "tun->dtls");
@@ -496,6 +499,9 @@ final class Tunnel implements AutoCloseable {
                   Thread.sleep(2000);
                 }
               } catch (Throwable ignored) {
+                // Running still true means the keepalive pump stopped unexpectedly, not a clean
+                // stop.
+                if (running) Trace.line("na pump ended: " + ignored);
               }
             },
             "na");
@@ -506,7 +512,7 @@ final class Tunnel implements AutoCloseable {
   /**
    * Builds an unsolicited ICMPv6 Neighbour Advertisement (type 136) announcing {@link #ourUla} to
    * the device, with a correct checksum over the IPv6 pseudo-header, so the device's neighbour
-   * cache stays populated and it routes return traffic to us over the tunnel.
+   * cache stays populated, and it routes return traffic to us over the tunnel.
    *
    * @return the 64-byte IPv6 packet (40-byte header + 24-byte NA), ready to tag with channel 0x0001
    */
