@@ -76,6 +76,7 @@ final class EndpointReachability {
           Map.entry(LinkMethod.INSTALL_PACKAGES, Endpoint.UPDATE),
           Map.entry(LinkMethod.UNINSTALL_PACKAGES, Endpoint.UPDATE),
           // backup.cgi is served over USB and the tunnel but not the plain Wi-Fi LAN.
+          Map.entry(LinkMethod.GET_BACKUP_INVENTORY, Endpoint.BACKUP),
           Map.entry(LinkMethod.BACKUP_DEVICE, Endpoint.BACKUP),
           Map.entry(LinkMethod.RESTORE_DEVICE, Endpoint.BACKUP));
 

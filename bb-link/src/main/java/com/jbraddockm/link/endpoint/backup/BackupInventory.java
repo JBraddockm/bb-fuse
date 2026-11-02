@@ -11,10 +11,10 @@ import java.util.Optional;
  *
  * @param categories the categories, in the order the device listed them
  */
-record BackupInventory(List<AvailableCategory> categories) implements CommandResult {
+public record BackupInventory(List<AvailableCategory> categories) implements CommandResult {
 
   /** Takes an immutable copy of the list. */
-  BackupInventory {
+  public BackupInventory {
     categories = List.copyOf(categories);
   }
 

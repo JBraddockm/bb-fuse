@@ -14,6 +14,7 @@ import com.jbraddockm.link.endpoint.backup.BackupCategory;
 import com.jbraddockm.link.endpoint.backup.BackupRequest;
 import com.jbraddockm.link.endpoint.backup.DeviceBackup;
 import com.jbraddockm.link.endpoint.backup.DeviceRestore;
+import com.jbraddockm.link.endpoint.backup.ListCategories;
 import com.jbraddockm.link.endpoint.backup.PackageType;
 import com.jbraddockm.link.endpoint.backup.RestoreRequest;
 import com.jbraddockm.link.endpoint.characteristics.GetDeviceCharacteristics;
@@ -189,6 +190,12 @@ enum LinkMethod {
   INSPECT_CERTIFICATE("inspectCertificate"),
 
   /**
+   * Reads the device's backup inventory — the categories it can back up, with their sizes — without
+   * backing anything up. Reaches {@code backup.cgi}, so only over USB or the tunnel.
+   */
+  GET_BACKUP_INVENTORY("getBackupInventory"),
+
+  /**
    * Backs the device up into a {@code .bbb} file. Reaches {@code backup.cgi}, so only over USB or
    * the tunnel. The device must already hold a backup-and-restore key for the data to stream.
    */
@@ -361,6 +368,8 @@ enum LinkMethod {
               ? Optional.of(new InstallPackages(List.of(REPLAY_BAR), Duration.ZERO))
               : Optional.empty();
       case UNINSTALL_PACKAGES -> replayedRemoval(argument);
+      case GET_BACKUP_INVENTORY ->
+          argument == null ? Optional.of(new ListCategories()) : Optional.empty();
       case BACKUP_DEVICE ->
           argument == null ? Optional.of(DeviceBackup.replayCommand()) : Optional.empty();
       case RESTORE_DEVICE ->
@@ -589,6 +598,7 @@ enum LinkMethod {
                 return reply ->
                     reply.complete(wireName, InspectPackage.inspect(file, validate), false);
               });
+      case GET_BACKUP_INVENTORY -> onSession(_ -> new ListCategories());
       case BACKUP_DEVICE ->
           new CommandSpec.SessionScoped<>(
               wireName,

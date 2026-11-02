@@ -8,6 +8,7 @@ import com.jbraddockm.core.daemon.CommandSpec;
 import com.jbraddockm.core.daemon.Reply;
 import com.jbraddockm.core.daemon.RequestParams;
 import com.jbraddockm.core.error.InvalidArgumentException;
+import com.jbraddockm.link.endpoint.backup.ListCategories;
 import com.jbraddockm.link.endpoint.pairing.CertificateRetrieval;
 import com.jbraddockm.link.endpoint.pairing.GetAuthenticationCertificate;
 import com.jbraddockm.link.endpoint.pairing.PairWithDevice;
@@ -182,6 +183,7 @@ class LinkMethodTest {
       "INSTALL_PACKAGES, installPackages",
       "UNINSTALL_PACKAGES, uninstallPackages",
       "INSPECT_CERTIFICATE, inspectCertificate",
+      "GET_BACKUP_INVENTORY, getBackupInventory",
       "BACKUP_DEVICE, backupDevice",
       "RESTORE_DEVICE, restoreDevice"
     })
@@ -192,10 +194,10 @@ class LinkMethodTest {
     }
 
     @Test
-    @DisplayName("are 30, and distinct")
-    void areThirtyAndDistinct() {
+    @DisplayName("are 31, and distinct")
+    void areThirtyOneAndDistinct() {
       assertThat(Arrays.stream(LinkMethod.values()).map(LinkMethod::wireName))
-          .hasSize(30)
+          .hasSize(31)
           .doesNotHaveDuplicates();
     }
 
@@ -217,8 +219,10 @@ class LinkMethodTest {
       assertThat(replay(LinkMethod.GET_DEVICE_PROPERTIES))
           .containsInstanceOf(GetDeviceProperties.class);
       assertThat(replay(LinkMethod.LIST_PIM_ACCOUNTS)).containsInstanceOf(ListPimAccounts.class);
+      assertThat(replay(LinkMethod.GET_BACKUP_INVENTORY)).containsInstanceOf(ListCategories.class);
       assertThat(replay(LinkMethod.GET_DEVICE_PROPERTIES, "x")).isEmpty();
       assertThat(replay(LinkMethod.LIST_PIM_ACCOUNTS, "x")).isEmpty();
+      assertThat(replay(LinkMethod.GET_BACKUP_INVENTORY, "x")).isEmpty();
     }
 
     @Test
@@ -421,7 +425,8 @@ class LinkMethodTest {
           "PAIR_DEVICE",
           "GET_AUTHENTICATION_CERTIFICATE",
           "INSTALL_PACKAGES",
-          "UNINSTALL_PACKAGES"
+          "UNINSTALL_PACKAGES",
+          "GET_BACKUP_INVENTORY"
         })
     @DisplayName("works on the session of a device when it talks to one")
     void worksOnASession(String name) {

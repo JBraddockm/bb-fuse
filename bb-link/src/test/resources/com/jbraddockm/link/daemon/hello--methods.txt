@@ -29,5 +29,6 @@ inspectPackage
 installPackages
 uninstallPackages
 inspectCertificate
+getBackupInventory
 backupDevice
 restoreDevice

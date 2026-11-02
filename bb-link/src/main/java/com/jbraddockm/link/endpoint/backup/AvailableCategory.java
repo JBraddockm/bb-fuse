@@ -15,7 +15,7 @@ import java.util.Objects;
  * @param perimeterType the perimeter the device reports (such as {@code personal}), or {@code null}
  * @param subPackages the sub-packages the device lists under it (rev2 only); empty otherwise
  */
-record AvailableCategory(
+public record AvailableCategory(
     BackupCategory category,
     long bytesize,
     int count,
@@ -28,7 +28,7 @@ record AvailableCategory(
    *
    * @throws NullPointerException if the category is {@code null}
    */
-  AvailableCategory {
+  public AvailableCategory {
     Objects.requireNonNull(category, "category");
     subPackages = List.copyOf(subPackages);
   }

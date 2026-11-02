@@ -14,10 +14,10 @@ import java.util.Objects;
  * @param count the number of items the device reports for it, or {@code 0} if it gave none
  * @param name the display name, or empty
  */
-record SubPackage(String pkgid, PackageType type, long bytesize, int count, String name) {
+public record SubPackage(String pkgid, PackageType type, long bytesize, int count, String name) {
 
   /** Validates the sub-package. */
-  SubPackage {
+  public SubPackage {
     Objects.requireNonNull(pkgid, "pkgid");
     Objects.requireNonNull(type, "type");
     name = name == null ? "" : name;
