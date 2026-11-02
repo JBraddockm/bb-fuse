@@ -84,7 +84,7 @@ class BrokerTunnelConnectorTest {
     @Test
     @DisplayName("acquires for the configured host and hands the identity paths to the daemon")
     void passesWhatTheDaemonNeeds() throws IOException {
-      try (var binding = connector().connect()) {
+      try (var _ = connector().connect()) {
         assertThat(broker.acquires)
             .singleElement()
             .satisfies(
@@ -150,6 +150,7 @@ class BrokerTunnelConnectorTest {
 
     @Test
     @DisplayName("a refused acquire surfaces the broker's reason and does not leak the connection")
+    @SuppressWarnings("resource") // connect() throws on a refusal, so there is no binding to close
     void refusedAcquireFails() {
       broker.reject = true;
 
@@ -183,6 +184,7 @@ class BrokerTunnelConnectorTest {
       serving = Thread.ofPlatform().daemon().name("fake-broker").start(this::serve);
     }
 
+    @SuppressWarnings("SameParameterValue")
     void pushDropped(String host) {
       var out = toClient;
       if (out == null) {
@@ -262,11 +264,9 @@ class BrokerTunnelConnectorTest {
       }
     }
 
-    private void send(PrintStream out, Map<String, Object> message) {
-      synchronized (out) {
-        out.print(Json.write(message) + "\n");
-        out.flush();
-      }
+    private synchronized void send(PrintStream out, Map<String, Object> message) {
+      out.print(Json.write(message) + "\n");
+      out.flush();
     }
 
     @SuppressWarnings("unchecked")

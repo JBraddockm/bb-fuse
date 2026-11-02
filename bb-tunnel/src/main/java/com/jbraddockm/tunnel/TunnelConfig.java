@@ -98,7 +98,7 @@ record TunnelConfig(
   static TunnelConfig fromFiles(
       String host, Path chainPem, Path keyPem, String pcIpv4, String deviceIpv4)
       throws TunnelCertificateException {
-    var chain = loadBlocks(chainPem, "CERTIFICATE", "cert");
+    var chain = loadBlocks(chainPem);
     var keyDer = loadPrivateKeyDer(keyPem);
     return new TunnelConfig(host, CONTROL_PORT, chain, keyDer, pcIpv4, deviceIpv4);
   }
@@ -153,26 +153,25 @@ record TunnelConfig(
   }
 
   /**
-   * Reads PEM blocks of {@code type} from {@code pem}, mapping each failure to a typed cert code.
+   * Reads the certificate PEM blocks from {@code pem}, mapping each failure to a typed cert code.
    */
-  private static List<byte[]> loadBlocks(Path pem, String type, String which)
-      throws TunnelCertificateException {
+  private static List<byte[]> loadBlocks(Path pem) throws TunnelCertificateException {
     List<byte[]> blocks;
     try {
-      blocks = PemUtil.readBlocksFromFile(pem, type);
+      blocks = PemUtil.readBlocksFromFile(pem, "CERTIFICATE");
     } catch (NoSuchFileException missing) {
       throw new TunnelCertificateException(
-          which + "_not_found", "the " + which + " file was not found: " + pem, missing);
+          "cert_not_found", "the cert file was not found: " + pem, missing);
     } catch (IOException unreadable) {
       throw new TunnelCertificateException(
-          which + "_unreadable",
-          "the " + which + " file could not be read: " + pem + " (" + unreadable.getMessage() + ")",
+          "cert_unreadable",
+          "the cert file could not be read: " + pem + " (" + unreadable.getMessage() + ")",
           unreadable);
     } catch (Exception malformed) {
       throw new TunnelCertificateException(
-          which + "_malformed", "the " + which + " file is not valid PEM: " + pem, malformed);
+          "cert_malformed", "the cert file is not valid PEM: " + pem, malformed);
     }
-    if ("CERTIFICATE".equals(type) && blocks.isEmpty()) {
+    if (blocks.isEmpty()) {
       throw new TunnelCertificateException(
           "cert_malformed", "no certificate (a BEGIN CERTIFICATE block) in " + pem);
     }

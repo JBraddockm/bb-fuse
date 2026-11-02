@@ -173,6 +173,7 @@ class BrokerServerRoundTripTest {
       this.onDrop = listener;
     }
 
+    @SuppressWarnings("SameParameterValue")
     void drop(String host, Throwable cause) {
       synchronized (this) {
         up.remove(host);

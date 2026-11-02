@@ -34,7 +34,6 @@ import org.bouncycastle.tls.crypto.impl.bc.BcTlsCrypto;
  *   <li>{@link #state()} / {@link #isOpen()} / {@link #failure()} — observe liveness.
  *   <li>{@link #onClosed(Consumer)} — be told once when the tunnel leaves {@code UP}: {@code null}
  *       for a clean close, or the cause for an unexpected drop (so a module can reconnect).
- *   <li>{@link #restart()} — tear down and bring the same handle back up (e.g. after a drop).
  *   <li>{@link #close()} — tear everything down (idempotent; {@code AutoCloseable}).
  * </ul>
  *
@@ -201,27 +200,9 @@ final class Tunnel implements AutoCloseable {
     return cfg.deviceIpv4();
   }
 
-  /**
-   * Our inner IPv4 on the tunnel ({@code 169.254.x.y}), assigned to the utun as the SMB client
-   * address.
-   */
-  String pcIpv4() {
-    return cfg.pcIpv4();
-  }
-
   /** Our tunnel ULA, derived from the config's leaf certificate. */
   String ourUla() {
     return ourUla;
-  }
-
-  /** The device LAN host this tunnel is bound to. */
-  String host() {
-    return cfg.host();
-  }
-
-  /** The utun interface name (e.g. {@code utun5}), or {@code null} before the data plane is up. */
-  String tunInterface() {
-    return tun == null ? null : tun.name();
   }
 
   /** The current lifecycle state. */
@@ -250,18 +231,6 @@ final class Tunnel implements AutoCloseable {
     return this;
   }
 
-  /**
-   * Tears the current tunnel down and brings the <i>same</i> handle back up (fresh control + DTLS
-   * handshake and a new utun). Useful after a {@link State#FAILED} drop. The interim stop does not
-   * fire {@link #onClosed}. Blocks for the full bring-up, like {@link #open}.
-   */
-  synchronized void restart() throws Throwable {
-    stop(State.CLOSED, null, false); // quiet teardown — a restart is not a "closed" event
-    state = State.CONNECTING;
-    failure = null;
-    bringUp();
-  }
-
   // ---------------------------------------------------------------------------------------------
 
   /**
@@ -270,7 +239,7 @@ final class Tunnel implements AutoCloseable {
    */
   @Override
   public void close() {
-    stop(State.CLOSED, null, true);
+    stop(State.CLOSED, null);
   }
 
   private void bringUp() throws Throwable {
@@ -410,7 +379,7 @@ final class Tunnel implements AutoCloseable {
                 try {
                   r = dtls.receive(rx, 0, rx.length, 5000);
                 } catch (SocketException e) {
-                  if (running) stop(State.FAILED, e, true); // link dropped (not our own close)
+                  if (running) stop(State.FAILED, e); // link dropped (not our own close)
                   break;
                 } catch (Exception e) {
                   if (running) Trace.line("recv ex: " + e);
@@ -498,10 +467,10 @@ final class Tunnel implements AutoCloseable {
                   dtls.send(f, 0, f.length);
                   Thread.sleep(2000);
                 }
-              } catch (Throwable ignored) {
+              } catch (Throwable failure) {
                 // Running still true means the keepalive pump stopped unexpectedly, not a clean
                 // stop.
-                if (running) Trace.line("na pump ended: " + ignored);
+                if (running) Trace.line("na pump ended: " + failure);
               }
             },
             "na");
@@ -545,11 +514,11 @@ final class Tunnel implements AutoCloseable {
 
   /**
    * The one-shot lifecycle transition out of a live/connecting state: records {@code target} and
-   * {@code cause}, stops the data-plane threads, closes the transports, and (when {@code notify})
-   * fires {@link #onClosed} once with {@code cause}. A second call is a no-op, so a user {@link
-   * #close} racing a drop resolves to whichever happens first.
+   * {@code cause}, stops the data-plane threads, closes the transports, and fires {@link #onClosed}
+   * once with {@code cause}. A second call is a no-op, so a user {@link #close} racing a drop
+   * resolves to whichever happens first.
    */
-  private void stop(State target, Throwable cause, boolean notify) {
+  private void stop(State target, Throwable cause) {
     Consumer<Throwable> listener;
     synchronized (lifecycle) {
       if (state == State.CLOSED || state == State.FAILED) return; // already terminated — once only
@@ -559,7 +528,7 @@ final class Tunnel implements AutoCloseable {
       listener = onClosed;
     }
     teardown();
-    if (notify && listener != null) {
+    if (listener != null) {
       try {
         listener.accept(cause);
       } catch (Throwable ignore) {
@@ -593,7 +562,7 @@ final class Tunnel implements AutoCloseable {
     CONNECTING,
     /** The data plane is live; the device ULA ({@link #deviceUla()}) is reachable. */
     UP,
-    /** Torn down by {@link #close} (or an interim {@link #restart} stop). */
+    /** Torn down by {@link #close}. */
     CLOSED,
     /** The link dropped on its own; see {@link #failure()}. */
     FAILED

@@ -67,6 +67,7 @@ class TunnelBrokerTest {
     }
 
     /** Simulates a spontaneous drop of {@code host}, as a real tunnel failing would. */
+    @SuppressWarnings("SameParameterValue")
     void drop(String host, Throwable cause) {
       synchronized (this) {
         up.remove(host);
@@ -182,12 +183,10 @@ class TunnelBrokerTest {
       assertThat(b.get("refs")).isEqualTo(2L);
       assertThat(tunnels.isOpen("192.168.1.118")).isTrue();
 
-      assertThat(broker.release(params("token", (String) a.get("token"))).get("refs"))
-          .isEqualTo(1L);
+      assertThat(broker.release(params("token", a.get("token"))).get("refs")).isEqualTo(1L);
       assertThat(tunnels.isOpen("192.168.1.118")).isTrue();
 
-      assertThat(broker.release(params("token", (String) b.get("token"))).get("refs"))
-          .isEqualTo(0L);
+      assertThat(broker.release(params("token", b.get("token"))).get("refs")).isEqualTo(0L);
       assertThat(tunnels.isOpen("192.168.1.118")).isFalse();
       assertThat(((List<?>) broker.status(params()).get("tunnels"))).isEmpty();
     }

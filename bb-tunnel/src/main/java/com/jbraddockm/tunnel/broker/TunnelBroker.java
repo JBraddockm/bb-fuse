@@ -185,7 +185,7 @@ final class TunnelBroker {
   Map<String, Object> status(RequestParams params) {
     var only = params.optionalString("host");
     synchronized (lock) {
-      var tunnels = new ArrayList<Object>();
+      var tunnels = new ArrayList<>();
       byHost.forEach(
           (host, info) -> {
             if (only.isPresent() && !only.get().equals(host)) {
