@@ -101,23 +101,29 @@ public final class TunnelBrokerClient implements AutoCloseable {
 
   /**
    * Opens or joins a device's tunnel by its transport {@code host} (USB host−1 or the Wi-Fi LAN
-   * address). {@code stable} pins the constant {@code 169.254.1.1} SMB address. The tunnel's client
-   * identity comes from the daemon's own resolution (CLI args / env / {@code devices/<PIN>/}).
+   * address). {@code proposedSmbHost} (a {@code 169.254.x.1} address, or {@code null} for no
+   * preference) is honoured when it is free, otherwise the broker counter-offers; the returned
+   * lease's {@code innerIpv4} is the granted address. The tunnel's client identity comes from the
+   * daemon's own resolution (CLI args / env / {@code devices/<PIN>/}).
    */
-  public BrokerLease acquire(String host, boolean stable, String consumer) throws IOException {
-    return acquire(host, stable, consumer, null, null);
+  public BrokerLease acquire(String host, String proposedSmbHost, String consumer)
+      throws IOException {
+    return acquire(host, proposedSmbHost, consumer, null, null);
   }
 
   /**
-   * As {@link #acquire(String, boolean, String)}, but tells the daemon which client identity to
+   * As {@link #acquire(String, String, String)}, but tells the daemon which client identity to
    * present: the absolute paths of the device's certificate chain (leaf first) and PKCS#8 key on
    * disk. Passing them keeps the daemon's binary portable — it loads the device's own cert rather
    * than an embedded one. A {@code null} path leaves identity to the daemon's fallback resolution.
    */
   public BrokerLease acquire(
-      String host, boolean stable, String consumer, Path certChainPem, Path keyPem)
+      String host, String proposedSmbHost, String consumer, Path certChainPem, Path keyPem)
       throws IOException {
-    var params = Json.object("host", host, "stable", stable, "consumer", consumer);
+    var params = Json.object("host", host, "consumer", consumer);
+    if (proposedSmbHost != null) {
+      params.put("smbHost", proposedSmbHost);
+    }
     if (certChainPem != null && keyPem != null) {
       params.put("certificate", certChainPem.toString());
       params.put("key", keyPem.toString());

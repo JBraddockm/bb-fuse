@@ -50,7 +50,7 @@ class BrokerTunnelConnectorTest {
     return new BrokerTunnelConnector(
         broker.socket,
         "192.168.1.118",
-        true,
+        "169.254.1.1",
         "bb-link",
         Path.of("/devices/2C1E7583/tunnel_cert.pem"),
         Path.of("/devices/2C1E7583/tunnel_key.pem"));
@@ -90,7 +90,7 @@ class BrokerTunnelConnectorTest {
             .satisfies(
                 params -> {
                   assertThat(params.get("host")).isEqualTo("192.168.1.118");
-                  assertThat(params.get("stable")).isEqualTo(Boolean.TRUE);
+                  assertThat(params.get("smbHost")).isEqualTo("169.254.1.1");
                   assertThat(params.get("consumer")).isEqualTo("bb-link");
                   assertThat(params.get("certificate"))
                       .isEqualTo("/devices/2C1E7583/tunnel_cert.pem");

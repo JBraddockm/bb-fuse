@@ -92,7 +92,7 @@ class BrokerServerRoundTripTest {
   @DisplayName("acquire, status and release flow over the socket")
   void lifecycle() throws Exception {
     try (var client = TunnelBrokerClient.connect(socket, Duration.ofSeconds(5))) {
-      var lease = client.acquire("192.168.1.118", true, "bb-link");
+      var lease = client.acquire("192.168.1.118", "169.254.1.1", "bb-link");
       assertThat(lease.ula()).isEqualTo("fd00::192.168.1.118");
       assertThat(lease.innerIpv4()).isEqualTo("169.254.1.1");
       assertThat(lease.token()).isNotBlank();
@@ -116,7 +116,7 @@ class BrokerServerRoundTripTest {
       var events = new LinkedBlockingQueue<BrokerEvent>();
       one.onEvent(events::add);
 
-      var first = one.acquire("192.168.1.118", false, "bb-link");
+      var first = one.acquire("192.168.1.118", null, "bb-link");
       one.identify("192.168.1.118", "GUID-1", "2C1E7583");
 
       var identity = poll(events, "identity");
@@ -134,7 +134,7 @@ class BrokerServerRoundTripTest {
     try (var client = TunnelBrokerClient.connect(socket, Duration.ofSeconds(5))) {
       var events = new LinkedBlockingQueue<BrokerEvent>();
       client.onEvent(events::add);
-      client.acquire("192.168.1.118", false, "bb-link");
+      client.acquire("192.168.1.118", null, "bb-link");
 
       tunnels.drop("192.168.1.118", new IllegalStateException("link lost"));
 
@@ -152,10 +152,13 @@ class BrokerServerRoundTripTest {
     private BiConsumer<String, Throwable> onDrop;
 
     @Override
-    public synchronized Lease acquire(String host, boolean stable, Identity identity) {
+    public synchronized Lease acquire(String host, String proposedSmbHost, Identity identity) {
       var info =
           up.computeIfAbsent(
-              host, h -> new Info("fd00::" + h, stable ? "169.254.1.1" : "169.254.9.1"));
+              host,
+              h ->
+                  new Info(
+                      "fd00::" + h, proposedSmbHost != null ? proposedSmbHost : "169.254.9.1"));
       refs.merge(host, 1, Integer::sum);
       return new FakeLease(host, info);
     }

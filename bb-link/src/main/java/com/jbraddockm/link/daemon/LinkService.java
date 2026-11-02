@@ -185,9 +185,12 @@ public final class LinkService implements Service<DeviceSession> {
       // its binary embeds no device cert. Absent, the daemon falls back to its own resolution.
       var tunnelCert = params.optionalString("tunnelCertificate").map(Path::of).orElse(null);
       var tunnelKey = params.optionalString("tunnelKey").map(Path::of).orElse(null);
+      // --smb-host under --tunnel is the proposed SMB host; --stable-smb proposes 169.254.1.1.
+      var proposedSmbHost =
+          params.optionalString("smbHost").orElse(params.flag("stableSmb") ? "169.254.1.1" : null);
       session.useTunnel(
           new BrokerTunnelConnector(
-              socket, target.host(), params.flag("stableSmb"), "bb-link", tunnelCert, tunnelKey));
+              socket, target.host(), proposedSmbHost, "bb-link", tunnelCert, tunnelKey));
       if (tunnelCert != null) {
         pairingCertificate = tunnelCert;
       }
