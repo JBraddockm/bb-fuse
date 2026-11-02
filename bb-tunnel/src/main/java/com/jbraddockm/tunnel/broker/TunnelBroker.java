@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 
 /**
  * The shared, thread-safe core of the tunnel broker daemon: it layers consumer-facing leases,
@@ -43,6 +44,7 @@ final class TunnelBroker {
 
   private final Tunnels tunnels;
   private final IdentityResolver fallbackIdentity;
+  private final Consumer<String> log;
   private final Object lock = new Object();
   private final AtomicLong tokens = new AtomicLong();
   private final Map<String, Hold> byToken = new HashMap<>();
@@ -65,8 +67,18 @@ final class TunnelBroker {
    * an acquire is refused.
    */
   TunnelBroker(Tunnels tunnels, IdentityResolver fallbackIdentity) {
+    this(tunnels, fallbackIdentity, _ -> {});
+  }
+
+  /**
+   * As {@link #TunnelBroker(Tunnels, IdentityResolver)}, with a {@code log} for the daemon's
+   * lifecycle lines (a tunnel coming up or down, an identity learned). It defaults to a no-op; the
+   * daemon ({@code Tunneld}) points it at standard error.
+   */
+  TunnelBroker(Tunnels tunnels, IdentityResolver fallbackIdentity, Consumer<String> log) {
     this.tunnels = Objects.requireNonNull(tunnels, "tunnels");
     this.fallbackIdentity = Objects.requireNonNull(fallbackIdentity, "fallbackIdentity");
+    this.log = Objects.requireNonNull(log, "log");
     tunnels.onDrop(this::dropped);
   }
 
@@ -81,6 +93,30 @@ final class TunnelBroker {
     }
   }
 
+  /**
+   * The device PIN for a log line: the acquire's explicit {@code pin}, else the name of the device
+   * folder holding the tunnel certificate ({@code devices/<PIN>/tunnel_cert.pem}), or {@code null}
+   * when neither is present.
+   */
+  private static String pinFrom(RequestParams params) {
+    var explicit = params.optionalString("pin");
+    return explicit.orElseGet(() ->
+        params
+            .optionalString("certificate")
+            .map(Path::of)
+            .map(Path::getParent)
+            .map(Path::getFileName)
+            .map(Path::toString)
+            .filter(name -> name.matches("[A-Za-z0-9]{1,16}"))
+            .orElse(null));
+  }
+
+  /** A device's coordinates for a log line: host, inner SMB host, ULA, and PIN when known. */
+  private static String describeTunnel(String host, DeviceInfo info) {
+    var line = host + "  smb " + info.innerIpv4 + "  ula " + info.ula;
+    return info.pin == null ? line : line + "  pin " + info.pin;
+  }
+
   /** Registers a connection and where to write its events. Call before handling its requests. */
   void connected(String connection, EventSink events) {
     synchronized (lock) {
@@ -90,16 +126,23 @@ final class TunnelBroker {
 
   /** Forgets a connection and releases every lease it still held (its socket closed). */
   void disconnected(String connection) {
-    List<String> toRelease;
+    List<String> downHosts = new ArrayList<>();
     synchronized (lock) {
       connections.remove(connection);
-      toRelease =
+      var toRelease =
           byToken.values().stream()
               .filter(hold -> hold.connection.equals(connection))
               .map(Hold::token)
               .toList();
-      toRelease.forEach(this::releaseLocked);
+      for (var token : toRelease) {
+        var hold = byToken.get(token);
+        var host = hold == null ? null : hold.host;
+        if (releaseLocked(token) == 0 && host != null) {
+          downHosts.add(host);
+        }
+      }
     }
+    downHosts.forEach(host -> log.accept("tunnel down: " + host));
   }
 
   /**
@@ -136,14 +179,29 @@ final class TunnelBroker {
       throw new BrokerException(certFailure.code(), certFailure.getMessage());
     }
 
+    String message;
+    Map<String, Object> coordinates;
     synchronized (lock) {
       var info = byHost.computeIfAbsent(host, _ -> new DeviceInfo());
       info.ula = lease.deviceUla();
       info.innerIpv4 = lease.deviceIpv4();
+      var pin = pinFrom(params);
+      if (pin != null) {
+        info.pin = pin;
+      }
       var token = "t" + tokens.incrementAndGet();
       byToken.put(token, new Hold(token, host, connection, consumer, lease));
-      return describe(token, host, info);
+      var refs = holdsFor(host).size();
+      message =
+          (refs == 1 ? "tunnel up: " : "tunnel joined (refs " + refs + "): ")
+              + describeTunnel(host, info)
+              + "  ["
+              + consumer
+              + "]";
+      coordinates = describe(token, host, info);
     }
+    log.accept(message);
+    return coordinates;
   }
 
   /**
@@ -164,21 +222,31 @@ final class TunnelBroker {
     }
     return fallbackIdentity
         .resolve(params)
-        .orElseThrow(
-            () ->
-                new BrokerException(
-                    "identity_missing",
-                    "no client certificate for the tunnel: pass 'certificate' and 'key' paths, or"
-                        + " give the daemon a device identity (--cert/--key, BB_DEVICE, or a"
-                        + " devices/<PIN>/ folder beside the binary)"));
+        .orElseThrow(() ->
+            new BrokerException(
+                "identity_missing",
+                "no client certificate for the tunnel: pass 'certificate' and 'key' paths, or"
+                    + " give the daemon a device identity (--cert/--key, BB_DEVICE, or a"
+                    + " devices/<PIN>/ folder beside the binary)"));
   }
 
   /** Releases one lease by token. Idempotent; reports the references remaining for the device. */
   Map<String, Object> release(RequestParams params) {
     var token = params.requireString("token");
+    int remaining;
+    String downHost;
     synchronized (lock) {
-      return Json.object("refs", (long) releaseLocked(token));
+      var hold = byToken.get(token);
+      downHost = hold == null ? null : hold.host;
+      remaining = releaseLocked(token);
+      if (remaining != 0) {
+        downHost = null;
+      }
     }
+    if (downHost != null) {
+      log.accept("tunnel down: " + downHost);
+    }
+    return Json.object("refs", (long) remaining);
   }
 
   /** Lists the tunnels the broker holds (optionally one {@code host}). */
@@ -186,33 +254,32 @@ final class TunnelBroker {
     var only = params.optionalString("host");
     synchronized (lock) {
       var tunnels = new ArrayList<>();
-      byHost.forEach(
-          (host, info) -> {
-            if (only.isPresent() && !only.get().equals(host)) {
-              return;
-            }
-            var holds = holdsFor(host);
-            var consumers = new LinkedHashSet<String>();
-            holds.forEach(hold -> consumers.add(hold.consumer));
-            tunnels.add(
-                Json.object(
-                    "host",
-                    host,
-                    "state",
-                    "UP",
-                    "ula",
-                    info.ula,
-                    "innerIpv4",
-                    info.innerIpv4,
-                    "guid",
-                    info.guid,
-                    "pin",
-                    info.pin,
-                    "refs",
-                    (long) holds.size(),
-                    "consumers",
-                    List.copyOf(consumers)));
-          });
+      byHost.forEach((host, info) -> {
+        if (only.isPresent() && !only.get().equals(host)) {
+          return;
+        }
+        var holds = holdsFor(host);
+        var consumers = new LinkedHashSet<String>();
+        holds.forEach(hold -> consumers.add(hold.consumer));
+        tunnels.add(
+            Json.object(
+                "host",
+                host,
+                "state",
+                "UP",
+                "ula",
+                info.ula,
+                "innerIpv4",
+                info.innerIpv4,
+                "guid",
+                info.guid,
+                "pin",
+                info.pin,
+                "refs",
+                (long) holds.size(),
+                "consumers",
+                List.copyOf(consumers)));
+      });
       return Json.object("tunnels", tunnels);
     }
   }
@@ -241,8 +308,11 @@ final class TunnelBroker {
       sinks = subscribers(host);
     }
     fan(sinks, event);
+    log.accept("identified: " + host + "  pin " + pin + "  guid " + guid);
     return Json.object("ok", true);
   }
+
+  // --- internals -------------------------------------------------------------------------------
 
   /** Called by {@link Tunnels} when a tunnel drops on its own. */
   private void dropped(String host, Throwable cause) {
@@ -265,6 +335,7 @@ final class TunnelBroker {
               cause == null ? null : String.valueOf(cause));
     }
     fan(sinks, event);
+    log.accept("tunnel dropped: " + host + (cause == null ? "" : " (" + cause + ")"));
   }
 
   /** Caller holds {@link #lock}. Returns the references remaining for the released device. */
@@ -281,8 +352,6 @@ final class TunnelBroker {
     }
     return remaining;
   }
-
-  // --- internals -------------------------------------------------------------------------------
 
   /** Caller holds {@link #lock}. */
   private List<Hold> holdsFor(String host) {

@@ -30,9 +30,10 @@ public final class Tunneld {
 
   /**
    * As {@link #run(Path)}, but with CLI overrides for the daemon's identity fallback — the client
-   * certificate presented for an acquire that carries none of its own. {@code certArg}/{@code keyArg}
-   * name an explicit identity; {@code deviceArg} a PIN; {@code devicesArg} the devices directory. Any
-   * left {@code null} fall back to the environment and the {@code devices/} convention.
+   * certificate presented for an acquire that carries none of its own. {@code certArg}/{@code
+   * keyArg} name an explicit identity; {@code deviceArg} a PIN; {@code devicesArg} the devices
+   * directory. Any left {@code null} fall back to the environment and the {@code devices/}
+   * convention.
    */
   public static void run(
       Path socketPath, Path certArg, Path keyArg, String deviceArg, Path devicesArg)
@@ -42,7 +43,9 @@ public final class Tunneld {
             System.getenv(), certArg, keyArg, deviceArg, devicesArg);
     var broker =
         new TunnelBroker(
-            new TunnelManager(), request -> sources.resolve(request.optionalString("pin")));
+            new TunnelManager(),
+            request -> sources.resolve(request.optionalString("pin")),
+            message -> System.err.println("bb-tunneld: " + message));
     try (var server = new BrokerServer(broker, socketPath, VERSION)) {
       // Stop the accept loop on SIGTERM/SIGINT so the socket file is removed on a clean signal,
       // not only on a graceful close(). A stale file from a hard kill is cleared at next startup.

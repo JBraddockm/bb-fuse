@@ -3,6 +3,7 @@ package com.jbraddockm.tunnel;
 import com.jbraddockm.tunnel.internal.Hex;
 import com.jbraddockm.tunnel.internal.Trace;
 import java.net.*;
+import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.time.Duration;
 import java.util.Arrays;
@@ -172,14 +173,27 @@ final class Tunnel implements AutoCloseable {
   }
 
   /**
-   * Runs a local command (ifconfig/route), inheriting stdio; logs a non-zero exit but never throws.
+   * Runs a local interface command ({@code ifconfig}/{@code route}), capturing its output so it
+   * does not clutter the daemon's own log. A route that already exists ({@code File exists}) is a
+   * normal result when a prior or shared tunnel left the addressing in place. Output and a non-zero
+   * exit go to the (gated) trace; failures never throw.
    */
   private static void runCmd(String... args) {
+    var command = String.join(" ", args);
     try {
-      int rc = new ProcessBuilder(args).inheritIO().start().waitFor();
-      if (rc != 0) Trace.line("cmd rc=" + rc + ": " + String.join(" ", args));
-    } catch (Throwable t) {
-      Trace.line("cmd failed: " + String.join(" ", args) + " : " + t);
+      var process = new ProcessBuilder(args).redirectErrorStream(true).start();
+      var output =
+          new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8).strip();
+      int rc = process.waitFor();
+      if (rc == 0 || output.contains("File exists")) {
+        if (!output.isEmpty()) {
+          Trace.line(command + " — " + output);
+        }
+        return;
+      }
+      Trace.line("cmd rc=" + rc + ": " + command + (output.isEmpty() ? "" : " — " + output));
+    } catch (Throwable failure) {
+      Trace.line("cmd failed: " + command + " : " + failure);
     }
   }
 

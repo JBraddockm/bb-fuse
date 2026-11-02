@@ -325,4 +325,48 @@ class TunnelBrokerTest {
           .satisfies(e -> assertThat(((BrokerException) e).code()).isEqualTo("cert_incomplete"));
     }
   }
+
+  @Nested
+  @DisplayName("daemon log")
+  class Logging {
+
+    private final List<String> log = new ArrayList<>();
+    private final TunnelBroker logged = new TunnelBroker(tunnels, FALLBACK, log::add);
+
+    @Test
+    @DisplayName("notes a tunnel coming up with its coordinates")
+    void notesTunnelUp() throws Exception {
+      logged.connected("c1", new Events());
+
+      logged.acquire("c1", params("host", "192.168.1.118", "consumer", "bb-link"));
+
+      assertThat(log)
+          .anyMatch(line -> line.startsWith("tunnel up: ") && line.contains("192.168.1.118"));
+    }
+
+    @Test
+    @DisplayName("notes an identity learned and the tunnel going down")
+    void notesIdentityAndDown() throws Exception {
+      logged.connected("c1", new Events());
+      var lease = logged.acquire("c1", params("host", "192.168.1.118"));
+      logged.identify(params("host", "192.168.1.118", "guid", "GUID-1", "pin", "2C1E7583"));
+
+      logged.release(params("token", lease.get("token")));
+
+      assertThat(log)
+          .anyMatch(line -> line.startsWith("identified: ") && line.contains("2C1E7583"));
+      assertThat(log).contains("tunnel down: 192.168.1.118");
+    }
+
+    @Test
+    @DisplayName("notes a spontaneous drop with its cause")
+    void notesDrop() throws Exception {
+      logged.connected("c1", new Events());
+      logged.acquire("c1", params("host", "192.168.1.118"));
+
+      tunnels.drop("192.168.1.118", new IllegalStateException("link lost"));
+
+      assertThat(log).anyMatch(line -> line.startsWith("tunnel dropped: 192.168.1.118"));
+    }
+  }
 }
