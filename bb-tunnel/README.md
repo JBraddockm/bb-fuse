@@ -10,8 +10,9 @@ Blend.
 The tunnel also brings up a link-local inner IPv4, so the device's **SMB share** (the Link network
 drive) is reachable at `smb://<inner-IPv4>/` — that address is returned alongside the login's SMB
 credentials. The inner IPv4 is **allocated per device** by `TunnelManager` from an `InnerAddressPool`
-(a distinct `169.254.k.1/.2` each), so several devices can use the SMB plane at once; a single-device
-or external-app mount pins the stable `169.254.1.1` (see [`PROTOCOL.md`](PROTOCOL.md) §2.2).
+(a distinct `169.254.k.1/.2` each), so several devices can use the SMB plane at once; a consumer can
+propose a specific host (e.g. the stable `169.254.1.1`), honoured when free and otherwise countered
+(see [`PROTOCOL.md`](PROTOCOL.md) §2.2).
 
 ## Opening a tunnel: `TunnelManager`
 
@@ -20,22 +21,21 @@ IPv4, and hands a consumer the coordinates to connect with:
 
 ```java
 TunnelManager manager = new TunnelManager();
-try(
-TunnelManager.Lease lease = manager.acquire(deviceHost, /* stable */ true)){
-        lease.
-
-deviceUla();   // the device's tunnel ULA — the host bb-link / Blend connect to
-  lease.
-
-deviceIpv4();  // the device's inner IPv4 — the SMB host (bb-link's `smbHost` connect param)
+var identity = new Tunnels.Identity(certPem, keyPem); // the device's enrolled tunnel cert + key
+// Propose an SMB host (null = let the pool choose); honoured if free, else countered.
+try (TunnelManager.Lease lease = manager.acquire(deviceHost, "169.254.1.1", identity)) {
+  lease.deviceUla();  // the device's tunnel ULA — the host bb-link / Blend connect to
+  lease.deviceIpv4(); // the GRANTED inner IPv4 — the SMB host (bb-link's `smbHost` connect param)
 }
 ```
 
-`acquire(host, stable)` is keyed by the transport address the tunnel is opened with (the device's USB
-host−1 or its Wi-Fi LAN address — the only identity known before the tunnel exists; the ULA is learned
-from `CONNECT_RESP`). It is ref-counted: the first consumer opens the tunnel, the last to close its
-`Lease` brings it down and returns the inner IPv4 to the pool. `stable` pins `169.254.1.1/.2`;
-otherwise the next free pair is allocated (`169.254.2.1`, `169.254.3.1`, …).
+`acquire(host, proposedSmbHost, identity)` is keyed by the transport address the tunnel is opened with
+(the device's USB host−1 or its Wi-Fi LAN address — the only identity known before the tunnel exists;
+the ULA is learned from `CONNECT_RESP`). It is ref-counted: the first consumer opens the tunnel, the
+last to close its `Lease` brings it down and returns the inner IPv4 to the pool. `proposedSmbHost` (a
+`169.254.k.1` address, or `null` for none) is **honoured** when the octet is free and valid, else the
+pool **counter-offers** the next free pair (`169.254.2.1`, `169.254.3.1`, …); the lease's
+`deviceIpv4()` is the granted address.
 
 The tunnel is a shared transport, so it is **not owned by bb-link**: bb-link and Blend are peers that
 each acquire a device's tunnel and connect over its ULA. A composition root (the application, not a
@@ -116,8 +116,15 @@ return traffic to us, and the device surface (CGIs, WebDAV, Blend) answers over 
 
 ## Troubleshooting
 
-**Tunnel "comes up" but every connection over the ULA times out → reboot the device.** Symptom: the
-log shows `HANDSHAKE OK` *and* `DTLS HANDSHAKE OK`, routes are installed, and `CONNECT_RESP` returns
+**Daemon log.** `bb-tunnel serve` prints one line per lifecycle event — `tunnel up` / `tunnel down` /
+`tunnel dropped` and `identified`, each with the host, SMB host, ULA and (when known) PIN. The
+low-level bring-up and data-plane trace (`ifconfig`/`route` output, the control-message flow,
+`HANDSHAKE OK` / `DTLS HANDSHAKE OK`) is **gated** — enable it with `-Dbb.tunnel.trace` or
+`BB_TUNNEL_TRACE=1`.
+
+**Tunnel "comes up" but every connection over the ULA times out → reboot the device.** Symptom (with
+the trace enabled): the log shows `HANDSHAKE OK` *and* `DTLS HANDSHAKE OK`, routes are installed, and
+`CONNECT_RESP` returns
 the correct device ULA, yet a TCP connect to `[deviceULA]:8443` (or the inner IPv4) times out. On the
 device, the service **is** listening on the ULA (`netstat` shows `fdXX:…8443 LISTEN` on `bptp0`), but
 it never sees the SYN and never forms a neighbour entry for our ULA — i.e. **no data crosses the

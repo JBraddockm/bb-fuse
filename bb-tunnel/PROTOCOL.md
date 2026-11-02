@@ -64,9 +64,11 @@ arrive at any time and are skipped; an **ERROR** (`0x04`) frame aborts.
 
    > **Per-device inner IPv4 (multi-device).** The pair is **allocated per device** by `TunnelManager`
    > from an `InnerAddressPool`: each device gets a distinct `169.254.k.1/.2` (`k = 2,3,…`), so several
-   > devices can use the IPv4/SMB plane at once without colliding. A single-device or external-app mount
-   > takes the pinned stable pair `169.254.1.1/.2` (`acquire(host, true)`), so that SMB address stays
-   > constant. The pool reserves `169.254.0.0/30` (USB NCM) and the RFC-3927 first/last `/24`; the
+   > devices can use the IPv4/SMB plane at once without colliding. A consumer can also **propose** an SMB
+   > host (`169.254.k.1`): the pool honours the octet `k` when it is free and valid (`k = 1..254`), else
+   > **counter-offers** the next free one, and the lease carries the **granted** address — so a pinned
+   > mount stays constant while a collision is resolved automatically. `acquire`'s `stable` flag is sugar
+   > for proposing `169.254.1.1`. The pool reserves `169.254.0.0/30` (USB NCM) and the RFC-3927 first/last `/24`; the
    > device accepts any `169.254.0.0/16` address (verified — it bound `169.254.9.1`). The device also
    > reports its occupied subnets in the `IPV4_INQUIRE` (`0x0b`) response — a `u16` count then
    > `(u32 address, u32 mask)` pairs (e.g. `127.0.0.1/8`, the Wi-Fi LAN, `169.254.0.1/30`) — which the
@@ -148,7 +150,7 @@ device without owning its lifecycle. It runs over a **Unix-domain socket** (defa
 
 | op         | params                                                                  | reply (on `ok`)                                                     |
 |------------|-------------------------------------------------------------------------|---------------------------------------------------------------------|
-| `acquire`  | `host` **or** `guid`; optional `stable` (pin `169.254.1.1`), `consumer` | `token`, `host`, `ula`, `innerIpv4`, `guid?`, `pin?`, `refs`        |
+| `acquire`  | `host` **or** `guid`; optional `smbHost` (propose `169.254.k.1`, honoured if free else countered), `stable` (= propose `169.254.1.1`), `consumer` | `token`, `host`, `ula`, `innerIpv4` (the **granted** SMB host), `guid?`, `pin?`, `refs` |
 | `release`  | `token`                                                                 | `refs` (remaining for the device)                                   |
 | `status`   | optional `host`                                                         | `tunnels`: `[{host,state,ula,innerIpv4,guid?,pin?,refs,consumers}]` |
 | `identify` | `host`, `guid`, optional `pin`                                          | `ok`                                                                |
