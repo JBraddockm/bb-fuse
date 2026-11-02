@@ -11,14 +11,18 @@ import com.jbraddockm.core.daemon.RequestParams;
 import com.jbraddockm.core.json.Json;
 import com.jbraddockm.link.endpoint.pairing.CertificateRetrieval;
 import com.jbraddockm.link.endpoint.pairing.Pairing;
+import com.jbraddockm.link.endpoint.pairing.store.DeviceDirectory;
 import com.jbraddockm.link.transport.cgi.ExchangeObserver;
 import com.jbraddockm.link.transport.cgi.TransportScheme;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 /**
  * Tests the {@code tunnel} opt-in of {@link LinkService#open}: a Wi-Fi LAN connect with {@code
@@ -88,5 +92,61 @@ class LinkServiceTunnelTest {
     assertThat(((Establishment.Rejected) establishment).error().message())
         .contains("could not be brought up");
     session.close();
+  }
+
+  @Nested
+  @DisplayName("the SMB host it proposes to the broker")
+  class ProposedSmbHost {
+
+    @TempDir private Path devices;
+
+    private Path pinnedCert(String smbHost) throws Exception {
+      DeviceDirectory.of(devices, "2C1E7583").pinSmbHost(smbHost);
+      return devices.resolve("2C1E7583").resolve("tunnel_cert.pem");
+    }
+
+    private Path unpinnedCert() {
+      return devices.resolve("2C1E7583").resolve("tunnel_cert.pem");
+    }
+
+    @Test
+    @DisplayName("uses an explicit smbHost, overriding any pin")
+    void explicitOverridesThePin() throws Exception {
+      var params = new RequestParams(Json.object("smbHost", "169.254.3.1"));
+
+      assertThat(LinkService.proposedSmbHost(params, pinnedCert("169.254.7.1")))
+          .isEqualTo("169.254.3.1");
+    }
+
+    @Test
+    @DisplayName("proposes 169.254.1.1 for stableSmb, overriding any pin")
+    void stableOverridesThePin() throws Exception {
+      var params = new RequestParams(Json.object("stableSmb", true));
+
+      assertThat(LinkService.proposedSmbHost(params, pinnedCert("169.254.7.1")))
+          .isEqualTo("169.254.1.1");
+    }
+
+    @Test
+    @DisplayName("falls back to the device's pinned address when the request names none")
+    void usesThePinnedAddress() throws Exception {
+      var params = new RequestParams(Json.object());
+
+      assertThat(LinkService.proposedSmbHost(params, pinnedCert("169.254.7.1")))
+          .isEqualTo("169.254.7.1");
+    }
+
+    @Test
+    @DisplayName("proposes nothing when the device has no pin")
+    void proposesNothingWithoutAPin() {
+      assertThat(LinkService.proposedSmbHost(new RequestParams(Json.object()), unpinnedCert()))
+          .isNull();
+    }
+
+    @Test
+    @DisplayName("proposes nothing when there is no tunnel certificate to locate the device")
+    void proposesNothingWithoutACertificate() {
+      assertThat(LinkService.proposedSmbHost(new RequestParams(Json.object()), null)).isNull();
+    }
   }
 }

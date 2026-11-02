@@ -43,6 +43,17 @@ public final class DeviceDirectory {
   }
 
   /**
+   * The record in a device folder named directly — e.g. the folder beside the tunnel certificate a
+   * connect was given, {@code <devices>/<PIN>/}.
+   *
+   * @param directory the device folder
+   * @return the directory; nothing is created yet
+   */
+  public static DeviceDirectory at(Path directory) {
+    return new DeviceDirectory(directory);
+  }
+
+  /**
    * The folder itself.
    *
    * @return its path

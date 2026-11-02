@@ -21,6 +21,7 @@ import com.jbraddockm.link.endpoint.discovery.FriendlyNameAdvertiser;
 import com.jbraddockm.link.endpoint.pairing.CertificateRetrieval;
 import com.jbraddockm.link.endpoint.pairing.ClientNames;
 import com.jbraddockm.link.endpoint.pairing.Pairing;
+import com.jbraddockm.link.endpoint.pairing.store.DeviceDirectory;
 import com.jbraddockm.link.endpoint.pairing.store.PairingDirectory;
 import com.jbraddockm.link.endpoint.pairing.store.StoredPairing;
 import com.jbraddockm.link.endpoint.properties.DeviceProperties;
@@ -185,9 +186,7 @@ public final class LinkService implements Service<DeviceSession> {
       // its binary embeds no device cert. Absent, the daemon falls back to its own resolution.
       var tunnelCert = params.optionalString("tunnelCertificate").map(Path::of).orElse(null);
       var tunnelKey = params.optionalString("tunnelKey").map(Path::of).orElse(null);
-      // --smb-host under --tunnel is the proposed SMB host; --stable-smb proposes 169.254.1.1.
-      var proposedSmbHost =
-          params.optionalString("smbHost").orElse(params.flag("stableSmb") ? "169.254.1.1" : null);
+      var proposedSmbHost = proposedSmbHost(params, tunnelCert);
       session.useTunnel(
           new BrokerTunnelConnector(
               socket, target.host(), proposedSmbHost, "bb-link", tunnelCert, tunnelKey));
@@ -201,6 +200,39 @@ public final class LinkService implements Service<DeviceSession> {
     // nothing.
     advertiseFriendlyName(session, pairingCertificate);
     return session;
+  }
+
+  /**
+   * The SMB host to propose to the broker on a tunnel connect, in order of precedence: an explicit
+   * {@code smbHost}, then {@code stableSmb} (169.254.1.1), then the device's pinned address from
+   * {@code device.json} beside the tunnel certificate, then {@code null} (the broker
+   * auto-allocates).
+   */
+  static String proposedSmbHost(RequestParams params, Path tunnelCertificate) {
+    return params
+        .optionalString("smbHost")
+        .orElseGet(
+            () -> params.flag("stableSmb") ? "169.254.1.1" : pinnedSmbHost(tunnelCertificate));
+  }
+
+  /**
+   * The device's pinned SMB host from {@code device.json} beside the tunnel certificate, or {@code
+   * null} when there is no certificate, no folder, no pin, or the record cannot be read. Only read
+   * here — a connect never writes it, so a broker counter never changes the pin.
+   */
+  private static String pinnedSmbHost(Path tunnelCertificate) {
+    if (tunnelCertificate == null) {
+      return null;
+    }
+    var deviceFolder = tunnelCertificate.getParent();
+    if (deviceFolder == null) {
+      return null;
+    }
+    try {
+      return DeviceDirectory.at(deviceFolder).pinnedSmbHost().orElse(null);
+    } catch (IOException unreadable) {
+      return null; // a device.json we cannot read must never block a connect
+    }
   }
 
   /**
