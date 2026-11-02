@@ -52,7 +52,7 @@ public record StoredDevice(StoredIdentity identity, StoredPairing pairing, Strin
    * @return JSON, with a trailing newline
    */
   public String toJsonText() {
-    var fields = new LinkedHashMap<String, Object>();
+    Map<String, Object> fields = new LinkedHashMap<>();
     if (identity != null) {
       fields.put("identity", identity.toJson());
     }

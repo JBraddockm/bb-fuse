@@ -159,6 +159,7 @@ class IdentityDirectoryTest {
 
     @Test
     @DisplayName("refuses to replace an identity that is there, and names the folder and the files")
+    @SuppressWarnings("resource") // prepare throws, so it returns no Pending to close
     void refusesToReplace() throws IOException {
       Files.createDirectories(directory.directory());
       Files.writeString(directory.certificateFile(), "old");
@@ -283,7 +284,7 @@ class IdentityDirectoryTest {
       Files.writeString(directory.certificateFile(), "old");
 
       try (var _ = directory.prepare(keys, IDENTITY, true)) {
-        // the device refused: nothing is committed
+        assertThat(SecureFiles.withSuffix(directory.keyFile())).exists();
       }
 
       assertThat(directory.certificateFile()).hasContent("old");

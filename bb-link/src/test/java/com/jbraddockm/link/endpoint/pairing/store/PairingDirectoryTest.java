@@ -143,6 +143,7 @@ class PairingDirectoryTest {
 
     @Test
     @DisplayName("refuses to replace a pairing that is there, and names it")
+    @SuppressWarnings("resource") // prepare throws, so it returns no Pending to close
     void refusesToReplace() throws IOException {
       Files.createDirectories(directory.directory());
       Files.writeString(directory.authorityFile(), "old");

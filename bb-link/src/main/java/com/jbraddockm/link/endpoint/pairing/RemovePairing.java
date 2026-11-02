@@ -10,11 +10,11 @@ import java.nio.file.Path;
 
 /**
  * Forgets a device pairing on this computer: deletes the keys and certificates in {@code
- * <devices>/<PIN>/} but keeps its {@code pairing.json}, so the identifier this computer gave itself is
- * preserved and a later re-pair reuses it (the device then updates its one entry rather than adding a
- * duplicate). Purely local — it sends nothing to the device, which keeps the pairing until it is
- * removed there. This is what BlackBerry Link's "remove" does; the device has no endpoint to unpair
- * over the network (its pairing.cgi only enrols — its delete path is dead code, verified).
+ * <devices>/<PIN>/} but keeps its {@code device.json}, so the identifier this computer gave itself
+ * is preserved and a later re-pair reuses it (the device then updates its one entry rather than
+ * adding a duplicate). Purely local — it sends nothing to the device, which keeps the pairing until
+ * it is removed there. This is what BlackBerry Link's "remove" does; the device has no endpoint to
+ * unpair over the network (its pairing.cgi only enrols — its delete path is dead code, verified).
  */
 public final class RemovePairing {
 
@@ -47,7 +47,9 @@ public final class RemovePairing {
     return CommandOutcome.succeeded(new RemovalResult(pin, deviceId, pairing.directory()));
   }
 
-  /** The stored identifier, read before deleting; {@code null} if the metadata is missing or bad. */
+  /**
+   * The stored identifier, read before deleting; {@code null} if the metadata is missing or bad.
+   */
   private static String readDeviceId(PairingDirectory pairing) {
     try {
       return pairing.metadata().map(StoredPairing::deviceId).orElse(null);

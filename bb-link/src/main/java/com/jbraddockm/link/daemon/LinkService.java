@@ -235,7 +235,7 @@ public final class LinkService implements Service<DeviceSession> {
 
   /**
    * The client certificate a certificate login offers, or {@code null} for a password or
-   * no-password login. The {@code pairing.json} beside it holds the identifier the device folds to
+   * no-password login. The {@code device.json} beside it holds the identifier the device folds to
    * match our Friendly advert.
    */
   private static Path clientCertificate(Authentication authentication) {
