@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 
 import com.jbraddockm.link.testing.Resources;
+import java.time.Instant;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -15,8 +16,12 @@ import org.junit.jupiter.params.provider.ValueSource;
 @DisplayName("StoredDevice: the device.json file of a device")
 class StoredDeviceTest {
 
-  private static final StoredDevice PINNED = new StoredDevice("169.254.5.1");
-  private static final StoredDevice NO_PIN = new StoredDevice(null);
+  private static final StoredIdentity IDENTITY =
+      new StoredIdentity("BBCGIAUTH [2A3B4C5D] workstation", Instant.parse("2026-10-18T10:00:00Z"));
+  private static final StoredPairing PAIRING =
+      new StoredPairing("01AB", "PC issuer 1", Instant.parse("2026-10-28T00:00:00Z"));
+  private static final StoredDevice PINNED = new StoredDevice(null, null, "169.254.5.1");
+  private static final StoredDevice NO_PIN = new StoredDevice(null, null, null);
 
   private static String resource(String name) {
     return Resources.text(StoredDeviceTest.class, name);
@@ -33,7 +38,7 @@ class StoredDeviceTest {
     }
 
     @Test
-    @DisplayName("writes an empty object when nothing is pinned")
+    @DisplayName("writes an empty object when the record holds nothing")
     void writesAnEmptyObject() {
       assertThat(NO_PIN.toJsonText()).isEqualTo(resource("stored-device--empty.json"));
     }
@@ -51,10 +56,21 @@ class StoredDeviceTest {
     }
 
     @Test
-    @DisplayName("reads an empty object as no pin")
+    @DisplayName("round-trips the identity, pairing and pinned host together")
+    void roundTripsEveryPart() {
+      var full = new StoredDevice(IDENTITY, PAIRING, "169.254.5.1");
+
+      assertThat(StoredDevice.fromJsonText(full.toJsonText())).isEqualTo(full);
+    }
+
+    @Test
+    @DisplayName("reads an empty object as no parts")
     void readsAnEmptyObject() {
-      assertThat(StoredDevice.fromJsonText(resource("stored-device--empty.json")).smbHost())
-          .isNull();
+      var device = StoredDevice.fromJsonText(resource("stored-device--empty.json"));
+
+      assertThat(device.identity()).isNull();
+      assertThat(device.pairing()).isNull();
+      assertThat(device.smbHost()).isNull();
     }
 
     @Test
@@ -88,7 +104,7 @@ class StoredDeviceTest {
     @ValueSource(strings = {"169.254.1.1", "169.254.5.1", "169.254.254.1"})
     @DisplayName("accepts a 169.254.<k>.1 host with k in 1..254")
     void accepts(String host) {
-      assertThat(new StoredDevice(host).smbHost()).isEqualTo(host);
+      assertThat(new StoredDevice(null, null, host).smbHost()).isEqualTo(host);
     }
 
     @ParameterizedTest(name = "\"{0}\" is rejected")
@@ -96,13 +112,13 @@ class StoredDeviceTest {
         strings = {"169.254.0.1", "169.254.255.1", "169.254.5.2", "10.0.0.1", "169.254.5", "x"})
     @DisplayName("rejects anything that is not a 169.254.<k>.1 host with k in 1..254")
     void rejects(String host) {
-      assertThatIllegalArgumentException().isThrownBy(() -> new StoredDevice(host));
+      assertThatIllegalArgumentException().isThrownBy(() -> new StoredDevice(null, null, host));
     }
 
     @Test
     @DisplayName("allows null — a device with no pinned host")
     void allowsNull() {
-      assertThat(new StoredDevice(null).smbHost()).isNull();
+      assertThat(new StoredDevice(null, null, null).smbHost()).isNull();
     }
   }
 }

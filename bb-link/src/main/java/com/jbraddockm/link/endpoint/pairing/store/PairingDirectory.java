@@ -13,13 +13,14 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 /**
- * The folder of a pairing: the authority that this computer made, its private key, the authority
- * that the device answered with, and a file that says which pairing it is. It is the folder of the
- * device, {@code <devices>/<PIN>/}, where the files of the certificate are too.
+ * The pairing of one device: the authority this computer made, its private key, and the authority
+ * the device answered with. It is the device folder, {@code <devices>/<PIN>/}, where the
+ * certificate files are too. The pairing metadata lives in the folder's {@link DeviceDirectory
+ * device.json} (the {@code pairing} section), which this class writes through.
  *
  * <p>A pairing is written in two steps: the key first, under a temporary name, and the rest, with
- * the key moved into place, once the device has taken the authority. An authority that the device
- * never took is never kept, and a key is never without its authority.
+ * the key moved into place, once the device has taken the authority. An authority the device never
+ * took is never kept, and a key is never without its authority.
  */
 public final class PairingDirectory {
 
@@ -32,13 +33,12 @@ public final class PairingDirectory {
   /** The name of the file that holds the authority that the device answered with. */
   public static final String DEVICE_AUTHORITY_FILE = "device_authority.pem";
 
-  /** The name of the file that records the identifier and the names. */
-  public static final String METADATA_FILE = "pairing.json";
-
   private final Path directory;
+  private final DeviceDirectory device;
 
-  private PairingDirectory(Path directory) {
+  private PairingDirectory(Path directory, DeviceDirectory device) {
     this.directory = directory;
+    this.device = device;
   }
 
   /**
@@ -50,10 +50,8 @@ public final class PairingDirectory {
    * @throws IllegalArgumentException if the PIN is not letters and digits
    */
   public static PairingDirectory of(Path devices, String pin) {
-    if (!pin.matches("[A-Za-z0-9]{1,16}")) {
-      throw new IllegalArgumentException("not a PIN: " + pin);
-    }
-    return new PairingDirectory(devices.resolve(pin));
+    var device = DeviceDirectory.of(devices, pin);
+    return new PairingDirectory(device.directory(), device);
   }
 
   /**
@@ -93,15 +91,6 @@ public final class PairingDirectory {
   }
 
   /**
-   * The file that says which pairing it is.
-   *
-   * @return its path
-   */
-  public Path metadataFile() {
-    return directory.resolve(METADATA_FILE);
-  }
-
-  /**
    * Writes a per-service identity into the device folder: {@code <name>_cert.pem} (the certificate,
    * or a chain) and {@code <name>_key.pem} (its private key, owner-only), both moved into place
    * atomically. Used for the tunnel and Blend identities made at pairing.
@@ -133,29 +122,24 @@ public final class PairingDirectory {
   }
 
   /**
-   * The files of a pairing that are there.
+   * The authorities and key of a pairing that are there.
    *
    * @return the paths, in a fixed order
    */
   public List<Path> existingFiles() {
-    return Stream.of(authorityFile(), keyFile(), deviceAuthorityFile(), metadataFile())
+    return Stream.of(authorityFile(), keyFile(), deviceAuthorityFile())
         .filter(Files::exists)
         .toList();
   }
 
   /**
-   * Reads what the pairing says of itself.
+   * The pairing recorded for this device.
    *
-   * @return the pairing, or nothing if there is no file
-   * @throws IOException if the file cannot be read
-   * @throws IllegalArgumentException if it is not a pairing file
+   * @return the pairing, or empty if there is none
+   * @throws IOException if the record cannot be read
    */
   public Optional<StoredPairing> metadata() throws IOException {
-    if (!Files.exists(metadataFile())) {
-      return Optional.empty();
-    }
-    return Optional.of(
-        StoredPairing.fromJsonText(Files.readString(metadataFile(), StandardCharsets.UTF_8)));
+    return device.pairing();
   }
 
   /** Whether the folder of this pairing exists on disk. */
@@ -164,11 +148,12 @@ public final class PairingDirectory {
   }
 
   /**
-   * Forgets the pairing locally: deletes the keys and certificates (and anything else in the folder)
-   * but <b>keeps {@code pairing.json}</b>, so the identifier this computer gave itself is preserved.
-   * A later re-pair reuses that identifier, so the device updates its one trusted-peer entry rather
-   * than adding a duplicate (and it is also what renewal needs). Local only — it tells the device
-   * nothing; the device keeps the pairing until it is removed there. Leaves the folder in place.
+   * Forgets the pairing locally: deletes the keys and certificates (and anything else in the
+   * folder) but <b>keeps {@code device.json}</b>, so the identifier this computer gave itself is
+   * preserved. A later re-pair reuses that identifier, so the device updates its one trusted-peer
+   * entry rather than adding a duplicate (and it is also what renewal needs). Local only — it tells
+   * the device nothing; the device keeps the pairing until it is removed there. Leaves the folder
+   * in place.
    *
    * @throws IOException if a file cannot be deleted
    */
@@ -176,11 +161,11 @@ public final class PairingDirectory {
     if (!Files.exists(directory)) {
       return;
     }
-    var metadata = metadataFile();
+    var record = directory.resolve(DeviceDirectory.DEVICE_FILE);
     try (var paths = Files.walk(directory)) {
       paths
           .sorted(Comparator.reverseOrder())
-          .filter(path -> !path.equals(directory) && !path.equals(metadata))
+          .filter(path -> !path.equals(directory) && !path.equals(record))
           .forEach(
               path -> {
                 try {
@@ -205,11 +190,11 @@ public final class PairingDirectory {
    * @throws IOException if the key cannot be written
    */
   public Pending prepare(KeyPair keys, boolean replace) throws IOException {
-    // Only the keys and certificates are a pairing worth protecting; a lone pairing.json (kept by
-    // `remove`, which preserves the identifier) is not. So require --replace only when that material is
-    // present — pairing again after a remove then reuses the kept identifier without needing --replace.
-    var material =
-        Stream.of(authorityFile(), keyFile(), deviceAuthorityFile()).filter(Files::exists).toList();
+    // Only the keys and certificates are a pairing worth protecting; a lone device.json (kept by
+    // `remove`, which preserves the identifier) is not. So require --replace only when that
+    // material
+    // is present — pairing again after a remove then reuses the kept identifier without --replace.
+    var material = existingFiles();
     if (!material.isEmpty() && !replace) {
       throw new FilesExistException("a pairing with this device", directory, material);
     }
@@ -226,8 +211,8 @@ public final class PairingDirectory {
     private Pending() {}
 
     /**
-     * Writes the authorities and the file of the pairing, then moves all four files into place, the
-     * key first.
+     * Writes the authorities, moves them and the key into place (the key first), and records the
+     * pairing.
      *
      * @param authorityPem this computer's authority, as PEM
      * @param deviceAuthorityPem the device's authority, as PEM
@@ -238,14 +223,12 @@ public final class PairingDirectory {
         throws IOException {
       var authorityTemporary = SecureFiles.withSuffix(authorityFile());
       var deviceTemporary = SecureFiles.withSuffix(deviceAuthorityFile());
-      var metadataTemporary = SecureFiles.withSuffix(metadataFile());
       Files.writeString(authorityTemporary, authorityPem, StandardCharsets.UTF_8);
       Files.writeString(deviceTemporary, deviceAuthorityPem, StandardCharsets.UTF_8);
-      Files.writeString(metadataTemporary, stored.toJsonText(), StandardCharsets.UTF_8);
       SecureFiles.move(SecureFiles.withSuffix(keyFile()), keyFile());
       SecureFiles.move(authorityTemporary, authorityFile());
       SecureFiles.move(deviceTemporary, deviceAuthorityFile());
-      SecureFiles.move(metadataTemporary, metadataFile());
+      device.writePairing(stored);
       committed = true;
     }
 
@@ -255,8 +238,7 @@ public final class PairingDirectory {
       if (committed) {
         return;
       }
-      SecureFiles.deleteTemporaries(
-          List.of(keyFile(), authorityFile(), deviceAuthorityFile(), metadataFile()));
+      SecureFiles.deleteTemporaries(List.of(keyFile(), authorityFile(), deviceAuthorityFile()));
     }
   }
 }

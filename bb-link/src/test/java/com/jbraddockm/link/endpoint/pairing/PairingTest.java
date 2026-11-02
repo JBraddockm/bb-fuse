@@ -232,12 +232,16 @@ class PairingTest {
 
     @Test
     @DisplayName(
-        "keeps four files, the pairing file being what the identifier, the name and the time say,"
+        "keeps three files, the device record being what the identifier, the name and the time say,"
             + " and no temporary file")
-    void keepsFourFiles() throws Exception {
-      assertThat(directory.existingFiles()).hasSize(4);
-      assertThat(directory.metadataFile())
-          .hasContent(Resources.text(PairingTest.class, "pairing--stored.json"));
+    void keepsThreeFiles() throws Exception {
+      assertThat(directory.existingFiles()).hasSize(3);
+      assertThat(directory.metadata())
+          .hasValueSatisfying(
+              pairing -> {
+                assertThat(pairing.deviceId()).isEqualTo("01ABABABABABABABABABABABABABABABAB");
+                assertThat(pairing.commonName()).isEqualTo("PC issuer ABABABABABABABAB");
+              });
       try (var names = Files.list(directory.directory())) {
         assertThat(names.map(path -> path.getFileName().toString()))
             .noneMatch(name -> name.endsWith(".new"));

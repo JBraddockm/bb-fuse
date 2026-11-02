@@ -4,8 +4,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.jbraddockm.core.command.CommandOutcome;
 import com.jbraddockm.core.error.CoreErrorCode;
+import com.jbraddockm.link.endpoint.pairing.store.DeviceDirectory;
+import com.jbraddockm.link.endpoint.pairing.store.StoredPairing;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -15,16 +18,15 @@ import org.junit.jupiter.api.io.TempDir;
 class RemovePairingTest {
 
   @Test
-  @DisplayName("deletes the keys and certificates but keeps pairing.json (the identifier)")
+  @DisplayName("deletes the keys and certificates but keeps device.json (the identifier)")
   void deletesCertificatesKeepsIdentity(@TempDir Path devices) throws Exception {
     var folder = devices.resolve("2C1E7583");
     Files.createDirectories(folder.resolve("BACKUP"));
     Files.writeString(folder.resolve("tunnel_cert.pem"), "cert");
     Files.writeString(folder.resolve("authority_key.pem"), "key");
     Files.writeString(folder.resolve("BACKUP").resolve("old.pem"), "old");
-    Files.writeString(
-        folder.resolve("pairing.json"),
-        "{\"deviceId\":\"01ABCDEF\",\"commonName\":\"PC\",\"createdAt\":\"2026-10-28T00:00:00Z\"}");
+    DeviceDirectory.at(folder)
+        .writePairing(new StoredPairing("01ABCDEF", "PC", Instant.parse("2026-10-28T00:00:00Z")));
 
     var outcome = RemovePairing.remove(devices, "2C1E7583");
 
@@ -40,8 +42,8 @@ class RemovePairingTest {
                   .containsEntry("deviceStillPaired", Boolean.TRUE)
                   .containsKey("note");
             });
-    // pairing.json (the identifier) stays; the keys, certs and backup are gone.
-    assertThat(Files.exists(folder.resolve("pairing.json"))).isTrue();
+    // device.json (the identifier) stays; the keys, certs and backup are gone.
+    assertThat(Files.exists(folder.resolve("device.json"))).isTrue();
     assertThat(Files.exists(folder.resolve("tunnel_cert.pem"))).isFalse();
     assertThat(Files.exists(folder.resolve("authority_key.pem"))).isFalse();
     assertThat(Files.exists(folder.resolve("BACKUP"))).isFalse();

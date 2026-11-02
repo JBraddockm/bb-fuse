@@ -55,13 +55,12 @@ class IdentityDirectoryTest {
 
     @Test
     @DisplayName(
-        "is the folder of the PIN in the folder of the devices, with the three files in it")
+        "is the folder of the PIN in the folder of the devices, with the certificate and key in it")
     void isTheFolderOfThePin() {
       assertThat(directory.directory()).isEqualTo(devices.resolve("2A3B4C5D"));
       assertThat(directory.certificateFile())
           .isEqualTo(devices.resolve("2A3B4C5D/client_cert.pem"));
       assertThat(directory.keyFile()).isEqualTo(devices.resolve("2A3B4C5D/client_key.pem"));
-      assertThat(directory.metadataFile()).isEqualTo(devices.resolve("2A3B4C5D/identity.json"));
     }
 
     @ParameterizedTest(name = "\"{0}\" is a PIN")
@@ -99,11 +98,11 @@ class IdentityDirectoryTest {
             + " first")
     void listsTheFilesInAFixedOrder() throws IOException {
       Files.createDirectories(directory.directory());
-      Files.writeString(directory.metadataFile(), "m");
+      Files.writeString(directory.keyFile(), "k");
       Files.writeString(directory.certificateFile(), "c");
 
       assertThat(directory.existingFiles())
-          .containsExactly(directory.certificateFile(), directory.metadataFile());
+          .containsExactly(directory.certificateFile(), directory.keyFile());
     }
 
     @Test
@@ -113,27 +112,20 @@ class IdentityDirectoryTest {
     }
 
     @Test
-    @DisplayName("metadata reads the file")
-    void metadataReadsTheFile() throws IOException {
-      Files.createDirectories(directory.directory());
-      Resources.copyTo(
-          StoredIdentityTest.class, "stored-identity--complete.json", directory.directory());
-      Files.move(
-          directory.directory().resolve("stored-identity--complete.json"),
-          directory.metadataFile());
+    @DisplayName("metadata reads the record")
+    void metadataReadsTheRecord() throws IOException {
+      DeviceDirectory.at(directory.directory()).writeIdentity(IDENTITY);
 
       assertThat(directory.metadata()).contains(IDENTITY);
     }
 
     @Test
-    @DisplayName("metadata fails for a file that is not an identity file")
-    void metadataFailsForAnotherFile() throws IOException {
+    @DisplayName("metadata reads a corrupt record as no identity rather than failing")
+    void metadataReadsACorruptRecordAsEmpty() throws IOException {
       Files.createDirectories(directory.directory());
-      Files.writeString(directory.metadataFile(), "{ not json");
+      Files.writeString(directory.directory().resolve(DeviceDirectory.DEVICE_FILE), "{ not json");
 
-      assertThatIllegalArgumentException()
-          .isThrownBy(() -> directory.metadata())
-          .withMessageContaining("not readable");
+      assertThat(directory.metadata()).isEmpty();
     }
   }
 
@@ -206,10 +198,9 @@ class IdentityDirectoryTest {
       }
 
       assertThat(directory.existingFiles())
-          .containsExactly(
-              directory.certificateFile(), directory.keyFile(), directory.metadataFile());
+          .containsExactly(directory.certificateFile(), directory.keyFile());
       assertThat(directory.certificateFile()).hasContent(certificate);
-      assertThat(directory.metadataFile()).hasContent(IDENTITY.toJsonText());
+      assertThat(directory.metadata()).contains(IDENTITY);
       assertThat(Pem.first(Files.readString(directory.keyFile()), "PRIVATE KEY"))
           .hasValueSatisfying(
               block -> assertThat(block.content()).isEqualTo(keys.getPrivate().getEncoded()));
@@ -259,7 +250,6 @@ class IdentityDirectoryTest {
       Files.createDirectories(directory.directory());
       Files.writeString(directory.certificateFile(), "old");
       Files.writeString(directory.keyFile(), "old");
-      Files.writeString(directory.metadataFile(), "old");
 
       try (var pending = directory.prepare(keys, IDENTITY, true)) {
         pending.commit(certificate);
@@ -307,7 +297,7 @@ class IdentityDirectoryTest {
         pending.commit(certificate);
       }
 
-      assertThat(directory.existingFiles()).hasSize(3);
+      assertThat(directory.existingFiles()).hasSize(2);
     }
   }
 }

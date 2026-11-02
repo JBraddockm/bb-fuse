@@ -5,11 +5,13 @@ import java.time.Instant;
 import java.time.format.DateTimeParseException;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
- * What is kept of a pairing besides the two authorities and the key.
+ * The {@code pairing} section of {@code device.json}: what is kept of a pairing besides the two
+ * authorities and the key.
  *
- * @param deviceId the identifier that the computer gave itself
+ * @param deviceId the identifier the computer gave itself
  * @param commonName the common name of the computer's authority
  * @param createdAt when the pairing was made
  */
@@ -26,37 +28,30 @@ public record StoredPairing(String deviceId, String commonName, Instant createdA
     Objects.requireNonNull(createdAt, "createdAt");
   }
 
-  /**
-   * The text of the file.
-   *
-   * @return JSON
-   */
-  public String toJsonText() {
-    return Json.write(
-            Json.object(
-                "deviceId", deviceId, "commonName", commonName, "createdAt", createdAt.toString()))
-        + "\n";
+  /** This pairing as the {@code pairing} object of {@code device.json}. */
+  Map<String, Object> toJson() {
+    return Json.object(
+        "deviceId", deviceId, "commonName", commonName, "createdAt", createdAt.toString());
   }
 
   /**
-   * Reads the text of the file.
+   * The pairing read from a {@code device.json} section, or empty when the value is absent or not a
+   * well-formed pairing.
    *
-   * @param text JSON as {@link #toJsonText()} writes it
-   * @return the pairing
-   * @throws IllegalArgumentException if it is not that
+   * @param value the {@code pairing} field of the parsed record
+   * @return the pairing, or empty
    */
-  public static StoredPairing fromJsonText(String text) {
-    try {
-      if (Json.parse(text) instanceof Map<?, ?> fields
-          && fields.get("deviceId") instanceof String deviceId
-          && fields.get("commonName") instanceof String commonName
-          && fields.get("createdAt") instanceof String createdAt) {
-        return new StoredPairing(deviceId, commonName, Instant.parse(createdAt));
+  static Optional<StoredPairing> fromJson(Object value) {
+    if (value instanceof Map<?, ?> fields
+        && fields.get("deviceId") instanceof String deviceId
+        && fields.get("commonName") instanceof String commonName
+        && fields.get("createdAt") instanceof String createdAt) {
+      try {
+        return Optional.of(new StoredPairing(deviceId, commonName, Instant.parse(createdAt)));
+      } catch (DateTimeParseException malformed) {
+        return Optional.empty();
       }
-    } catch (Json.JsonException | DateTimeParseException failure) {
-      throw new IllegalArgumentException(
-          "the pairing file is not readable: " + failure.getMessage());
     }
-    throw new IllegalArgumentException("the pairing file lacks deviceId, commonName or createdAt");
+    return Optional.empty();
   }
 }

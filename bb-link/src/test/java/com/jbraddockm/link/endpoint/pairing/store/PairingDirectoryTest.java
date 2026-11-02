@@ -54,7 +54,8 @@ class PairingDirectoryTest {
   class Naming {
 
     @Test
-    @DisplayName("is the folder of the PIN in the folder of the devices, with the four files in it")
+    @DisplayName(
+        "is the folder of the PIN in the folder of the devices, with the three files in it")
     void isTheFolderOfThePin() {
       assertThat(directory.directory()).isEqualTo(devices.resolve("2A3B4C5D"));
       assertThat(directory.authorityFile())
@@ -62,7 +63,6 @@ class PairingDirectoryTest {
       assertThat(directory.keyFile()).isEqualTo(devices.resolve("2A3B4C5D/authority_key.pem"));
       assertThat(directory.deviceAuthorityFile())
           .isEqualTo(devices.resolve("2A3B4C5D/device_authority.pem"));
-      assertThat(directory.metadataFile()).isEqualTo(devices.resolve("2A3B4C5D/pairing.json"));
     }
 
     @ParameterizedTest(name = "\"{0}\" is not a PIN")
@@ -99,20 +99,19 @@ class PairingDirectoryTest {
             + " identity")
     void listsOnlyItsOwnFiles() throws IOException {
       Files.createDirectories(directory.directory());
-      Files.writeString(directory.metadataFile(), "m");
+      Files.writeString(directory.keyFile(), "k");
       Files.writeString(directory.authorityFile(), "a");
       Files.writeString(directory.directory().resolve("client_cert.pem"), "c");
 
       assertThat(directory.existingFiles())
-          .containsExactly(directory.authorityFile(), directory.metadataFile());
+          .containsExactly(directory.authorityFile(), directory.keyFile());
     }
 
     @Test
     @DisplayName("metadata gives nothing when there is no file, and reads one that is there")
     void metadataReadsTheFile() throws IOException {
       assertThat(directory.metadata()).isEmpty();
-      Files.createDirectories(directory.directory());
-      Files.writeString(directory.metadataFile(), PAIRING.toJsonText());
+      DeviceDirectory.at(directory.directory()).writePairing(PAIRING);
 
       assertThat(directory.metadata()).contains(PAIRING);
     }
@@ -167,14 +166,13 @@ class PairingDirectoryTest {
     }
 
     @Test
-    @DisplayName("is not stopped by a kept pairing.json alone (after remove), without --replace")
+    @DisplayName("is not stopped by a kept device.json alone (after remove), without --replace")
     void aKeptIdentifierDoesNotStopIt() throws IOException {
-      Files.createDirectories(directory.directory());
-      Files.writeString(directory.metadataFile(), PAIRING.toJsonText());
+      DeviceDirectory.at(directory.directory()).writePairing(PAIRING);
 
       try (var _ = directory.prepare(keys, false)) {
         // The kept identifier stays; a re-pair reuses it, so no --replace is needed.
-        assertThat(directory.metadataFile()).hasContent(PAIRING.toJsonText());
+        assertThat(directory.metadata()).contains(PAIRING);
       }
     }
   }
@@ -184,7 +182,7 @@ class PairingDirectoryTest {
   class Forgetting {
 
     @Test
-    @DisplayName("deletes the keys and certificates but keeps pairing.json and the folder")
+    @DisplayName("deletes the keys and certificates but keeps device.json and the folder")
     void keepsOnlyTheIdentifier() throws IOException {
       try (var pending = directory.prepare(keys, false)) {
         pending.commit(authority, deviceAuthority, PAIRING);
@@ -194,7 +192,7 @@ class PairingDirectoryTest {
       directory.forget();
 
       assertThat(directory.exists()).isTrue();
-      assertThat(directory.metadataFile()).hasContent(PAIRING.toJsonText());
+      assertThat(directory.metadata()).contains(PAIRING);
       assertThat(directory.authorityFile()).doesNotExist();
       assertThat(directory.keyFile()).doesNotExist();
       assertThat(directory.deviceAuthorityFile()).doesNotExist();
@@ -215,13 +213,10 @@ class PairingDirectoryTest {
 
       assertThat(directory.existingFiles())
           .containsExactly(
-              directory.authorityFile(),
-              directory.keyFile(),
-              directory.deviceAuthorityFile(),
-              directory.metadataFile());
+              directory.authorityFile(), directory.keyFile(), directory.deviceAuthorityFile());
       assertThat(directory.authorityFile()).hasContent(authority);
       assertThat(directory.deviceAuthorityFile()).hasContent(deviceAuthority);
-      assertThat(directory.metadataFile()).hasContent(PAIRING.toJsonText());
+      assertThat(directory.metadata()).contains(PAIRING);
       assertThat(Pem.first(Files.readString(directory.keyFile()), "PRIVATE KEY"))
           .hasValueSatisfying(
               block -> assertThat(block.content()).isEqualTo(keys.getPrivate().getEncoded()));
@@ -285,7 +280,7 @@ class PairingDirectoryTest {
         pending.commit(authority, deviceAuthority, PAIRING);
       }
 
-      assertThat(directory.existingFiles()).hasSize(4);
+      assertThat(directory.existingFiles()).hasSize(3);
     }
   }
 }

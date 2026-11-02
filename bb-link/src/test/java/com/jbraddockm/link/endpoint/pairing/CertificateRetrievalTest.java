@@ -15,6 +15,7 @@ import com.jbraddockm.link.testing.DeviceFixture;
 import com.jbraddockm.link.testing.Logs;
 import com.jbraddockm.link.testing.TestDer;
 import com.jbraddockm.link.transport.tls.ClientCertificate;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -119,14 +120,11 @@ class CertificateRetrievalTest {
 
     @Test
     @DisplayName(
-        "keeps three files: the certificate, the key, and the identity file with the name and the"
-            + " time")
-    void keepsThreeFiles() {
+        "keeps the certificate and key, and records the identity with the name and the time")
+    void keepsTheCertificateKeyAndIdentity() throws IOException {
       assertThat(directory.existingFiles())
-          .containsExactly(
-              directory.certificateFile(), directory.keyFile(), directory.metadataFile());
-      assertThat(directory.metadataFile())
-          .hasContent(new StoredIdentity(COMMON_NAME, NOW).toJsonText());
+          .containsExactly(directory.certificateFile(), directory.keyFile());
+      assertThat(directory.metadata()).contains(new StoredIdentity(COMMON_NAME, NOW));
     }
 
     @Test
@@ -310,7 +308,7 @@ class CertificateRetrievalTest {
       assertThat(result.verification()).isEqualTo(Verification.failed(refusal));
       assertThat(logs.messages(LogLevel.WARN))
           .containsExactly("The device did not take the new certificate: peer not authenticated");
-      assertThat(directory.existingFiles()).hasSize(3);
+      assertThat(directory.existingFiles()).hasSize(2);
     }
   }
 }

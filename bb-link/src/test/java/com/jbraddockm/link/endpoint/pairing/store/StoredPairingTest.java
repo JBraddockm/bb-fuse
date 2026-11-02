@@ -1,27 +1,21 @@
 package com.jbraddockm.link.endpoint.pairing.store;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 
-import com.jbraddockm.link.testing.Resources;
 import java.time.Instant;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 
-/** Tests for {@link StoredPairing}: its JSON form in {@code pairing.json}. */
-@DisplayName("StoredPairing: the pairing.json file of a pairing")
+/** Tests for {@link StoredPairing}: the {@code pairing} section of {@code device.json}. */
+@DisplayName("StoredPairing: the pairing section of device.json")
 class StoredPairingTest {
 
   private static final StoredPairing PAIRING =
       new StoredPairing("01AB", "PC issuer 1", Instant.parse("2026-10-18T10:00:00Z"));
-
-  private static String resource(String name) {
-    return Resources.text(StoredPairingTest.class, name);
-  }
 
   @Test
   @DisplayName("a pairing has an identifier, a name and a date")
@@ -38,49 +32,41 @@ class StoredPairingTest {
   }
 
   @Nested
-  @DisplayName("writing")
-  class Writing {
+  @DisplayName("toJson and fromJson")
+  class Json {
 
     @Test
-    @DisplayName("toJsonText writes the three fields, compactly, in this order, and a newline")
-    void writesTheThreeFields() {
-      assertThat(PAIRING.toJsonText()).isEqualTo(resource("stored-pairing--complete.json"));
-    }
-  }
-
-  @Nested
-  @DisplayName("reading")
-  class Reading {
-
-    @Test
-    @DisplayName("fromJsonText reads what toJsonText wrote")
-    void readsWhatWasWritten() {
-      assertThat(StoredPairing.fromJsonText(resource("stored-pairing--complete.json")))
-          .isEqualTo(PAIRING);
+    @DisplayName("round-trips the identifier, the name and the date")
+    void roundTrips() {
+      assertThat(StoredPairing.fromJson(PAIRING.toJson())).contains(PAIRING);
     }
 
     @Test
-    @DisplayName("fromJsonText still reads a file of update 39, which has a device name as well")
-    void readsAFileThatHasAnExtraField() {
-      assertThat(StoredPairing.fromJsonText(resource("stored-pairing--from-update-39.json")))
-          .isEqualTo(PAIRING);
+    @DisplayName("reads a section that still carries an older extra field, ignoring it")
+    void ignoresExtraFields() {
+      var section = new LinkedHashMap<>(PAIRING.toJson());
+      section.put("deviceName", "ms-MacBook-Pro");
+
+      assertThat(StoredPairing.fromJson(section)).contains(PAIRING);
     }
 
-    @ParameterizedTest(name = "{0}: {1}")
-    @CsvSource({
-      "stored-pairing--without-device-id.json, lacks deviceId",
-      "stored-pairing--bad-date.json, is not readable",
-      "stored-pairing--not-json.txt, is not readable",
-      "stored-pairing--array.json, lacks deviceId",
-      "stored-pairing--device-id-not-text.json, lacks deviceId"
-    })
-    @DisplayName("fromJsonText refuses a file that lacks a field, has a bad date, or is not JSON")
-    void refusesWhatIsNotAPairingFile(String resource, String reason) {
-      var text = resource(resource);
-
-      assertThatIllegalArgumentException()
-          .isThrownBy(() -> StoredPairing.fromJsonText(text))
-          .withMessageContaining(reason);
+    @Test
+    @DisplayName("reads a missing or malformed section as no pairing")
+    void readsMalformedAsEmpty() {
+      assertThat(StoredPairing.fromJson(null)).isEmpty();
+      assertThat(StoredPairing.fromJson("not an object")).isEmpty();
+      assertThat(
+              StoredPairing.fromJson(
+                  Map.of("commonName", "x", "createdAt", "2026-10-18T10:00:00Z")))
+          .isEmpty();
+      assertThat(
+              StoredPairing.fromJson(
+                  Map.of("deviceId", 5, "commonName", "x", "createdAt", "2026-10-18T10:00:00Z")))
+          .isEmpty();
+      assertThat(
+              StoredPairing.fromJson(
+                  Map.of("deviceId", "01AB", "commonName", "x", "createdAt", "not-a-date")))
+          .isEmpty();
     }
   }
 }

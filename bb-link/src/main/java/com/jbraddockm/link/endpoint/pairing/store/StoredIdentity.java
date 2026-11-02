@@ -5,11 +5,13 @@ import java.time.Instant;
 import java.time.format.DateTimeParseException;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
- * What is kept beside the key and the certificate.
+ * The {@code identity} section of {@code device.json}: the common name of the login certificate and
+ * when it was issued.
  *
- * @param commonName the common name that the request had
+ * @param commonName the common name the certificate request carried
  * @param createdAt when the identity was made
  */
 public record StoredIdentity(String commonName, Instant createdAt) {
@@ -24,35 +26,28 @@ public record StoredIdentity(String commonName, Instant createdAt) {
     Objects.requireNonNull(createdAt, "createdAt");
   }
 
-  /**
-   * The text of the file.
-   *
-   * @return JSON
-   */
-  public String toJsonText() {
-    return Json.write(Json.object("commonName", commonName, "createdAt", createdAt.toString()))
-        + "\n";
+  /** This identity as the {@code identity} object of {@code device.json}. */
+  Map<String, Object> toJson() {
+    return Json.object("commonName", commonName, "createdAt", createdAt.toString());
   }
 
   /**
-   * Reads the text of the file. A file that an earlier version wrote has an identifier of the
-   * device too, which is ignored.
+   * The identity read from a {@code device.json} section, or empty when the value is absent or not
+   * a well-formed identity.
    *
-   * @param text JSON as {@link #toJsonText()} writes it
-   * @return the identity
-   * @throws IllegalArgumentException if it is not that
+   * @param value the {@code identity} field of the parsed record
+   * @return the identity, or empty
    */
-  public static StoredIdentity fromJsonText(String text) {
-    try {
-      if (Json.parse(text) instanceof Map<?, ?> fields
-          && fields.get("commonName") instanceof String commonName
-          && fields.get("createdAt") instanceof String createdAt) {
-        return new StoredIdentity(commonName, Instant.parse(createdAt));
+  static Optional<StoredIdentity> fromJson(Object value) {
+    if (value instanceof Map<?, ?> fields
+        && fields.get("commonName") instanceof String commonName
+        && fields.get("createdAt") instanceof String createdAt) {
+      try {
+        return Optional.of(new StoredIdentity(commonName, Instant.parse(createdAt)));
+      } catch (DateTimeParseException malformed) {
+        return Optional.empty();
       }
-    } catch (Json.JsonException | DateTimeParseException failure) {
-      throw new IllegalArgumentException(
-          "the identity file is not readable: " + failure.getMessage());
     }
-    throw new IllegalArgumentException("the identity file lacks commonName or createdAt");
+    return Optional.empty();
   }
 }

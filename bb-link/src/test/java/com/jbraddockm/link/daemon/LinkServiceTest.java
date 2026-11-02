@@ -13,7 +13,7 @@ import com.jbraddockm.core.error.InvalidArgumentException;
 import com.jbraddockm.core.json.Json;
 import com.jbraddockm.link.endpoint.pairing.CertificateRetrieval;
 import com.jbraddockm.link.endpoint.pairing.Pairing;
-import com.jbraddockm.link.endpoint.pairing.store.PairingDirectory;
+import com.jbraddockm.link.endpoint.pairing.store.DeviceDirectory;
 import com.jbraddockm.link.endpoint.pairing.store.StoredPairing;
 import com.jbraddockm.link.endpoint.properties.GetDeviceProperties;
 import com.jbraddockm.link.testing.FakeDevice;
@@ -110,10 +110,10 @@ class LinkServiceTest {
     void fromThePairing() throws IOException {
       var cert = folder.resolve("tunnel_cert.pem");
       Files.writeString(cert, "unused");
-      Files.writeString(
-          folder.resolve(PairingDirectory.METADATA_FILE),
-          new StoredPairing("019C197F3871C2F52B133252D06A4A96A3", "PC issuer X", Instant.EPOCH)
-              .toJsonText());
+      DeviceDirectory.at(folder)
+          .writePairing(
+              new StoredPairing(
+                  "019C197F3871C2F52B133252D06A4A96A3", "PC issuer X", Instant.EPOCH));
 
       assertThat(LinkService.pairedDeviceId(cert)).contains("019C197F3871C2F52B133252D06A4A96A3");
     }

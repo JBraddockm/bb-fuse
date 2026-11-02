@@ -22,7 +22,6 @@ import com.jbraddockm.link.endpoint.pairing.CertificateRetrieval;
 import com.jbraddockm.link.endpoint.pairing.ClientNames;
 import com.jbraddockm.link.endpoint.pairing.Pairing;
 import com.jbraddockm.link.endpoint.pairing.store.DeviceDirectory;
-import com.jbraddockm.link.endpoint.pairing.store.PairingDirectory;
 import com.jbraddockm.link.endpoint.pairing.store.StoredPairing;
 import com.jbraddockm.link.endpoint.properties.DeviceProperties;
 import com.jbraddockm.link.endpoint.properties.GetDeviceProperties;
@@ -37,7 +36,6 @@ import com.jbraddockm.link.transport.login.SmbCredentials;
 import com.jbraddockm.link.transport.session.DeviceSession;
 import com.jbraddockm.link.transport.tunnel.BrokerTunnelConnector;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
@@ -276,7 +274,7 @@ public final class LinkService implements Service<DeviceSession> {
   }
 
   /**
-   * The identifier the device stored for this computer, read from the {@code pairing.json} beside
+   * The identifier the device stored for this computer, read from the {@code device.json} beside
    * the certificate the connect uses (the tunnel certificate, or the client certificate of the
    * login): the {@code deviceId} the pairing gave itself, which the device folds to match our
    * Friendly advert. Empty when there is no certificate or no readable pairing beside it.
@@ -288,9 +286,12 @@ public final class LinkService implements Service<DeviceSession> {
     if (pairingCertificate == null) {
       return Optional.empty();
     }
-    var pairingFile = pairingCertificate.resolveSibling(PairingDirectory.METADATA_FILE);
+    var folder = pairingCertificate.getParent();
+    if (folder == null) {
+      return Optional.empty();
+    }
     try {
-      return Optional.of(StoredPairing.fromJsonText(Files.readString(pairingFile)).deviceId());
+      return DeviceDirectory.at(folder).pairing().map(StoredPairing::deviceId);
     } catch (IOException | RuntimeException noPairing) {
       return Optional.empty();
     }

@@ -1,18 +1,21 @@
 package com.jbraddockm.link.endpoint.pairing.store;
 
 import com.jbraddockm.core.json.Json;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 
 /**
- * What {@code device.json} in a device folder records. For now just the pinned SMB host — the inner
- * address the user chose to keep stable for this device, proposed to the tunnel broker on connect.
- * A later iteration folds the pairing and identity records into this one file.
+ * What a device folder's {@code device.json} holds: the login {@code identity}, the {@code
+ * pairing}, and the pinned SMB host — the single record for a device. Each part is optional, so a
+ * device may have, say, a pairing but no pinned address yet.
  *
+ * @param identity the login certificate's identity, or {@code null} when none is enrolled
+ * @param pairing the pairing this computer made with the device, or {@code null} when not paired
  * @param smbHost the pinned device SMB host ({@code 169.254.<k>.1}, {@code k} in 1..254), or {@code
- *     null} when the device has no pinned address
+ *     null} when no address is pinned
  */
-public record StoredDevice(String smbHost) {
+public record StoredDevice(StoredIdentity identity, StoredPairing pairing, String smbHost) {
 
   private static final Pattern SMB_HOST = Pattern.compile("169\\.254\\.(\\d{1,3})\\.1");
 
@@ -38,34 +41,49 @@ public record StoredDevice(String smbHost) {
     return k >= 1 && k <= 254;
   }
 
-  /**
-   * The text of the file.
-   *
-   * @return JSON — {@code {"smbHost":"..."}}, or {@code {}} when nothing is pinned
-   */
-  public String toJsonText() {
-    return Json.write(smbHost == null ? Json.object() : Json.object("smbHost", smbHost)) + "\n";
+  /** Whether the record holds nothing — so its file can be removed rather than left empty. */
+  boolean isEmpty() {
+    return identity == null && pairing == null && smbHost == null;
   }
 
   /**
-   * Reads the text of the file, tolerantly. Anything unreadable — unparseable JSON, a missing or
-   * malformed {@code smbHost} — becomes a record with no pinned host, so a hand-edited or stale
-   * {@code device.json} can never break a connect. Unknown fields are ignored, so the record that a
-   * later version writes still reads here.
+   * The text of the file: the present parts only, so an absent part leaves no key.
+   *
+   * @return JSON, with a trailing newline
+   */
+  public String toJsonText() {
+    var fields = new LinkedHashMap<String, Object>();
+    if (identity != null) {
+      fields.put("identity", identity.toJson());
+    }
+    if (pairing != null) {
+      fields.put("pairing", pairing.toJson());
+    }
+    if (smbHost != null) {
+      fields.put("smbHost", smbHost);
+    }
+    return Json.write(fields) + "\n";
+  }
+
+  /**
+   * Reads the text of the file, tolerantly: anything unreadable — unparseable JSON, or a malformed
+   * part — reads as that part being absent, so a hand-edited or stale {@code device.json} can never
+   * break a connect. Unknown fields are ignored.
    *
    * @param text the file's JSON
-   * @return the record; its {@link #smbHost()} is {@code null} unless a valid one was present
+   * @return the record; each part is {@code null} unless a valid one was present
    */
   public static StoredDevice fromJsonText(String text) {
     try {
-      if (Json.parse(text) instanceof Map<?, ?> fields
-          && fields.get("smbHost") instanceof String host
-          && isSmbHost(host)) {
-        return new StoredDevice(host);
+      if (Json.parse(text) instanceof Map<?, ?> fields) {
+        var identity = StoredIdentity.fromJson(fields.get("identity")).orElse(null);
+        var pairing = StoredPairing.fromJson(fields.get("pairing")).orElse(null);
+        var smbHost = fields.get("smbHost") instanceof String host && isSmbHost(host) ? host : null;
+        return new StoredDevice(identity, pairing, smbHost);
       }
     } catch (Json.JsonException ignored) {
-      // fall through to the no-pin record
+      // fall through to the empty record
     }
-    return new StoredDevice(null);
+    return new StoredDevice(null, null, null);
   }
 }
