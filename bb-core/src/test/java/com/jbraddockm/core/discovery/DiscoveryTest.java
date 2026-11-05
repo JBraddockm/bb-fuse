@@ -32,14 +32,16 @@ class DiscoveryTest {
       DiscoveredDevice.anonymous(
           "BlackBerry 10 10.3.3.2205", "10.3.3.2205", ConnectionKind.USB, "169.254.0.1");
 
-  private static DeviceCharacteristics identity(
-      String pin, String guid, String model, String version) {
+  private static final String MODEL = "STR100-1";
+  private static final String VERSION = "10.3.3.3216";
+
+  private static DeviceCharacteristics identity(String pin, String guid) {
     return new DeviceCharacteristics(
         pin,
         guid,
-        model,
+        MODEL,
         "BlackBerry 10",
-        version,
+        VERSION,
         null,
         null,
         null,
@@ -109,14 +111,12 @@ class DiscoveryTest {
     void anIdentifiedDevice() {
       var device =
           DiscoveredDevice.identified(
-              identity("2A3B4C5D", "abc=", "STR100-1", "10.3.3.3216"),
-              ConnectionKind.USB,
-              "169.254.0.1");
+              identity("2A3B4C5D", "abc="), ConnectionKind.USB, "169.254.0.1");
 
       assertThat(device.pin()).isEqualTo("2A3B4C5D");
       assertThat(device.guid()).isEqualTo("abc=");
-      assertThat(device.name()).isEqualTo("STR100-1");
-      assertThat(device.version()).isEqualTo("10.3.3.3216");
+      assertThat(device.name()).isEqualTo(MODEL);
+      assertThat(device.version()).isEqualTo(VERSION);
       assertThat(device.connection()).isEqualTo(ConnectionKind.USB);
       assertThat(device.address()).isEqualTo("169.254.0.1");
     }
@@ -174,9 +174,7 @@ class DiscoveryTest {
     void foldsALegacyHitAtAnIdentifiedAddress() {
       var identified =
           DiscoveredDevice.identified(
-              identity("2C1E7583", "G1", "STR100-1", "10.3.3.3216"),
-              ConnectionKind.USB,
-              "169.254.0.1");
+              identity("2C1E7583", "G1"), ConnectionKind.USB, "169.254.0.1");
       var legacySame =
           DiscoveredDevice.anonymous("blackberry-7583", null, ConnectionKind.USB, "169.254.0.1");
       var legacyOther =
@@ -193,14 +191,10 @@ class DiscoveryTest {
     void foldsOneGuidFoundTwice() {
       var usb =
           DiscoveredDevice.identified(
-              identity("2C1E7583", "G1", "STR100-1", "10.3.3.3216"),
-              ConnectionKind.USB,
-              "169.254.0.1");
+              identity("2C1E7583", "G1"), ConnectionKind.USB, "169.254.0.1");
       var wifi =
           DiscoveredDevice.identified(
-              identity("2C1E7583", "G1", "STR100-1", "10.3.3.3216"),
-              ConnectionKind.WIFI,
-              "192.168.1.82");
+              identity("2C1E7583", "G1"), ConnectionKind.WIFI, "192.168.1.82");
       DeviceScanner scanner = List.of(usb, wifi)::forEach;
 
       var list = DeviceDiscovery.discover(scanner, _ -> {});

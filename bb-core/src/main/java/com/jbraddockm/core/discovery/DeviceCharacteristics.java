@@ -5,10 +5,9 @@ import com.jbraddockm.core.json.Json;
 import java.util.Map;
 
 /**
- * What {@code discovery.cgi} reports about a device, pre-auth and cheaply (no package enumeration).
- * It is bb-link's PIN source for every flow that needs the PIN — connect itself, the pair/renew
- * confirmation guard, and naming a backup — read through {@link SessionCharacteristics}, which
- * works on every path, including the Wi-Fi tunnel.
+ * What {@code discovery.cgi} reports about a device, read pre-auth and cheaply (no package
+ * enumeration). It carries the device PIN and GUID and answers on every path, including the Wi-Fi
+ * tunnel, so it is the identity a client reads when it needs the PIN.
  *
  * @param pin the device PIN as 8-digit uppercase hexadecimal (from the decimal {@code BbPin}); may
  *     be {@code null}

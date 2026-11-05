@@ -18,11 +18,13 @@ import org.junit.jupiter.params.provider.ValueSource;
 @DisplayName("UsbScanner: finding a device over the USB link")
 class UsbScannerTest {
 
-  private static DiscoveryClient serving(String deviceAddress, String fixture) {
+  private static final String DEVICE_FIXTURE = "discovery--real.xml";
+
+  private static DiscoveryClient serving(String deviceAddress) {
     return new DiscoveryClient(
         uri ->
             uri.getHost().equals(deviceAddress)
-                ? new Body(200, Resources.text(DiscoveryClientTest.class, fixture))
+                ? new Body(200, Resources.text(DiscoveryClientTest.class, DEVICE_FIXTURE))
                 : new Body(404, ""));
   }
 
@@ -68,9 +70,7 @@ class UsbScannerTest {
     @Test
     @DisplayName("identifies the device one below a link-local host, over discovery.cgi")
     void identifiesTheDevice() {
-      var scanner =
-          new UsbScanner(
-              () -> List.of("169.254.0.2"), serving("169.254.0.1", "discovery--real.xml"));
+      var scanner = new UsbScanner(() -> List.of("169.254.0.2"), serving("169.254.0.1"));
 
       assertThat(scan(scanner))
           .singleElement()
@@ -86,8 +86,7 @@ class UsbScannerTest {
     @Test
     @DisplayName("finds nothing when the candidate does not answer as a device")
     void noDeviceAnswers() {
-      var scanner =
-          new UsbScanner(() -> List.of("169.254.0.2"), serving("10.9.9.9", "discovery--real.xml"));
+      var scanner = new UsbScanner(() -> List.of("169.254.0.2"), serving("10.9.9.9"));
 
       assertThat(scan(scanner)).isEmpty();
     }
@@ -95,7 +94,7 @@ class UsbScannerTest {
     @Test
     @DisplayName("finds nothing when there is no link-local host interface")
     void noLinkLocalHost() {
-      var scanner = new UsbScanner(List::of, serving("169.254.0.1", "discovery--real.xml"));
+      var scanner = new UsbScanner(List::of, serving("169.254.0.1"));
 
       assertThat(scan(scanner)).isEmpty();
     }
@@ -108,7 +107,7 @@ class UsbScannerTest {
               () -> {
                 throw new SocketException("no interfaces");
               },
-              serving("169.254.0.1", "discovery--real.xml"));
+              serving("169.254.0.1"));
 
       assertThat(scan(scanner)).isEmpty();
     }

@@ -5,7 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.function.Consumer;
 
-/** Runs a scan, gathers its devices, and folds duplicates of the one device into a single entry. */
+/** Runs a scan, gathers its devices, and folds duplicate sightings of a device into one entry. */
 public final class DeviceDiscovery {
 
   private DeviceDiscovery() {}
@@ -14,9 +14,8 @@ public final class DeviceDiscovery {
    * Scans for devices.
    *
    * <p>A scanner may report from several threads at once (a {@link CompositeScanner} fans out), so
-   * each find — the running tally and the {@code onFound} call — is serialized here; {@code
-   * onFound} is therefore never called from two threads at once and sees every raw find. The
-   * returned list is deduplicated: see {@link #deduplicate}.
+   * {@code onFound} is called one device at a time, in the order found. The returned list folds
+   * duplicate sightings of a device into one entry.
    *
    * @param scanner how to scan
    * @param onFound told about each device the moment it is found, before duplicates are folded

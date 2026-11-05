@@ -4,13 +4,10 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * The native scanners bb-core can run on the host it is on. The USB link-local scan is portable JDK
- * (see {@link UsbScanner}), so it is offered on macOS and Linux, the supported hosts; on another OS
- * nothing native is offered yet and the caller falls back to its own scanner. A composition root
- * combines these with any caller-supplied scanner in a {@link CompositeScanner}.
- *
- * <p>This is the seam where a Wi-Fi scanner will join once it lands, so adding a transport is a
- * change here rather than at every call site.
+ * The native scanners bb-core runs on the host it is on. The USB link-local scan is portable JDK
+ * (see {@link UsbScanner}), so it is offered on macOS and Linux; another OS is left to the caller's
+ * own scanner. A composition root combines these with any caller-supplied scanner in a {@link
+ * CompositeScanner}, and a further transport is added here alone.
  */
 public final class PlatformScanners {
 

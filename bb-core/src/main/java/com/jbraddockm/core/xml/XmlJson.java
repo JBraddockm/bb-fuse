@@ -62,7 +62,7 @@ public final class XmlJson {
       var values = (List<Object>) list;
       values.add(value);
     } else {
-      var values = new ArrayList<Object>();
+      var values = new ArrayList<>();
       values.add(existing);
       values.add(value);
       object.put(name, values);

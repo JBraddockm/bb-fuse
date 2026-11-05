@@ -80,10 +80,9 @@ public final class DiscoveryClient {
   }
 
   private static Body fetch(URI uri) throws IOException {
-    var client = HttpClient.newBuilder().connectTimeout(TIMEOUT).build();
     var request =
         HttpRequest.newBuilder(uri).timeout(TIMEOUT).header("User-Agent", USER_AGENT).GET().build();
-    try {
+    try (var client = HttpClient.newBuilder().connectTimeout(TIMEOUT).build()) {
       var response = client.send(request, HttpResponse.BodyHandlers.ofString());
       return new Body(response.statusCode(), response.body());
     } catch (InterruptedException interrupted) {

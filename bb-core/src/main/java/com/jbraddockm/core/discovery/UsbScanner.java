@@ -11,7 +11,7 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 /**
- * Finds a device over the USB link. A paired-or-not BlackBerry 10 device attached by USB raises a
+ * Finds a device over the USB link. A BlackBerry 10 device attached by USB, paired or not, raises a
  * host network interface on the IPv4 link-local block ({@code 169.254.0.0/16}); the device sits one
  * address below the host's (host {@code …0.2} ⇒ device {@code …0.1}). This reads the host's
  * link-local addresses, works out each device candidate, and identifies it over {@link

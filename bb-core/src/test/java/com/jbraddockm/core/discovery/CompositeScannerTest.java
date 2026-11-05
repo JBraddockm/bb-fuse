@@ -58,7 +58,7 @@ class CompositeScannerTest {
   @Test
   @DisplayName("keeps its own copy of the scanners it was given")
   void keepsItsOwnCopy() {
-    var given = new ArrayList<DeviceScanner>(List.of(emitting(A)));
+    var given = new ArrayList<>(List.of(emitting(A)));
 
     var composite = new CompositeScanner(given);
     given.add(emitting(B));

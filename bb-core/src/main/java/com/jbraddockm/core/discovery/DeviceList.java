@@ -10,7 +10,7 @@ import java.util.Map;
  *
  * @param devices the devices in the order they were found
  */
-record DeviceList(List<DiscoveredDevice> devices) implements CommandResult {
+public record DeviceList(List<DiscoveredDevice> devices) implements CommandResult {
 
   /** Takes an immutable copy of the devices. */
   public DeviceList {
