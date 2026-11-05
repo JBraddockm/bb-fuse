@@ -44,6 +44,8 @@ class MdnsServiceTest {
     final List<String> browses = new ArrayList<>();
     boolean closed;
     IOException registerFailure;
+    String listedType;
+    long listedTimeout;
 
     @Override
     public void registerService(ServiceInfo service) throws IOException {
@@ -66,6 +68,13 @@ class MdnsServiceTest {
     @Override
     public void removeServiceListener(String type, ServiceListener listener) {
       browses.remove(type);
+    }
+
+    @Override
+    public ServiceInfo[] list(String type, long timeoutMillis) {
+      listedType = type;
+      listedTimeout = timeoutMillis;
+      return new ServiceInfo[0];
     }
 
     @Override
@@ -183,6 +192,20 @@ class MdnsServiceTest {
 
       second.close();
       assertThat(responders.current.closed).isTrue();
+    }
+
+    @Test
+    @DisplayName("a one-shot list opens the responder for the scan and releases it after")
+    void listResolvesAndReleases() throws IOException {
+      var responders = new CountingResponders();
+
+      var infos = new MdnsService(responders).list("_bp2p._tcp.local.", 25);
+
+      assertThat(responders.opens).isOne();
+      assertThat(responders.current.listedType).isEqualTo("_bp2p._tcp.local.");
+      assertThat(responders.current.listedTimeout).isEqualTo(25);
+      assertThat(responders.current.closed).isTrue();
+      assertThat(infos).isEmpty();
     }
 
     @Test

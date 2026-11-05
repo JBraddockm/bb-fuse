@@ -66,7 +66,7 @@ class DiscoveryBoundaryTest {
   }
 
   @Test
-  @DisplayName("discovery uses the JDK, the core's json, command and xml, and nothing more")
+  @DisplayName("discovery uses the JDK, the core's json, command, xml and mdns, and nothing more")
   void discoveryRestsOnLeavesOnly() throws IOException {
     var allowed =
         List.of(
@@ -75,6 +75,7 @@ class DiscoveryBoundaryTest {
             "com.jbraddockm.core.json.",
             "com.jbraddockm.core.command.",
             "com.jbraddockm.core.xml.",
+            "com.jbraddockm.core.mdns.",
             "com.jbraddockm.core.discovery.");
 
     var scan = importsOutside(sources().resolve(CORE + "discovery"), allowed, "discovery");

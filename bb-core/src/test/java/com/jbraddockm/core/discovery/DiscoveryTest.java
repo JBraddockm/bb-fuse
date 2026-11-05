@@ -98,12 +98,14 @@ class DiscoveryTest {
             + " connection and its address")
     void aDeviceAsJson() {
       assertThat(USB.toJson())
-          .containsOnlyKeys("pin", "guid", "name", "version", "connection", "address")
+          .containsOnlyKeys(
+              "pin", "guid", "name", "version", "connection", "address", "ula", "hwid")
           .containsEntry("connection", "USB")
           .containsEntry("version", "10.3.3.2205")
           .containsEntry("address", "169.254.0.1");
       assertThat(List.copyOf(USB.toJson().keySet()))
-          .containsExactly("pin", "guid", "name", "version", "connection", "address");
+          .containsExactly(
+              "pin", "guid", "name", "version", "connection", "address", "ula", "hwid");
     }
 
     @Test
@@ -128,7 +130,29 @@ class DiscoveryTest {
           .doesNotContain("pin")
           .doesNotContain("guid")
           .doesNotContain("version")
+          .doesNotContain("ula")
           .contains("\"connection\":\"WiFi\"");
+    }
+
+    @Test
+    @DisplayName(
+        "a Wi-Fi device from mDNS carries its name, OS, address and tunnel ULA, but no PIN")
+    void aWifiDeviceFromMdns() {
+      var device =
+          DiscoveredDevice.overWifi(
+              "BLACKBERRY-3247", "10.3.3.3216", "192.168.1.82", "fd0f:db1::1", "0x87002c0a");
+
+      var json = device.toJson();
+      assertThat(json)
+          .containsEntry("name", "BLACKBERRY-3247")
+          .containsEntry("version", "10.3.3.3216")
+          .containsEntry("connection", "WiFi")
+          .containsEntry("address", "192.168.1.82")
+          .containsEntry("ula", "fd0f:db1::1")
+          .containsEntry("hwid", "0x87002c0a");
+      assertThat(json.get("pin")).isNull();
+      assertThat(json.get("guid")).isNull();
+      assertThat(Json.write(json)).doesNotContain("pin").doesNotContain("guid");
     }
 
     @Test
@@ -187,6 +211,22 @@ class DiscoveryTest {
     }
 
     @Test
+    @DisplayName(
+        "folds the mDNS and legacy sightings of one Wi-Fi device into one entry, by address")
+    void foldsUnidentifiedByAddress() {
+      var mdns =
+          DiscoveredDevice.overWifi(
+              "BLACKBERRY-3247", "10.3.3.3216", "192.168.1.82", "fd0f:db1::1", "0x87002c0a");
+      var legacy =
+          DiscoveredDevice.anonymous(
+              "blackberry-3247.lan", null, ConnectionKind.WIFI, "192.168.1.82");
+
+      // The legacy hit arrives first, so address-fold must still keep the richer mDNS entry.
+      assertThat(DeviceDiscovery.discover(List.of(legacy, mdns)::forEach, _ -> {}).devices())
+          .containsExactly(mdns);
+    }
+
+    @Test
     @DisplayName("keeps a device found twice under one GUID just once, the first it was found")
     void foldsOneGuidFoundTwice() {
       var usb =
@@ -220,13 +260,17 @@ class DiscoveryTest {
       DeviceScanner scanner =
           found -> {
             try (ExecutorService pool = Executors.newFixedThreadPool(8)) {
-              names.forEach(
-                  name ->
-                      pool.submit(
-                          () ->
-                              found.accept(
-                                  DiscoveredDevice.anonymous(
-                                      name, null, ConnectionKind.WIFI, "10.0.0.1"))));
+              IntStream.range(0, 400)
+                  .forEach(
+                      index ->
+                          pool.submit(
+                              () ->
+                                  found.accept(
+                                      DiscoveredDevice.anonymous(
+                                          "device-" + index,
+                                          null,
+                                          ConnectionKind.WIFI,
+                                          "10.0." + (index / 256) + "." + (index % 256)))));
               pool.shutdown();
               assertThat(pool.awaitTermination(20, TimeUnit.SECONDS)).isTrue();
             } catch (InterruptedException _) {

@@ -2,6 +2,7 @@ package com.jbraddockm.core.mdns;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.List;
 import javax.jmdns.ServiceInfo;
 import javax.jmdns.ServiceListener;
 
@@ -41,6 +42,8 @@ public final class MdnsService {
     void addServiceListener(String type, ServiceListener listener);
 
     void removeServiceListener(String type, ServiceListener listener);
+
+    ServiceInfo[] list(String type, long timeoutMillis);
   }
 
   private static final System.Logger LOG = System.getLogger(MdnsService.class.getName());
@@ -98,6 +101,26 @@ public final class MdnsService {
       acquire();
       responder.addServiceListener(type, listener);
       return registration(() -> responder.removeServiceListener(type, listener));
+    }
+  }
+
+  /**
+   * Browses for a service type once, resolving the instances found within a window — a one-shot
+   * scan rather than a standing browse.
+   *
+   * @param type the service type to list, for example {@code _bp2p._tcp.local.}
+   * @param timeoutMillis how long to wait for instances to resolve
+   * @return the resolved instances
+   * @throws IOException if mDNS could not be started
+   */
+  public List<ServiceInfo> list(String type, long timeoutMillis) throws IOException {
+    synchronized (lock) {
+      acquire();
+      try {
+        return List.of(responder.list(type, timeoutMillis));
+      } finally {
+        release();
+      }
     }
   }
 

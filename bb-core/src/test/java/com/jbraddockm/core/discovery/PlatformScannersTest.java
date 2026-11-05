@@ -12,15 +12,16 @@ class PlatformScannersTest {
 
   @ParameterizedTest(name = "\"{0}\"")
   @ValueSource(strings = {"Mac OS X", "Darwin", "Linux", "GNU/Linux"})
-  @DisplayName("a supported OS offers the USB scanner")
-  void aSupportedOsOffersUsb(String osName) {
-    assertThat(PlatformScanners.forOs(osName)).singleElement().isInstanceOf(UsbScanner.class);
+  @DisplayName("macOS and Linux offer the USB scanner and the Wi-Fi scanner")
+  void macAndLinuxOfferUsbAndWifi(String osName) {
+    assertThat(PlatformScanners.forOs(osName))
+        .hasExactlyElementsOfTypes(UsbScanner.class, WifiScanner.class);
   }
 
   @ParameterizedTest(name = "\"{0}\"")
   @ValueSource(strings = {"Windows 11", "Windows Server 2022", ""})
-  @DisplayName("an unsupported OS offers nothing native, leaving the caller to fall back")
-  void anUnsupportedOsOffersNothing(String osName) {
-    assertThat(PlatformScanners.forOs(osName)).isEmpty();
+  @DisplayName("another OS offers the Wi-Fi scanner, which is portable, but not USB")
+  void anotherOsOffersWifiOnly(String osName) {
+    assertThat(PlatformScanners.forOs(osName)).singleElement().isInstanceOf(WifiScanner.class);
   }
 }
