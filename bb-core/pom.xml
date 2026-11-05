@@ -15,8 +15,9 @@
     <artifactId>bb-core</artifactId>
     <name>bb-core</name>
     <description>
-        Shared runtime for the BlackBerry 10 daemons: JSON, error vocabulary and the
-        line-delimited JSON protocol server.
+        Shared runtime for the BlackBerry 10 daemons: JSON, error vocabulary, the line-delimited
+        JSON protocol server, BAR inspection, device discovery (USB and mDNS), the shared mDNS
+        advertise/browse facility, and the tunnel-broker client.
     </description>
 
     <dependencies>
@@ -45,6 +46,15 @@
         <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- jmdns (core.mdns) logs through SLF4J. With no provider on the classpath, SLF4J prints a
+             "No SLF4J providers were found" warning the first time a logger is created. A no-op
+             provider in test scope binds quietly so the test output stays clean. -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-nop</artifactId>
+            <version>2.0.7</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

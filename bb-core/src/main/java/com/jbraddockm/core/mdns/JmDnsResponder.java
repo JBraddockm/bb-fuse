@@ -10,14 +10,15 @@ final class JmDnsResponder implements MdnsService.Responder {
 
   private final JmDNS jmdns;
 
-  private JmDnsResponder(JmDNS jmdns) {
+  // Package-private for tests, which inject a fake JmDNS; production opens a real one via open().
+  JmDnsResponder(JmDNS jmdns) {
     this.jmdns = jmdns;
   }
 
   /**
-   * Opens a JmDNS responder on the default interface. Binding to a specific address (such as the one
-   * {@code InetAddress.getLocalHost()} returns, which can be loopback) misses the multicast, so the
-   * no-argument {@link JmDNS#create()} is used.
+   * Opens a JmDNS responder on the default interface. Binding to a specific address (such as the
+   * one {@code InetAddress.getLocalHost()} returns, which can be loopback) misses the multicast, so
+   * the no-argument {@link JmDNS#create()} is used.
    *
    * @return the responder
    * @throws IOException if JmDNS could not be started
