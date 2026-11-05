@@ -36,10 +36,10 @@ final class LibraryDeviceScanner implements DeviceScanner {
    */
   static DiscoveredDevice convert(String hostname, String address, String type, String version) {
     var stripped = version == null ? "" : version.strip();
-    return new DiscoveredDevice(
+    return DiscoveredDevice.anonymous(
         hostname,
-        address,
+        stripped.isEmpty() ? null : stripped,
         ConnectionKind.fromDetectorText(type),
-        stripped.isEmpty() ? null : stripped);
+        address);
   }
 }

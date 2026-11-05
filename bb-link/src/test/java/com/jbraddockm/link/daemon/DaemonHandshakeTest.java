@@ -27,9 +27,10 @@ class DaemonHandshakeTest {
 
   private static final List<DiscoveredDevice> FOUND =
       List.of(
-          new DiscoveredDevice("blackberry-0000.lan", "192.168.1.82", ConnectionKind.WIFI, null),
-          new DiscoveredDevice(
-              "BlackBerry 10 10.3.3.2205", "169.254.0.1", ConnectionKind.USB, "10.3.3.2205"));
+          DiscoveredDevice.anonymous(
+              "blackberry-0000.lan", null, ConnectionKind.WIFI, "192.168.1.82"),
+          DiscoveredDevice.anonymous(
+              "BlackBerry 10 10.3.3.2205", "10.3.3.2205", ConnectionKind.USB, "169.254.0.1"));
 
   private DaemonRun daemon;
 

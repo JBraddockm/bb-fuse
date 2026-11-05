@@ -62,11 +62,7 @@ public final class LinkService implements Service<DeviceSession> {
    */
   public LinkService(ExchangeObserver observer) {
     this(
-        TransportScheme.HTTPS,
-        Scanners.library(),
-        observer,
-        new Pairing(),
-        new CertificateRetrieval());
+        TransportScheme.HTTPS, Scanners.all(), observer, new Pairing(), new CertificateRetrieval());
   }
 
   /** Creates a service with its collaborators replaced, which tests use. */

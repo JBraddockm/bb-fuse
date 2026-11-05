@@ -27,10 +27,31 @@ import org.junit.jupiter.params.provider.ValueSource;
 class DiscoveryTest {
 
   private static final DiscoveredDevice WIFI =
-      new DiscoveredDevice("blackberry-0000.lan", "192.168.1.82", ConnectionKind.WIFI, null);
+      DiscoveredDevice.anonymous("blackberry-0000.lan", null, ConnectionKind.WIFI, "192.168.1.82");
   private static final DiscoveredDevice USB =
-      new DiscoveredDevice(
-          "BlackBerry 10 10.3.3.2205", "169.254.0.1", ConnectionKind.USB, "10.3.3.2205");
+      DiscoveredDevice.anonymous(
+          "BlackBerry 10 10.3.3.2205", "10.3.3.2205", ConnectionKind.USB, "169.254.0.1");
+
+  private static DeviceCharacteristics identity(
+      String pin, String guid, String model, String version) {
+    return new DeviceCharacteristics(
+        pin,
+        guid,
+        model,
+        "BlackBerry 10",
+        version,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null);
+  }
 
   @Nested
   @DisplayName("ConnectionKind")
@@ -71,21 +92,41 @@ class DiscoveryTest {
 
     @Test
     @DisplayName(
-        "a device is said by its host name, its address, the spelling of its connection and its"
-            + " version")
+        "a device is said by its PIN, its GUID, its name, its version, the spelling of its"
+            + " connection and its address")
     void aDeviceAsJson() {
       assertThat(USB.toJson())
-          .containsOnlyKeys("hostname", "address", "connection", "version")
+          .containsOnlyKeys("pin", "guid", "name", "version", "connection", "address")
           .containsEntry("connection", "USB")
-          .containsEntry("version", "10.3.3.2205");
+          .containsEntry("version", "10.3.3.2205")
+          .containsEntry("address", "169.254.0.1");
       assertThat(List.copyOf(USB.toJson().keySet()))
-          .containsExactly("hostname", "address", "connection", "version");
+          .containsExactly("pin", "guid", "name", "version", "connection", "address");
     }
 
     @Test
-    @DisplayName("a device whose version is not known is said without it on the wire")
-    void aDeviceWithoutAVersion() {
+    @DisplayName("an identified device takes its PIN, GUID, model name and platform version")
+    void anIdentifiedDevice() {
+      var device =
+          DiscoveredDevice.identified(
+              identity("2A3B4C5D", "abc=", "STR100-1", "10.3.3.3216"),
+              ConnectionKind.USB,
+              "169.254.0.1");
+
+      assertThat(device.pin()).isEqualTo("2A3B4C5D");
+      assertThat(device.guid()).isEqualTo("abc=");
+      assertThat(device.name()).isEqualTo("STR100-1");
+      assertThat(device.version()).isEqualTo("10.3.3.3216");
+      assertThat(device.connection()).isEqualTo(ConnectionKind.USB);
+      assertThat(device.address()).isEqualTo("169.254.0.1");
+    }
+
+    @Test
+    @DisplayName("an unidentified device is said without a PIN or a GUID, and without a version")
+    void anUnidentifiedDeviceOnTheWire() {
       assertThat(Json.write(WIFI.toJson()))
+          .doesNotContain("pin")
+          .doesNotContain("guid")
           .doesNotContain("version")
           .contains("\"connection\":\"WiFi\"");
     }
@@ -127,6 +168,47 @@ class DiscoveryTest {
     }
 
     @Test
+    @DisplayName(
+        "folds a legacy hit at an identified device's address, and keeps a legacy device of its"
+            + " own")
+    void foldsALegacyHitAtAnIdentifiedAddress() {
+      var identified =
+          DiscoveredDevice.identified(
+              identity("2C1E7583", "G1", "STR100-1", "10.3.3.3216"),
+              ConnectionKind.USB,
+              "169.254.0.1");
+      var legacySame =
+          DiscoveredDevice.anonymous("blackberry-7583", null, ConnectionKind.USB, "169.254.0.1");
+      var legacyOther =
+          DiscoveredDevice.anonymous("blackberry-3247", null, ConnectionKind.WIFI, "192.168.1.82");
+      DeviceScanner scanner = List.of(legacyOther, identified, legacySame)::forEach;
+
+      var list = DeviceDiscovery.discover(scanner, _ -> {});
+
+      assertThat(list.devices()).containsExactly(identified, legacyOther);
+    }
+
+    @Test
+    @DisplayName("keeps a device found twice under one GUID just once, the first it was found")
+    void foldsOneGuidFoundTwice() {
+      var usb =
+          DiscoveredDevice.identified(
+              identity("2C1E7583", "G1", "STR100-1", "10.3.3.3216"),
+              ConnectionKind.USB,
+              "169.254.0.1");
+      var wifi =
+          DiscoveredDevice.identified(
+              identity("2C1E7583", "G1", "STR100-1", "10.3.3.3216"),
+              ConnectionKind.WIFI,
+              "192.168.1.82");
+      DeviceScanner scanner = List.of(usb, wifi)::forEach;
+
+      var list = DeviceDiscovery.discover(scanner, _ -> {});
+
+      assertThat(list.devices()).containsExactly(usb);
+    }
+
+    @Test
     @DisplayName("finds nothing when the scanner finds nothing: an empty list, and nobody told")
     void findsNothing() {
       var told = new ArrayList<DiscoveredDevice>();
@@ -149,8 +231,8 @@ class DiscoveryTest {
                       pool.submit(
                           () ->
                               found.accept(
-                                  new DiscoveredDevice(
-                                      name, "10.0.0.1", ConnectionKind.WIFI, null))));
+                                  DiscoveredDevice.anonymous(
+                                      name, null, ConnectionKind.WIFI, "10.0.0.1"))));
               pool.shutdown();
               assertThat(pool.awaitTermination(20, TimeUnit.SECONDS)).isTrue();
             } catch (InterruptedException _) {
@@ -162,7 +244,7 @@ class DiscoveryTest {
       var list = DeviceDiscovery.discover(scanner, told::add);
 
       assertThat(list.devices())
-          .extracting(DiscoveredDevice::hostname)
+          .extracting(DiscoveredDevice::name)
           .containsExactlyInAnyOrderElementsOf(names);
       assertThat(told).hasSize(400);
     }

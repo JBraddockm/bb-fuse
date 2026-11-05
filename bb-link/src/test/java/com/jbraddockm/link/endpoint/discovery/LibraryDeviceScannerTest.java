@@ -35,8 +35,8 @@ class LibraryDeviceScannerTest {
               LibraryDeviceScanner.convert(
                   "blackberry-0000.lan", "192.168.1.82", "WiFi", "10.3.3.2205"))
           .isEqualTo(
-              new DiscoveredDevice(
-                  "blackberry-0000.lan", "192.168.1.82", ConnectionKind.WIFI, "10.3.3.2205"));
+              DiscoveredDevice.anonymous(
+                  "blackberry-0000.lan", "10.3.3.2205", ConnectionKind.WIFI, "192.168.1.82"));
     }
 
     @ParameterizedTest(name = "version \"{0}\"")
