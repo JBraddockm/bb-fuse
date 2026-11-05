@@ -77,7 +77,7 @@ class UsbScannerTest {
           .satisfies(
               device -> {
                 assertThat(device.pin()).isEqualTo("2C1E7583");
-                assertThat(device.name()).isEqualTo("STR100-1");
+                assertThat(device.model()).isEqualTo("STR100-1");
                 assertThat(device.connection()).isEqualTo(ConnectionKind.USB);
                 assertThat(device.address()).isEqualTo("169.254.0.1");
               });

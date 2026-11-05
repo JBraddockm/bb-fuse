@@ -12,16 +12,30 @@ class PlatformScannersTest {
 
   @ParameterizedTest(name = "\"{0}\"")
   @ValueSource(strings = {"Mac OS X", "Darwin", "Linux", "GNU/Linux"})
-  @DisplayName("macOS and Linux offer the USB scanner and the Wi-Fi scanner")
+  @DisplayName("macOS and Linux offer the USB scanner and the mDNS scanner")
   void macAndLinuxOfferUsbAndWifi(String osName) {
     assertThat(PlatformScanners.forOs(osName))
-        .hasExactlyElementsOfTypes(UsbScanner.class, WifiScanner.class);
+        .hasExactlyElementsOfTypes(UsbScanner.class, MdnsScanner.class);
   }
 
   @ParameterizedTest(name = "\"{0}\"")
   @ValueSource(strings = {"Windows 11", "Windows Server 2022", ""})
-  @DisplayName("another OS offers the Wi-Fi scanner, which is portable, but not USB")
+  @DisplayName("another OS offers the mDNS scanner, which is portable, but not USB")
   void anotherOsOffersWifiOnly(String osName) {
-    assertThat(PlatformScanners.forOs(osName)).singleElement().isInstanceOf(WifiScanner.class);
+    assertThat(PlatformScanners.forOs(osName)).singleElement().isInstanceOf(MdnsScanner.class);
+  }
+
+  @ParameterizedTest(name = "\"{0}\"")
+  @ValueSource(strings = {"Mac OS X", "Darwin", "Linux", "GNU/Linux"})
+  @DisplayName("macOS and Linux have a native USB scanner, so need no legacy fallback")
+  void macAndLinuxHaveNativeUsb(String osName) {
+    assertThat(PlatformScanners.hasNativeUsb(osName)).isTrue();
+  }
+
+  @ParameterizedTest(name = "\"{0}\"")
+  @ValueSource(strings = {"Windows 11", "Windows Server 2022", ""})
+  @DisplayName("another OS has no native USB scanner, so a USB fallback is needed")
+  void anotherOsHasNoNativeUsb(String osName) {
+    assertThat(PlatformScanners.hasNativeUsb(osName)).isFalse();
   }
 }

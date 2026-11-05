@@ -1,12 +1,11 @@
 package com.jbraddockm.core.discovery;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.function.Consumer;
 
-/** Runs a scan, gathers its devices, and folds duplicate sightings of a device into one entry. */
+/** Runs a scan, gathers its devices, and folds the sightings of a device into one entry. */
 public final class DeviceDiscovery {
 
   private DeviceDiscovery() {}
@@ -15,12 +14,12 @@ public final class DeviceDiscovery {
    * Scans for devices.
    *
    * <p>A scanner may report from several threads at once (a {@link CompositeScanner} fans out), so
-   * {@code onFound} is called one device at a time, in the order found. The returned list folds
-   * duplicate sightings of a device into one entry.
+   * {@code onFound} is called one device at a time, in the order found. The returned list folds the
+   * sightings of a device into one entry per address.
    *
    * @param scanner how to scan
-   * @param onFound told about each device the moment it is found, before duplicates are folded
-   * @return the devices found, deduplicated, identified ones first
+   * @param onFound told about each device the moment it is found, before the sightings are folded
+   * @return the devices found, one per address, merged
    */
   public static DeviceList discover(DeviceScanner scanner, Consumer<DiscoveredDevice> onFound) {
     var found = new ArrayList<DiscoveredDevice>();
@@ -38,42 +37,50 @@ public final class DeviceDiscovery {
   }
 
   /**
-   * Folds duplicates of one device into a single entry. An identified device (one with a GUID) is
-   * kept once per GUID — the first time it was found — and its address is taken. An unidentified
-   * device (one found without a GUID, over Wi-Fi mDNS or by the legacy detector) is folded by
-   * address, and dropped when its address is already an identified device's. So the mDNS and legacy
-   * sightings of one Wi-Fi device fold into one entry; where they differ, the one carrying an OS
-   * version (mDNS) is kept over the one without (the detector). Identified devices come first.
+   * Folds the sightings of a device into one entry per address. One scan can see a device two ways
+   * at one address — the USB scan identifies it over {@code discovery.cgi} (PIN, GUID, model) while
+   * mDNS gives its name, ULA and hardware id — so the two are merged into one complete entry. A
+   * device reachable at two addresses (the USB link and Wi-Fi) stays two entries, one per
+   * transport.
    */
   private static List<DiscoveredDevice> deduplicate(List<DiscoveredDevice> found) {
-    var identified = new ArrayList<DiscoveredDevice>();
-    var guids = new HashSet<String>();
-    var takenAddresses = new HashSet<String>();
+    var byAddress = new LinkedHashMap<String, DiscoveredDevice>();
     for (var device : found) {
-      if (device.guid() != null && guids.add(device.guid())) {
-        identified.add(device);
-        takenAddresses.add(device.address());
-      }
+      byAddress.merge(device.address(), device, DeviceDiscovery::merge);
     }
-    var anonymousByAddress = new LinkedHashMap<String, DiscoveredDevice>();
-    for (var device : found) {
-      if (device.guid() == null && !takenAddresses.contains(device.address())) {
-        anonymousByAddress.merge(device.address(), device, DeviceDiscovery::richer);
-      }
-    }
-    var deduplicated = new ArrayList<>(identified);
-    deduplicated.addAll(anonymousByAddress.values());
-    return deduplicated;
+    return List.copyOf(byAddress.values());
   }
 
   /**
-   * Keeps the device that says more: the one with a ULA (an mDNS advert) wins over one without,
-   * then the one with an OS version, else the one found first.
+   * Merges two sightings of a device at one address into one, taking each field from whichever
+   * sighting supplied it. The fields are complementary — {@code discovery.cgi} gives the PIN, GUID
+   * and model; mDNS gives the name, ULA and hardware id — so a non-null value wins, keeping the
+   * first when both have one.
    */
-  private static DiscoveredDevice richer(DiscoveredDevice kept, DiscoveredDevice candidate) {
-    if (kept.ula() != null || candidate.ula() != null) {
-      return candidate.ula() != null ? candidate : kept;
+  private static DiscoveredDevice merge(DiscoveredDevice a, DiscoveredDevice b) {
+    return new DiscoveredDevice(
+        a.pin() != null ? a.pin() : b.pin(),
+        a.guid() != null ? a.guid() : b.guid(),
+        a.model() != null ? a.model() : b.model(),
+        mergedName(a, b),
+        a.version() != null ? a.version() : b.version(),
+        a.connection(),
+        a.address(),
+        a.ula() != null ? a.ula() : b.ula(),
+        a.hwid() != null ? a.hwid() : b.hwid());
+  }
+
+  /**
+   * The network name, from the mDNS sighting (the one with a hardware id) when there is one — its
+   * {@code fname} is the device's own name — rather than the host name the legacy detector reports.
+   */
+  private static String mergedName(DiscoveredDevice a, DiscoveredDevice b) {
+    if (a.hwid() != null) {
+      return a.name();
     }
-    return kept.version() != null || candidate.version() == null ? kept : candidate;
+    if (b.hwid() != null) {
+      return b.name();
+    }
+    return a.name() != null ? a.name() : b.name();
   }
 }

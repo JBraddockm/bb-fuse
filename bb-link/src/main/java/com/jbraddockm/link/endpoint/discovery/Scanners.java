@@ -11,17 +11,20 @@ public final class Scanners {
   private Scanners() {}
 
   /**
-   * The scanner the daemon runs: bb-core's native scanners for this host (the USB link-local scan,
-   * which identifies a device by its PIN) together with the legacy library-backed scanner. They run
-   * at once; a device the native scan already identified is not listed a second time from the
-   * legacy hit at the same address (see {@code DeviceDiscovery}). The legacy scanner is what still
-   * finds Wi-Fi devices until a native Wi-Fi scanner lands.
+   * The scanner the daemon runs: bb-core's native scanners for this host — the USB link-local scan
+   * (which identifies a device by its PIN) and the Wi-Fi mDNS scan. On a host without a native USB
+   * scanner (see {@link PlatformScanners#hasNativeUsb()}) the legacy library-backed scanner is
+   * added as the USB fallback; on macOS and Linux the native scanners suffice, so it is left out.
+   * When both run, a device the native scan already identified is not listed a second time from the
+   * legacy hit at the same address (see {@code DeviceDiscovery}).
    *
    * @return the combined scanner
    */
   public static DeviceScanner all() {
     var scanners = new ArrayList<>(PlatformScanners.forThisOs());
-    scanners.add(new LibraryDeviceScanner());
+    if (!PlatformScanners.hasNativeUsb()) {
+      scanners.add(new LibraryDeviceScanner());
+    }
     return new CompositeScanner(scanners);
   }
 

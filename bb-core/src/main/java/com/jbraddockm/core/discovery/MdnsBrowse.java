@@ -7,21 +7,21 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Optional;
 import javax.jmdns.ServiceInfo;
 
 /**
- * Browses the shared mDNS facility for bp2p devices and resolves each to its LAN IPv4 address.
+ * Browses the shared mDNS facility for bp2p devices and resolves each to its address(es).
  *
- * <p>A device advertises several bp2p instances; the <b>Friendly</b> one carries the device's
- * network name and OS in its TXT ({@code fname}, {@code os}). The bp2p SRV target is the device's
- * tunnel ULA (no dependable IPv4), so the LAN address comes from the device's own hostname — {@code
- * <fname>.local}, whose A record is its Wi-Fi IPv4. A USB-attached device's hostname resolves to
- * its link-local address, which the USB scan already covers, so a link-local result is skipped.
- * mDNS is a listen-for-a-while source, so the browse resolves for a short window and returns what
- * it found.
+ * <p>A device advertises several bp2p instances; the <b>Friendly</b> one carries its network name,
+ * OS and hardware id in the TXT ({@code fname}, {@code os}, {@code hwid}). The bp2p SRV target is
+ * the device's tunnel ULA (IPv6, taken from the service info), so the usable address comes from the
+ * device's own hostname — {@code <fname>.local} — which resolves to each IPv4 the device is
+ * reachable at: its Wi-Fi LAN address, and its USB link-local address when attached. Each is
+ * reported as a sighting, classified by the address — a link-local ({@code 169.254.x}) one as USB,
+ * the rest as Wi-Fi. mDNS is a listen-for-a-while source, so the browse resolves for a short window
+ * and returns what it found.
  */
-final class MdnsBrowse implements WifiScanner.Browse {
+final class MdnsBrowse implements MdnsScanner.Browse {
 
   private static final String SERVICE_TYPE = "_bp2p._tcp.local.";
   private static final String FRIENDLY_NAME = "fname";
@@ -42,8 +42,8 @@ final class MdnsBrowse implements WifiScanner.Browse {
   }
 
   @Override
-  public List<WifiScanner.Advert> resolve() {
-    var byAddress = new LinkedHashMap<String, WifiScanner.Advert>();
+  public List<MdnsScanner.Advert> resolve() {
+    var byAddress = new LinkedHashMap<String, MdnsScanner.Advert>();
     try {
       for (var instance : mdns.list(SERVICE_TYPE, windowMs)) {
         var name = instance.getPropertyString(FRIENDLY_NAME);
@@ -53,29 +53,31 @@ final class MdnsBrowse implements WifiScanner.Browse {
         var version = instance.getPropertyString(OS_VERSION);
         var ula = ulaOf(instance);
         var hwid = instance.getPropertyString(HARDWARE_ID);
-        lanAddressOf(name)
-            .ifPresent(
-                address ->
-                    byAddress.putIfAbsent(
-                        address, new WifiScanner.Advert(name, version, address, ula, hwid)));
+        for (var ipv4 : addressesOf(name)) {
+          var connection = ipv4.isLinkLocalAddress() ? ConnectionKind.USB : ConnectionKind.WIFI;
+          var address = ipv4.getHostAddress();
+          byAddress.putIfAbsent(
+              address, new MdnsScanner.Advert(name, version, connection, address, ula, hwid));
+        }
       }
     } catch (IOException _) {
-      // mDNS could not start, so there are no Wi-Fi devices to report this scan.
+      // mDNS could not start, so there are no devices to report this scan.
     }
     return List.copyOf(byAddress.values());
   }
 
-  private static Optional<String> lanAddressOf(String friendlyName) {
+  private static List<Inet4Address> addressesOf(String friendlyName) {
+    var addresses = new java.util.ArrayList<Inet4Address>();
     try {
       for (var address : InetAddress.getAllByName(friendlyName + ".local")) {
-        if (address instanceof Inet4Address ipv4 && !ipv4.isLinkLocalAddress()) {
-          return Optional.of(ipv4.getHostAddress());
+        if (address instanceof Inet4Address ipv4) {
+          addresses.add(ipv4);
         }
       }
     } catch (UnknownHostException _) {
       // The device's hostname did not resolve; another scanner may still find it.
     }
-    return Optional.empty();
+    return addresses;
   }
 
   /**

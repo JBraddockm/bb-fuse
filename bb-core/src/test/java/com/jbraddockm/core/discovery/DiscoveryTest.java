@@ -99,17 +99,17 @@ class DiscoveryTest {
     void aDeviceAsJson() {
       assertThat(USB.toJson())
           .containsOnlyKeys(
-              "pin", "guid", "name", "version", "connection", "address", "ula", "hwid")
+              "pin", "guid", "model", "name", "version", "connection", "address", "ula", "hwid")
           .containsEntry("connection", "USB")
           .containsEntry("version", "10.3.3.2205")
           .containsEntry("address", "169.254.0.1");
       assertThat(List.copyOf(USB.toJson().keySet()))
           .containsExactly(
-              "pin", "guid", "name", "version", "connection", "address", "ula", "hwid");
+              "pin", "guid", "model", "name", "version", "connection", "address", "ula", "hwid");
     }
 
     @Test
-    @DisplayName("an identified device takes its PIN, GUID, model name and platform version")
+    @DisplayName("an identified device takes its PIN, GUID, model and version, but no network name")
     void anIdentifiedDevice() {
       var device =
           DiscoveredDevice.identified(
@@ -117,7 +117,8 @@ class DiscoveryTest {
 
       assertThat(device.pin()).isEqualTo("2A3B4C5D");
       assertThat(device.guid()).isEqualTo("abc=");
-      assertThat(device.name()).isEqualTo(MODEL);
+      assertThat(device.model()).isEqualTo(MODEL);
+      assertThat(device.name()).isNull();
       assertThat(device.version()).isEqualTo(VERSION);
       assertThat(device.connection()).isEqualTo(ConnectionKind.USB);
       assertThat(device.address()).isEqualTo("169.254.0.1");
@@ -139,8 +140,13 @@ class DiscoveryTest {
         "a Wi-Fi device from mDNS carries its name, OS, address and tunnel ULA, but no PIN")
     void aWifiDeviceFromMdns() {
       var device =
-          DiscoveredDevice.overWifi(
-              "BLACKBERRY-3247", "10.3.3.3216", "192.168.1.82", "fd0f:db1::1", "0x87002c0a");
+          DiscoveredDevice.fromMdns(
+              "BLACKBERRY-3247",
+              "10.3.3.3216",
+              ConnectionKind.WIFI,
+              "192.168.1.82",
+              "fd0f:db1::1",
+              "0x87002c0a");
 
       var json = device.toJson();
       assertThat(json)
@@ -152,6 +158,7 @@ class DiscoveryTest {
           .containsEntry("hwid", "0x87002c0a");
       assertThat(json.get("pin")).isNull();
       assertThat(json.get("guid")).isNull();
+      assertThat(json.get("model")).isNull();
       assertThat(Json.write(json)).doesNotContain("pin").doesNotContain("guid");
     }
 
@@ -192,54 +199,73 @@ class DiscoveryTest {
     }
 
     @Test
-    @DisplayName(
-        "folds a legacy hit at an identified device's address, and keeps a legacy device of its"
-            + " own")
-    void foldsALegacyHitAtAnIdentifiedAddress() {
+    @DisplayName("merges the USB identity and the mDNS sighting at one address into one full entry")
+    void mergesIdentityAndMdnsAtOneAddress() {
       var identified =
           DiscoveredDevice.identified(
               identity("2C1E7583", "G1"), ConnectionKind.USB, "169.254.0.1");
-      var legacySame =
-          DiscoveredDevice.anonymous("blackberry-7583", null, ConnectionKind.USB, "169.254.0.1");
-      var legacyOther =
-          DiscoveredDevice.anonymous("blackberry-3247", null, ConnectionKind.WIFI, "192.168.1.82");
-      DeviceScanner scanner = List.of(legacyOther, identified, legacySame)::forEach;
-
-      var list = DeviceDiscovery.discover(scanner, _ -> {});
-
-      assertThat(list.devices()).containsExactly(identified, legacyOther);
-    }
-
-    @Test
-    @DisplayName(
-        "folds the mDNS and legacy sightings of one Wi-Fi device into one entry, by address")
-    void foldsUnidentifiedByAddress() {
       var mdns =
-          DiscoveredDevice.overWifi(
-              "BLACKBERRY-3247", "10.3.3.3216", "192.168.1.82", "fd0f:db1::1", "0x87002c0a");
-      var legacy =
-          DiscoveredDevice.anonymous(
-              "blackberry-3247.lan", null, ConnectionKind.WIFI, "192.168.1.82");
+          DiscoveredDevice.fromMdns(
+              "BLACKBERRY-7583",
+              VERSION,
+              ConnectionKind.USB,
+              "169.254.0.1",
+              "fd15:c6dc::1",
+              "0x07002e0a");
+      DeviceScanner scanner = List.of(identified, mdns)::forEach;
 
-      // The legacy hit arrives first, so address-fold must still keep the richer mDNS entry.
-      assertThat(DeviceDiscovery.discover(List.of(legacy, mdns)::forEach, _ -> {}).devices())
-          .containsExactly(mdns);
+      assertThat(DeviceDiscovery.discover(scanner, _ -> {}).devices())
+          .singleElement()
+          .isEqualTo(
+              new DiscoveredDevice(
+                  "2C1E7583",
+                  "G1",
+                  MODEL,
+                  "BLACKBERRY-7583",
+                  VERSION,
+                  ConnectionKind.USB,
+                  "169.254.0.1",
+                  "fd15:c6dc::1",
+                  "0x07002e0a"));
     }
 
     @Test
-    @DisplayName("keeps a device found twice under one GUID just once, the first it was found")
-    void foldsOneGuidFoundTwice() {
+    @DisplayName("keeps both transports of a device: one entry per address (USB and Wi-Fi)")
+    void keepsBothTransports() {
       var usb =
           DiscoveredDevice.identified(
               identity("2C1E7583", "G1"), ConnectionKind.USB, "169.254.0.1");
       var wifi =
-          DiscoveredDevice.identified(
-              identity("2C1E7583", "G1"), ConnectionKind.WIFI, "192.168.1.82");
+          DiscoveredDevice.fromMdns(
+              "BLACKBERRY-7583",
+              VERSION,
+              ConnectionKind.WIFI,
+              "192.168.1.118",
+              "fd15:c6dc::1",
+              "0x07002e0a");
       DeviceScanner scanner = List.of(usb, wifi)::forEach;
 
-      var list = DeviceDiscovery.discover(scanner, _ -> {});
+      assertThat(DeviceDiscovery.discover(scanner, _ -> {}).devices()).containsExactly(usb, wifi);
+    }
 
-      assertThat(list.devices()).containsExactly(usb);
+    @Test
+    @DisplayName("folds the mDNS and legacy sightings at one address, keeping the mDNS name")
+    void foldsUnidentifiedByAddress() {
+      var mdns =
+          DiscoveredDevice.fromMdns(
+              "BLACKBERRY-3247",
+              "10.3.3.3216",
+              ConnectionKind.WIFI,
+              "192.168.1.82",
+              "fd0f:db1::1",
+              "0x87002c0a");
+      var legacy =
+          DiscoveredDevice.anonymous(
+              "blackberry-3247.lan", null, ConnectionKind.WIFI, "192.168.1.82");
+
+      // The legacy hit arrives first, but the merged entry keeps the mDNS name and fields.
+      assertThat(DeviceDiscovery.discover(List.of(legacy, mdns)::forEach, _ -> {}).devices())
+          .containsExactly(mdns);
     }
 
     @Test
