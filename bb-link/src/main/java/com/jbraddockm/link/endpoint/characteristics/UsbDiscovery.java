@@ -1,5 +1,6 @@
 package com.jbraddockm.link.endpoint.characteristics;
 
+import com.jbraddockm.core.discovery.DeviceCharacteristics;
 import com.jbraddockm.core.error.ServiceError;
 import com.jbraddockm.link.LinkErrorCode;
 import com.jbraddockm.link.transport.cgi.PlainHttpGet;

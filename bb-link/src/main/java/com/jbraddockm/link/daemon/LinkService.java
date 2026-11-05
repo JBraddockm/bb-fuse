@@ -9,15 +9,16 @@ import com.jbraddockm.core.daemon.Reply;
 import com.jbraddockm.core.daemon.RequestParams;
 import com.jbraddockm.core.daemon.Service;
 import com.jbraddockm.core.daemon.ServiceInfo;
+import com.jbraddockm.core.discovery.DeviceCharacteristics;
+import com.jbraddockm.core.discovery.DeviceScanner;
 import com.jbraddockm.core.error.CoreErrorCode;
 import com.jbraddockm.core.error.ServiceError;
 import com.jbraddockm.core.json.Json;
 import com.jbraddockm.core.tunnel.TunnelBrokerClient;
-import com.jbraddockm.link.endpoint.characteristics.DeviceCharacteristics;
 import com.jbraddockm.link.endpoint.characteristics.GetDeviceCharacteristics;
 import com.jbraddockm.link.endpoint.characteristics.UsbDiscovery;
-import com.jbraddockm.link.endpoint.discovery.DeviceScanner;
 import com.jbraddockm.link.endpoint.discovery.FriendlyNameAdvertiser;
+import com.jbraddockm.link.endpoint.discovery.Scanners;
 import com.jbraddockm.link.endpoint.pairing.CertificateRetrieval;
 import com.jbraddockm.link.endpoint.pairing.ClientNames;
 import com.jbraddockm.link.endpoint.pairing.Pairing;
@@ -62,7 +63,7 @@ public final class LinkService implements Service<DeviceSession> {
   public LinkService(ExchangeObserver observer) {
     this(
         TransportScheme.HTTPS,
-        DeviceScanner.library(),
+        Scanners.library(),
         observer,
         new Pairing(),
         new CertificateRetrieval());

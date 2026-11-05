@@ -5,13 +5,14 @@ import static com.jbraddockm.link.testing.Steps.finished;
 import static com.jbraddockm.link.testing.Steps.sent;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.jbraddockm.core.discovery.DeviceCharacteristics;
 import com.jbraddockm.core.error.CoreErrorCode;
 import com.jbraddockm.link.LinkErrorCode;
+import com.jbraddockm.link.testing.Resources;
 import com.jbraddockm.link.transport.cgi.CgiResponse;
 import com.jbraddockm.link.transport.cgi.Endpoint;
 import com.jbraddockm.link.transport.cgi.ResponseEnvelope;
 import com.jbraddockm.link.transport.cgi.Step;
-import com.jbraddockm.link.testing.Resources;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -108,7 +109,8 @@ class GetDeviceCharacteristicsTest {
   @DisplayName("a response whose numeric fields are not numbers")
   class MalformedValues {
 
-    private final DeviceCharacteristics characteristics = parse("discovery--synthetic-malformed.xml");
+    private final DeviceCharacteristics characteristics =
+        parse("discovery--synthetic-malformed.xml");
 
     @Test
     @DisplayName("drops each unparseable number rather than failing the whole read")

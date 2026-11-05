@@ -5,8 +5,8 @@ import static com.jbraddockm.link.testing.JsonObjects.array;
 import static com.jbraddockm.link.testing.JsonObjects.object;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.jbraddockm.link.endpoint.discovery.ConnectionKind;
-import com.jbraddockm.link.endpoint.discovery.DiscoveredDevice;
+import com.jbraddockm.core.discovery.ConnectionKind;
+import com.jbraddockm.core.discovery.DiscoveredDevice;
 import com.jbraddockm.link.endpoint.pairing.CertificateRetrieval;
 import com.jbraddockm.link.endpoint.pairing.Pairing;
 import com.jbraddockm.link.testing.Resources;

@@ -2,9 +2,9 @@ package com.jbraddockm.link.endpoint.properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.jbraddockm.link.transport.cgi.ResponseEnvelope;
+import com.jbraddockm.core.xml.XmlElement;
 import com.jbraddockm.link.testing.Resources;
-import com.jbraddockm.link.transport.xml.XmlElement;
+import com.jbraddockm.link.transport.cgi.ResponseEnvelope;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

@@ -3,9 +3,9 @@ package com.jbraddockm.link.transport.cgi;
 import com.jbraddockm.core.error.CoreErrorCode;
 import com.jbraddockm.core.error.ServiceError;
 import com.jbraddockm.core.json.Json;
+import com.jbraddockm.core.xml.XmlElement;
 import com.jbraddockm.link.LinkErrorCode;
 import com.jbraddockm.link.transport.internal.Scrub;
-import com.jbraddockm.link.transport.xml.XmlElement;
 import java.util.Map;
 import java.util.Optional;
 

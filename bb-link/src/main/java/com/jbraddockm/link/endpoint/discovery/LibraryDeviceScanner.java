@@ -1,5 +1,8 @@
 package com.jbraddockm.link.endpoint.discovery;
 
+import com.jbraddockm.core.discovery.ConnectionKind;
+import com.jbraddockm.core.discovery.DeviceScanner;
+import com.jbraddockm.core.discovery.DiscoveredDevice;
 import com.qnx.bbt.deploy.Device;
 import com.qnx.bbt.deploy.DeviceDetector;
 import java.util.function.Consumer;

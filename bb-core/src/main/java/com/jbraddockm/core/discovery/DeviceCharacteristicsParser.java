@@ -1,6 +1,6 @@
-package com.jbraddockm.link.endpoint.characteristics;
+package com.jbraddockm.core.discovery;
 
-import com.jbraddockm.link.transport.xml.XmlElement;
+import com.jbraddockm.core.xml.XmlElement;
 import java.util.Optional;
 
 /**
@@ -8,7 +8,7 @@ import java.util.Optional;
  * this version does not know are ignored; the decimal {@code BbPin} is formatted as the hexadecimal
  * PIN.
  */
-final class DeviceCharacteristicsParser {
+public final class DeviceCharacteristicsParser {
 
   private DeviceCharacteristicsParser() {}
 
@@ -18,7 +18,7 @@ final class DeviceCharacteristicsParser {
    * @param element the {@code DeviceCharacteristics} element
    * @return the characteristics, or empty if the element has no content at all
    */
-  static Optional<DeviceCharacteristics> parse(XmlElement element) {
+  public static Optional<DeviceCharacteristics> parse(XmlElement element) {
     if (element.children().isEmpty()) {
       return Optional.empty();
     }

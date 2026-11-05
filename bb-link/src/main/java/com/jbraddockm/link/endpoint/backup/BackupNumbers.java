@@ -1,6 +1,6 @@
 package com.jbraddockm.link.endpoint.backup;
 
-import com.jbraddockm.link.transport.xml.XmlElement;
+import com.jbraddockm.core.xml.XmlElement;
 import java.util.Optional;
 
 /** The small numeric reads the backup parsers share. */

@@ -1,4 +1,4 @@
-package com.jbraddockm.link.endpoint.characteristics;
+package com.jbraddockm.core.discovery;
 
 import com.jbraddockm.core.command.CommandResult;
 import com.jbraddockm.core.json.Json;

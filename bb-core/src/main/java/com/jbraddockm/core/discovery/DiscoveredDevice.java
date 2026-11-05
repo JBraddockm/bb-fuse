@@ -1,4 +1,4 @@
-package com.jbraddockm.link.endpoint.discovery;
+package com.jbraddockm.core.discovery;
 
 import com.jbraddockm.core.json.Json;
 import java.util.Map;

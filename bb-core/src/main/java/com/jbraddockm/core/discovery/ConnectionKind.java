@@ -1,4 +1,4 @@
-package com.jbraddockm.link.endpoint.discovery;
+package com.jbraddockm.core.discovery;
 
 import java.util.Arrays;
 

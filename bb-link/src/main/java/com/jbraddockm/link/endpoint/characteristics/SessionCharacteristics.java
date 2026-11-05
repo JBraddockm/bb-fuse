@@ -2,6 +2,7 @@ package com.jbraddockm.link.endpoint.characteristics;
 
 import com.jbraddockm.core.command.CommandListener;
 import com.jbraddockm.core.command.CommandOutcome;
+import com.jbraddockm.core.discovery.DeviceCharacteristics;
 import com.jbraddockm.core.error.ServiceError;
 import com.jbraddockm.link.LinkErrorCode;
 import com.jbraddockm.link.transport.cgi.ConnectionPath;

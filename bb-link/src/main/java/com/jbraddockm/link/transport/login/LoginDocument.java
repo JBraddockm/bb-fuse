@@ -1,9 +1,9 @@
 package com.jbraddockm.link.transport.login;
 
+import com.jbraddockm.core.xml.MalformedXmlException;
+import com.jbraddockm.core.xml.XmlElement;
+import com.jbraddockm.core.xml.XmlParser;
 import com.jbraddockm.link.transport.cgi.CgiResponse;
-import com.jbraddockm.link.transport.xml.MalformedXmlException;
-import com.jbraddockm.link.transport.xml.XmlElement;
-import com.jbraddockm.link.transport.xml.XmlParser;
 import java.util.Optional;
 
 /** A parsed answer of the login interface. */

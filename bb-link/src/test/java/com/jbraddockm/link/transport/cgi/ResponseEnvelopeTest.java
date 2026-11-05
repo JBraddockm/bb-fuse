@@ -3,8 +3,8 @@ package com.jbraddockm.link.transport.cgi;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
+import com.jbraddockm.core.xml.MalformedXmlException;
 import com.jbraddockm.link.testing.Resources;
-import com.jbraddockm.link.transport.xml.MalformedXmlException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;

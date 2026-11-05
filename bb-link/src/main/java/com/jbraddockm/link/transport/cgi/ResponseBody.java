@@ -1,9 +1,9 @@
 package com.jbraddockm.link.transport.cgi;
 
 import com.jbraddockm.core.json.Json;
-import com.jbraddockm.link.transport.xml.MalformedXmlException;
-import com.jbraddockm.link.transport.xml.XmlJson;
-import com.jbraddockm.link.transport.xml.XmlParser;
+import com.jbraddockm.core.xml.MalformedXmlException;
+import com.jbraddockm.core.xml.XmlJson;
+import com.jbraddockm.core.xml.XmlParser;
 import java.util.Objects;
 
 /**

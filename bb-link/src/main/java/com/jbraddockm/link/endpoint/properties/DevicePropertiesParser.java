@@ -1,6 +1,6 @@
 package com.jbraddockm.link.endpoint.properties;
 
-import com.jbraddockm.link.transport.xml.XmlElement;
+import com.jbraddockm.core.xml.XmlElement;
 import java.util.List;
 import java.util.Optional;
 

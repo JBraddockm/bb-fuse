@@ -1,5 +1,6 @@
 package com.jbraddockm.link.endpoint.backup;
 
+import com.jbraddockm.core.xml.XmlElement;
 import com.jbraddockm.link.transport.cgi.CgiRequest;
 import com.jbraddockm.link.transport.cgi.Endpoint;
 import com.jbraddockm.link.transport.cgi.FormField;
@@ -8,7 +9,6 @@ import com.jbraddockm.link.transport.cgi.ResponseEnvelope;
 import com.jbraddockm.link.transport.cgi.ResponseFailures;
 import com.jbraddockm.link.transport.cgi.Step;
 import com.jbraddockm.link.transport.cgi.XmlConversation;
-import com.jbraddockm.link.transport.xml.XmlElement;
 import java.util.ArrayList;
 import java.util.List;
 

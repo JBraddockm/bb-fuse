@@ -1,5 +1,6 @@
 package com.jbraddockm.link.endpoint.characteristics;
 
+
 import static com.jbraddockm.link.testing.Steps.failed;
 import static com.jbraddockm.link.testing.Steps.finished;
 import static org.assertj.core.api.Assertions.assertThat;

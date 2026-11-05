@@ -2,12 +2,12 @@ package com.jbraddockm.link.endpoint.pairing;
 
 import com.jbraddockm.core.command.CommandResult;
 import com.jbraddockm.core.json.Json;
+import com.jbraddockm.core.xml.XmlElement;
 import com.jbraddockm.link.transport.cgi.CgiResponse;
 import com.jbraddockm.link.transport.cgi.ResponseBody;
 import com.jbraddockm.link.transport.cgi.ResponseEnvelope;
 import com.jbraddockm.link.transport.cgi.ResponseFailures;
 import com.jbraddockm.link.transport.cgi.ResponseStatus;
-import com.jbraddockm.link.transport.xml.XmlElement;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
@@ -64,9 +64,12 @@ record PairingReply(
     if (status == ResponseStatus.UNKNOWN
         && statusText != null
         && statusText.toLowerCase(Locale.ROOT).contains("already paired")) {
-      // A renew is an idempotent re-insert: the device recognises the pairing as already present and
-      // updates its one trusted-peer entry rather than rejecting it, so "Device already paired" is a
-      // success, not an error. **[verified: pairing.cgi FUN_00017810 treats it as a result status]**
+      // A renew is an idempotent re-insert: the device recognises the pairing as already present
+      // and
+      // updates its one trusted-peer entry rather than rejecting it, so "Device already paired" is
+      // a
+      // success, not an error. **[verified: pairing.cgi FUN_00017810 treats it as a result
+      // status]**
       status = ResponseStatus.SUCCESS;
     }
     return new PairingReply(

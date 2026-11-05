@@ -1,4 +1,4 @@
-package com.jbraddockm.link.endpoint.discovery;
+package com.jbraddockm.core.discovery;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -20,8 +20,8 @@ import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 /**
- * Tests for device discovery: {@link ConnectionKind}, {@link DiscoveredDevice}, {@link DeviceList},
- * {@link DeviceDiscovery} and {@link LibraryDeviceScanner}.
+ * Tests for device discovery: {@link ConnectionKind}, {@link DiscoveredDevice}, {@link DeviceList}
+ * and {@link DeviceDiscovery}.
  */
 @DisplayName("Discovery: finding devices")
 class DiscoveryTest {
@@ -165,61 +165,6 @@ class DiscoveryTest {
           .extracting(DiscoveredDevice::hostname)
           .containsExactlyInAnyOrderElementsOf(names);
       assertThat(told).hasSize(400);
-    }
-
-    @Test
-    @DisplayName(
-        "uses the library when it is asked for the usual scanner, which finds nothing until it is"
-            + " run")
-    void theUsualScannerIsTheLibraryOne() {
-      assertThat(DeviceScanner.library()).isInstanceOf(LibraryDeviceScanner.class);
-    }
-  }
-
-  @Nested
-  @DisplayName("LibraryDeviceScanner: what the library says becomes what the daemon says")
-  class Converting {
-
-    @Test
-    @DisplayName(
-        "a device is the host name and the address that the library gave, with the kind that its"
-            + " word names")
-    void aDevice() {
-      assertThat(
-              LibraryDeviceScanner.convert(
-                  "blackberry-0000.lan", "192.168.1.82", "WiFi", "10.3.3.2205"))
-          .isEqualTo(
-              new DiscoveredDevice(
-                  "blackberry-0000.lan", "192.168.1.82", ConnectionKind.WIFI, "10.3.3.2205"));
-    }
-
-    @ParameterizedTest(name = "version \"{0}\"")
-    @CsvSource(value = {"'  10.3.3.2205  ', 10.3.3.2205", "10.3.3.2205, 10.3.3.2205"})
-    @DisplayName("a version is kept without the blanks around it")
-    void aVersionIsStripped(String given, String expected) {
-      assertThat(LibraryDeviceScanner.convert("h", "a", "USB", given).version())
-          .isEqualTo(expected);
-    }
-
-    @ParameterizedTest(name = "version \"{0}\"")
-    @ValueSource(strings = {"", "   ", "\t"})
-    @DisplayName("a version that is empty or blank is no version")
-    void aBlankVersion(String given) {
-      assertThat(LibraryDeviceScanner.convert("h", "a", "USB", given).version()).isNull();
-    }
-
-    @Test
-    @DisplayName("a version that the library did not give is no version")
-    void noVersion() {
-      assertThat(LibraryDeviceScanner.convert("h", "a", "USB", null).version()).isNull();
-    }
-
-    @Test
-    @DisplayName("a kind of connection that is not known is refused: the daemon does not guess")
-    void anUnknownKind() {
-      assertThatThrownBy(() -> LibraryDeviceScanner.convert("h", "a", "Bluetooth", null))
-          .isInstanceOf(IllegalArgumentException.class)
-          .hasMessage("unknown connection type: Bluetooth");
     }
   }
 }

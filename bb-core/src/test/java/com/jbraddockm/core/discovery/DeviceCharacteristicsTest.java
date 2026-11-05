@@ -1,4 +1,4 @@
-package com.jbraddockm.link.endpoint.characteristics;
+package com.jbraddockm.core.discovery;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

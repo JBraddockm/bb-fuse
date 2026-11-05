@@ -1,8 +1,8 @@
 package com.jbraddockm.link.transport.cgi;
 
-import com.jbraddockm.link.transport.xml.MalformedXmlException;
-import com.jbraddockm.link.transport.xml.XmlElement;
-import com.jbraddockm.link.transport.xml.XmlParser;
+import com.jbraddockm.core.xml.MalformedXmlException;
+import com.jbraddockm.core.xml.XmlElement;
+import com.jbraddockm.core.xml.XmlParser;
 import java.util.Optional;
 import java.util.stream.Stream;
 

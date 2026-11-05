@@ -19,9 +19,10 @@ import org.junit.jupiter.api.Test;
  * Keeps the two tiers of bb-link layered. {@code endpoint.*} packages are domains that sit on top
  * of the {@code transport.*} plumbing; they do not reach sideways into one another (save a short,
  * approved allow-list), the plumbing never reaches up into a domain, and nothing but {@link
- * Launcher} depends on the {@code daemon} composition root. The two leaf plumbing packages that
- * could one day move to {@code bb-core} ({@code transport.xml}, {@code transport.internal}) are
- * held to the JDK only. The test reads the sources and is skipped when they are not found.
+ * Launcher} depends on the {@code daemon} composition root. The lift-ready leaf plumbing that could
+ * one day move to {@code bb-core} ({@code transport.internal}) is held to the JDK only ({@code
+ * transport.xml} has already moved, to {@code core.xml}). The test reads the sources and is skipped
+ * when they are not found.
  *
  * <p>The companion {@code PairingBoundaryTest} holds the tighter line for {@code pairing.pki} and
  * {@code pairing.store}.
@@ -148,9 +149,9 @@ class ArchitectureBoundaryTest {
   }
 
   @Test
-  @DisplayName("the lift-ready plumbing (xml, internal) stays on the JDK alone")
+  @DisplayName("the lift-ready plumbing (internal) stays on the JDK alone")
   void liftReadyPackagesUseTheJdkOnly() {
-    var liftReady = Set.of(TRANSPORT + "xml", TRANSPORT + "internal");
+    var liftReady = Set.of(TRANSPORT + "internal");
 
     var scanned = sources().stream().filter(file -> liftReady.contains(file.pkg())).toList();
     var violations =
