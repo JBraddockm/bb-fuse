@@ -23,6 +23,16 @@ public final class Cli {
   private Cli() {}
 
   static void main(String[] args) throws Throwable {
+    if (!supportedOs(System.getProperty("os.name", ""))) {
+      // The tunnel brings up a macOS utun; refuse cleanly elsewhere rather than crash on bring-up
+      // (and so an installed service does not crash-loop under a service manager).
+      System.err.println(
+          "bb-tunnel: the tunnel is macOS-only for now (this is "
+              + System.getProperty("os.name")
+              + "). Not starting.");
+      System.exit(1);
+      return;
+    }
     if (args.length > 0 && args[0].equals("serve")) {
       serve(args);
       return;
@@ -110,6 +120,11 @@ public final class Cli {
       }
     }
     Tunneld.run(socket, cert, key, device, devices);
+  }
+
+  /** Whether the tunnel's macOS-only {@code utun} layer is available on this OS. */
+  static boolean supportedOs(String osName) {
+    return osName != null && osName.toLowerCase(java.util.Locale.ROOT).contains("mac");
   }
 
   /** The value after a flag, or a clear error if it is missing. */

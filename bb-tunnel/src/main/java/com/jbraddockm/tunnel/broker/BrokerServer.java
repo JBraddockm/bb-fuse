@@ -17,6 +17,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.PosixFileAttributeView;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.List;
 import java.util.Map;
@@ -83,27 +84,30 @@ final class BrokerServer implements AutoCloseable {
   }
 
   /**
-   * Makes the freshly-bound socket reachable by its client. Launched with {@code sudo}, the daemon
-   * runs as root, so the default root-owned {@code 0755} socket is not connectable by an
-   * unprivileged consumer (connecting to a Unix socket needs write permission). Hand it to the real
-   * invoking user ({@code SUDO_USER}) with owner-only {@code rw}; if that cannot be done, fall back
-   * to opening it to all local users so a dev run still works. Not under sudo, the daemon already
-   * runs as the connecting user, so the default owner access is left as it is.
+   * Makes the freshly-bound socket reachable by its client. Launched as root (under {@code sudo} or
+   * launchd), the daemon's socket is root-owned and not connectable by an unprivileged consumer
+   * (connecting to a Unix socket needs write permission), so it is handed to the intended owner
+   * ({@link SocketAccess}) with owner- (or owner+group-) only access; if that cannot be done, it
+   * falls back to opening it to all local users so a dev run still works. Running as the connecting
+   * user already, there is no owner to resolve and the default access is left as it is.
    */
   private static void grantSocketAccess(Path socket) {
-    var sudoUser = System.getenv("SUDO_USER");
-    if (sudoUser == null || sudoUser.isBlank()) {
-      return;
-    }
+    SocketAccess.from(System.getenv()).ifPresent(access -> apply(socket, access));
+  }
+
+  private static void apply(Path socket, SocketAccess access) {
     try {
-      var owner =
-          FileSystems.getDefault().getUserPrincipalLookupService().lookupPrincipalByName(sudoUser);
-      Files.setOwner(socket, owner);
-      Files.setPosixFilePermissions(socket, PosixFilePermissions.fromString("rw-------"));
+      var lookup = FileSystems.getDefault().getUserPrincipalLookupService();
+      Files.setOwner(socket, lookup.lookupPrincipalByName(access.owner()));
+      if (access.group() != null) {
+        Files.getFileAttributeView(socket, PosixFileAttributeView.class)
+            .setGroup(lookup.lookupPrincipalByGroupName(access.group()));
+      }
+      Files.setPosixFilePermissions(socket, PosixFilePermissions.fromString(access.permissions()));
     } catch (IOException | UnsupportedOperationException restrict) {
       System.err.println(
           "bb-tunneld: could not restrict the socket to "
-              + sudoUser
+              + access.owner()
               + " ("
               + restrict
               + "); opening it to local users instead");

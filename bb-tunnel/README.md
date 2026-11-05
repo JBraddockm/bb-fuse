@@ -61,7 +61,7 @@ the last `release` (or a dropped connection) brings it down. Consumers use the c
 (`com.jbraddockm.core.tunnel.TunnelBrokerClient`): `acquire(host | guid)`, `release(token)`,
 `status()`, `identify(host, guid, pin)`, and a `dropped` / `identity` event stream. The wire protocol
 is in [`PROTOCOL.md`](PROTOCOL.md) §7; the design, decisions and roadmap are in
-[`../analysis/TUNNEL-BROKER-DAEMON-PLAN.md`](../analysis/TUNNEL-BROKER-DAEMON-PLAN.md).
+[`../analysis/TUNNEL-BROKER-DAEMON.md`](../analysis/TUNNEL-BROKER-DAEMON.md).
 
 End to end, from a device's **Wi-Fi LAN address** — bb-link asks the daemon to bring the tunnel up and
 runs the whole session over the device's ULA, so you never type the ULA **[verified]**:

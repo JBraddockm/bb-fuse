@@ -138,7 +138,7 @@ Everything above is the *device-facing* tunnel. The **broker daemon** (`bb-tunne
 a local control protocol that lets bb-link and Blend share one tunnel per
 device without owning its lifecycle. It runs over a **Unix-domain socket** (default
 `/tmp/bb-tunneld.sock`), **not** the network. The design and rationale are in
-[`../analysis/TUNNEL-BROKER-DAEMON-PLAN.md`](../analysis/TUNNEL-BROKER-DAEMON-PLAN.md); the client is
+[`../analysis/TUNNEL-BROKER-DAEMON.md`](../analysis/TUNNEL-BROKER-DAEMON.md); the client is
 `com.jbraddockm.core.tunnel.TunnelBrokerClient` in bb-core.
 
 **Framing.** One JSON object per line (`\n`-terminated), UTF-8, like the bb-link daemon. A request is
