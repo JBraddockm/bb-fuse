@@ -28,6 +28,15 @@
             <artifactId>BarLibrary</artifactId>
             <optional>true</optional>
         </dependency>
+        <!-- mDNS/DNS-SD for core.mdns (the shared advertise/browse facility). Optional so it does not
+             leak onto the classpath of consumers that do not use mDNS (e.g. bb-tunnel); modules that
+             use core.mdns (bb-link) declare it themselves. -->
+        <dependency>
+            <groupId>org.jmdns</groupId>
+            <artifactId>jmdns</artifactId>
+            <version>3.6.1</version>
+            <optional>true</optional>
+        </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>

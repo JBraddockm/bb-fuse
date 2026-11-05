@@ -30,7 +30,9 @@
             <artifactId>bb-core</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <!-- mDNS/DNS-SD: advertise the bp2p _friendly service so a paired device shows our name. -->
+        <!-- mDNS/DNS-SD backs bb-core's core.mdns (the shared facility bb-link advertises the bp2p
+             _friendly service over). core.mdns declares it optional, so bb-link declares it here for
+             its own runtime and native image. -->
         <dependency>
             <groupId>org.jmdns</groupId>
             <artifactId>jmdns</artifactId>
