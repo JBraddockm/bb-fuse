@@ -1,9 +1,9 @@
-package com.jbraddockm.link.transport.xml;
+package com.jbraddockm.core.xml;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
-import com.jbraddockm.link.testing.Resources;
+import com.jbraddockm.core.testing.Resources;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;

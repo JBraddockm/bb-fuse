@@ -1,4 +1,4 @@
-package com.jbraddockm.link.transport.xml;
+package com.jbraddockm.core.xml;
 
 import java.io.StringReader;
 import java.util.ArrayDeque;

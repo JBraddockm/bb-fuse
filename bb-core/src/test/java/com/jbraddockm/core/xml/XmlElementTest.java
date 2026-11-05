@@ -1,9 +1,9 @@
-package com.jbraddockm.link.transport.xml;
+package com.jbraddockm.core.xml;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.jbraddockm.link.testing.Resources;
+import com.jbraddockm.core.testing.Resources;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
