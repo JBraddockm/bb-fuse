@@ -195,6 +195,40 @@ class DeviceSessionTunnelTest {
   }
 
   @Nested
+  @DisplayName("the host-tunnel indicator")
+  class HostTunnel {
+
+    @Test
+    @DisplayName("hasTunnel is false before establish, true while held, false once dropped")
+    void reportsWhetherATunnelIsHeld() throws IOException {
+      var binding = new FakeBinding("fd00::1", "169.254.2.1");
+      var session = tunnelled("10.0.0.5", 8443, new FakeConnector(binding));
+      assertThat(session.hasTunnel()).isFalse();
+
+      session.establishTunnel(CommandListener.SILENT);
+      assertThat(session.hasTunnel()).isTrue();
+
+      binding.down = true;
+      assertThat(session.hasTunnel()).isFalse();
+      session.close();
+    }
+
+    @Test
+    @DisplayName("a session with no tunnel configured never holds one")
+    void directConnectHoldsNoTunnel() {
+      var session =
+          DeviceSession.forTarget(
+              new DeviceTarget(
+                  "10.0.0.5", 8443, TransportScheme.HTTP, new Authentication.Password("secret")),
+              ExchangeObserver.NONE,
+              null);
+
+      assertThat(session.hasTunnel()).isFalse();
+      session.close();
+    }
+  }
+
+  @Nested
   @DisplayName("releasing the lease")
   class Releasing {
 

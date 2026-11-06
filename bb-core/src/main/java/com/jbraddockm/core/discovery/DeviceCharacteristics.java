@@ -18,8 +18,8 @@ import java.util.Map;
  * @param imei the IMEI; may be {@code null}
  * @param batteryLevel the charge in percent (from {@code Power}); may be {@code null}
  * @param developerMode whether developer mode is on; may be {@code null}
- * @param tunnelUp whether the bp2p tunnel is up (from {@code Bp2pTunnelStatus}); may be {@code
- *     null}
+ * @param deviceBp2pTunnel the device's own bp2p tunnel flag (from {@code Bp2pTunnelStatus}) — a
+ *     near-static device-side status, not whether a host holds a tunnel; may be {@code null}
  * @param screenWidth the screen width in pixels; may be {@code null}
  * @param screenHeight the screen height in pixels; may be {@code null}
  * @param flashSize the flash size in bytes; may be {@code null}
@@ -38,7 +38,7 @@ public record DeviceCharacteristics(
     String imei,
     Integer batteryLevel,
     Boolean developerMode,
-    Boolean tunnelUp,
+    Boolean deviceBp2pTunnel,
     Integer screenWidth,
     Integer screenHeight,
     Long flashSize,
@@ -59,7 +59,7 @@ public record DeviceCharacteristics(
         "imei", imei,
         "batteryLevel", batteryLevel,
         "developerMode", developerMode,
-        "tunnelUp", tunnelUp,
+        "deviceBp2pTunnel", deviceBp2pTunnel,
         "screenWidth", screenWidth,
         "screenHeight", screenHeight,
         "flashSize", flashSize,

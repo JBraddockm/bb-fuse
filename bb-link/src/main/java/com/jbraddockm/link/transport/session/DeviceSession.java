@@ -226,6 +226,23 @@ public final class DeviceSession implements ServiceSession {
   }
 
   /**
+   * Whether this session holds a host-brought-up tunnel to the device: {@code true} only once
+   * {@link #establishTunnel} has brought one up and it has not dropped, {@code false} for a USB or
+   * direct connect. This is the host side — whether <em>we</em> hold a tunnel — distinct from the
+   * device's own {@code Bp2pTunnelStatus}.
+   *
+   * @return {@code true} while a tunnel is held
+   */
+  public boolean hasTunnel() {
+    lock.lock();
+    try {
+      return tunnelBinding != null && !tunnelBinding.isDown();
+    } finally {
+      lock.unlock();
+    }
+  }
+
+  /**
    * The network path commands actually run over: the tunnel's path once {@link #establishTunnel}
    * has redirected this session, otherwise the configured target's path. This — not {@link
    * #target()}, which keeps the address the user gave — is what decides endpoint reachability.

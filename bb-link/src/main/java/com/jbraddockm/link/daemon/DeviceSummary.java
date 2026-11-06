@@ -23,7 +23,9 @@ import java.util.Map;
  * @param hasPower whether the device is on external power; may be {@code null}
  * @param batteryLevel the charge in percent; may be {@code null}
  * @param batteryStateOfHealth the battery's state of health in percent; may be {@code null}
- * @param tunnelUp whether the bp2p tunnel is up; may be {@code null}
+ * @param deviceBp2pTunnel the device's own bp2p tunnel flag (from {@code discovery.cgi}'s {@code
+ *     Bp2pTunnelStatus}) — a near-static device-side status, not whether this host holds a tunnel
+ *     (that is the {@code connect} result's top-level {@code tunnel}); may be {@code null}
  * @param developerMode whether developer mode is on; may be {@code null}
  * @param flashSize the flash size in bytes; may be {@code null}
  * @param sdCard the SD-card state the device reports; may be {@code null}
@@ -44,7 +46,7 @@ record DeviceSummary(
     Boolean hasPower,
     Integer batteryLevel,
     Integer batteryStateOfHealth,
-    Boolean tunnelUp,
+    Boolean deviceBp2pTunnel,
     Boolean developerMode,
     Long flashSize,
     Integer sdCard,
@@ -75,7 +77,7 @@ record DeviceSummary(
         properties.hasPower(),
         properties.batteryLevel(),
         properties.batteryHealth(),
-        characteristics != null ? characteristics.tunnelUp() : null,
+        characteristics != null ? characteristics.deviceBp2pTunnel() : null,
         characteristics != null ? characteristics.developerMode() : null,
         characteristics != null ? characteristics.flashSize() : null,
         characteristics != null ? characteristics.sdCard() : null,
@@ -98,7 +100,7 @@ record DeviceSummary(
         "hasPower", hasPower,
         "batteryLevel", batteryLevel,
         "batteryStateOfHealth", batteryStateOfHealth,
-        "tunnelUp", tunnelUp,
+        "deviceBp2pTunnel", deviceBp2pTunnel,
         "developerMode", developerMode,
         "flashSize", flashSize,
         "sdCard", sdCard,
