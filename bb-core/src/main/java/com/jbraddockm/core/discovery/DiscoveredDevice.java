@@ -81,7 +81,33 @@ public record DiscoveredDevice(
       String address,
       String ula,
       String hwid) {
-    return new DiscoveredDevice(null, null, null, name, version, connection, address, ula, hwid);
+    return fromMdns(null, name, version, connection, address, ula, hwid);
+  }
+
+  /**
+   * As {@link #fromMdns(String, String, ConnectionKind, String, String, String)}, but carrying the
+   * PIN recovered locally from the advert (see {@link DevicePinResolver}). The GUID and model come
+   * only from {@code discovery.cgi} at connect, so they stay unknown here.
+   *
+   * @param pin the device PIN as 8-digit uppercase hexadecimal, or {@code null} when no paired
+   *     device matched the advert
+   * @param name the device's network name
+   * @param version the OS version, or {@code null}
+   * @param connection how it was reached (USB when the advert was seen on the USB link, else Wi-Fi)
+   * @param address the address it was reached at
+   * @param ula the device's tunnel ULA, or {@code null}
+   * @param hwid the device's hardware id, or {@code null}
+   * @return the device, with the PIN but no GUID or model
+   */
+  public static DiscoveredDevice fromMdns(
+      String pin,
+      String name,
+      String version,
+      ConnectionKind connection,
+      String address,
+      String ula,
+      String hwid) {
+    return new DiscoveredDevice(pin, null, null, name, version, connection, address, ula, hwid);
   }
 
   /**

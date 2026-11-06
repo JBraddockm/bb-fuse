@@ -1,6 +1,7 @@
 package com.jbraddockm.link.endpoint.discovery;
 
 import com.jbraddockm.core.discovery.CompositeScanner;
+import com.jbraddockm.core.discovery.DevicePinResolver;
 import com.jbraddockm.core.discovery.DeviceScanner;
 import com.jbraddockm.core.discovery.PlatformScanners;
 import java.util.ArrayList;
@@ -21,7 +22,19 @@ public final class Scanners {
    * @return the combined scanner
    */
   public static DeviceScanner all() {
-    var scanners = new ArrayList<>(PlatformScanners.forThisOs());
+    return all(DevicePinResolver.NONE);
+  }
+
+  /**
+   * As {@link #all()}, but the Wi-Fi mDNS scan recovers a paired device's PIN from its advert
+   * through {@code pins} (see {@link DevicePinResolver}) — so a Wi-Fi sighting of a paired device
+   * carries its PIN, the same identity its USB sighting shows, with no tunnel.
+   *
+   * @param pins recovers a paired device's PIN from its mDNS advert, locally
+   * @return the combined scanner
+   */
+  public static DeviceScanner all(DevicePinResolver pins) {
+    var scanners = new ArrayList<>(PlatformScanners.forThisOs(pins));
     if (!PlatformScanners.hasNativeUsb()) {
       scanners.add(new LibraryDeviceScanner());
     }

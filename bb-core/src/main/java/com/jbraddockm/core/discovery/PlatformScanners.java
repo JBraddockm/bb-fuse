@@ -16,12 +16,14 @@ public final class PlatformScanners {
   private PlatformScanners() {}
 
   /**
-   * The native scanners for the host this is running on.
+   * The native scanners for the host this is running on, with the Wi-Fi mDNS scan resolving a
+   * paired device's PIN through {@code pins} (see {@link DevicePinResolver}).
    *
+   * @param pins recovers a paired device's PIN from its mDNS advert, locally
    * @return the scanners for this OS
    */
-  public static List<DeviceScanner> forThisOs() {
-    return forOs(System.getProperty("os.name", ""));
+  public static List<DeviceScanner> forThisOs(DevicePinResolver pins) {
+    return forOs(System.getProperty("os.name", ""), pins);
   }
 
   /**
@@ -31,11 +33,23 @@ public final class PlatformScanners {
    * @return the scanners for that OS
    */
   static List<DeviceScanner> forOs(String osName) {
+    return forOs(osName, DevicePinResolver.NONE);
+  }
+
+  /**
+   * The native scanners for a named OS, with the Wi-Fi mDNS scan resolving PINs through {@code
+   * pins}.
+   *
+   * @param osName the value of the {@code os.name} system property
+   * @param pins recovers a paired device's PIN from its mDNS advert, locally
+   * @return the scanners for that OS
+   */
+  static List<DeviceScanner> forOs(String osName, DevicePinResolver pins) {
     var scanners = new ArrayList<DeviceScanner>();
     if (hasNativeUsb(osName)) {
       scanners.add(new UsbScanner());
     }
-    scanners.add(new MdnsScanner());
+    scanners.add(new MdnsScanner(pins));
     return List.copyOf(scanners);
   }
 

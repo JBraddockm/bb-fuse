@@ -7,6 +7,9 @@ import com.jbraddockm.core.mdns.MdnsService;
 import com.jbraddockm.core.mdns.ServiceAdvert;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -15,6 +18,16 @@ import org.junit.jupiter.api.Test;
 // The advertiser's close is exercised where it is under test; elsewhere the fake holds no resource.
 @SuppressWarnings("resource")
 class FriendlyNameAdvertiserTest {
+
+  /**
+   * {@code start} logs the advert at INFO through {@link System.Logger}; these tests drive it
+   * directly over a fake advertiser, so lower that one logger to WARNING to keep the test output
+   * clean.
+   */
+  @BeforeAll
+  static void quietAdvertiserLog() {
+    Logger.getLogger(FriendlyNameAdvertiser.class.getName()).setLevel(Level.WARNING);
+  }
 
   /** Captures the advert and hands back a registration that counts its closes. */
   private static final class CapturingAdvertiser implements FriendlyNameAdvertiser.Advertiser {

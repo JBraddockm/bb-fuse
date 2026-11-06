@@ -20,26 +20,48 @@ import java.util.function.Consumer;
 public final class MdnsScanner implements DeviceScanner {
 
   private final Browse browse;
+  private final DevicePinResolver pins;
 
-  /** Creates a scanner that browses the shared mDNS facility. */
+  /** Creates a scanner that browses the shared mDNS facility and resolves no PIN. */
   public MdnsScanner() {
-    this(new MdnsBrowse(MdnsService.shared()));
+    this(new MdnsBrowse(MdnsService.shared()), DevicePinResolver.NONE);
   }
 
   /**
-   * Creates a scanner over the given browse seam.
+   * Creates a scanner that browses the shared mDNS facility and resolves PINs with {@code pins}.
+   */
+  public MdnsScanner(DevicePinResolver pins) {
+    this(new MdnsBrowse(MdnsService.shared()), pins);
+  }
+
+  /**
+   * Creates a scanner over the given browse seam that resolves no PIN.
    *
    * @param browse supplies the advertised devices
    */
   MdnsScanner(Browse browse) {
+    this(browse, DevicePinResolver.NONE);
+  }
+
+  /**
+   * Creates a scanner over the given browse seam and PIN resolver.
+   *
+   * @param browse supplies the advertised devices
+   * @param pins recovers a paired device's PIN from its advert, locally (see {@link
+   *     DevicePinResolver})
+   */
+  MdnsScanner(Browse browse, DevicePinResolver pins) {
     this.browse = browse;
+    this.pins = pins;
   }
 
   @Override
   public void scan(Consumer<DiscoveredDevice> found) {
     for (var advert : browse.resolve()) {
+      var pin = pins.resolve(advert.instanceName()).orElse(null);
       found.accept(
           DiscoveredDevice.fromMdns(
+              pin,
               advert.name(),
               advert.version(),
               advert.connection(),
@@ -58,6 +80,8 @@ public final class MdnsScanner implements DeviceScanner {
    * @param address the address
    * @param ula the device's tunnel ULA (IPv6), or {@code null}
    * @param hwid the device's hardware id (the bp2p {@code hwid}), or {@code null}
+   * @param instanceName the bp2p {@code Friendly} service instance name as advertised, from which a
+   *     {@link DevicePinResolver} can recover the PIN, or {@code null}
    */
   record Advert(
       String name,
@@ -65,7 +89,8 @@ public final class MdnsScanner implements DeviceScanner {
       ConnectionKind connection,
       String address,
       String ula,
-      String hwid) {}
+      String hwid,
+      String instanceName) {}
 
   /** Browses mDNS for bp2p devices; a seam, so a test needs no mDNS. */
   @FunctionalInterface

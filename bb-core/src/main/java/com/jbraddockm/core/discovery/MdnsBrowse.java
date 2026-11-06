@@ -53,11 +53,15 @@ final class MdnsBrowse implements MdnsScanner.Browse {
         var version = instance.getPropertyString(OS_VERSION);
         var ula = ulaOf(instance);
         var hwid = instance.getPropertyString(HARDWARE_ID);
+        // The Friendly instance name (Friendly_<seed>_<deviceHash>) folds the device's PIN, so a
+        // DevicePinResolver can recover it locally from this alone.
+        var instanceName = instance.getName();
         for (var ipv4 : addressesOf(name)) {
           var connection = ipv4.isLinkLocalAddress() ? ConnectionKind.USB : ConnectionKind.WIFI;
           var address = ipv4.getHostAddress();
           byAddress.putIfAbsent(
-              address, new MdnsScanner.Advert(name, version, connection, address, ula, hwid));
+              address,
+              new MdnsScanner.Advert(name, version, connection, address, ula, hwid, instanceName));
         }
       }
     } catch (IOException _) {

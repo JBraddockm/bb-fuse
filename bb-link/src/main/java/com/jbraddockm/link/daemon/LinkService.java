@@ -18,6 +18,7 @@ import com.jbraddockm.core.tunnel.TunnelBrokerClient;
 import com.jbraddockm.link.endpoint.characteristics.GetDeviceCharacteristics;
 import com.jbraddockm.link.endpoint.characteristics.UsbDiscovery;
 import com.jbraddockm.link.endpoint.discovery.FriendlyNameAdvertiser;
+import com.jbraddockm.link.endpoint.discovery.PairedPinResolver;
 import com.jbraddockm.link.endpoint.discovery.Scanners;
 import com.jbraddockm.link.endpoint.pairing.CertificateRetrieval;
 import com.jbraddockm.link.endpoint.pairing.ClientNames;
@@ -62,7 +63,21 @@ public final class LinkService implements Service<DeviceSession> {
    */
   public LinkService(ExchangeObserver observer) {
     this(
-        TransportScheme.HTTPS, Scanners.all(), observer, new Pairing(), new CertificateRetrieval());
+        TransportScheme.HTTPS,
+        Scanners.all(new PairedPinResolver(devicesDirectory())),
+        observer,
+        new Pairing(),
+        new CertificateRetrieval());
+  }
+
+  /**
+   * The devices directory the Wi-Fi discovery PIN match reads its paired PINs from: {@code
+   * BB_LINK_DEVICES} when set (the {@code bblink} script points it at the active {@code devices/}),
+   * otherwise {@code devices/} beside the daemon.
+   */
+  private static Path devicesDirectory() {
+    var configured = System.getenv("BB_LINK_DEVICES");
+    return Path.of(configured == null || configured.isBlank() ? "devices" : configured);
   }
 
   /** Creates a service with its collaborators replaced, which tests use. */
