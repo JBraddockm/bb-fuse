@@ -165,6 +165,20 @@ public final class LinkService implements Service<DeviceSession> {
         .toList();
   }
 
+  /**
+   * Opens a session for a {@code connect}, from the request's host, port and authentication. A
+   * Wi-Fi LAN (or other routable) address that carries a {@code tunnelCertificate} is run over a
+   * broker-managed tunnel automatically, so the caller reaches the device over its ULA without ever
+   * handling it; USB, a direct ULA, and an identity-less connect (a password or login-only connect)
+   * stay direct and reach only {@code login.cgi}. The tunnel identity is passed to the daemon by
+   * path, so its binary embeds no device cert. The friendly name is advertised over mDNS on every
+   * connect — the device learns it however the command channel is reached — and a login with no
+   * pairing beside its certificate advertises nothing.
+   *
+   * @param params the {@code connect} parameters: {@code host}, {@code port}, {@code
+   *     authentication}, and the optional tunnel identity, SMB and broker options
+   * @return the session, with a tunnel attached when the address and identity call for one
+   */
   @Override
   public DeviceSession open(RequestParams params) {
     var target =
@@ -176,38 +190,24 @@ public final class LinkService implements Service<DeviceSession> {
     describesDevice(params); // refuses a malformed option while no session exists yet
     var session =
         DeviceSession.forTarget(target, observer, params.optionalString("smbHost").orElse(null));
-    // The pairing that names us to the device sits beside the certificate the connect uses: the
-    // client
-    // certificate the login offers, or the tunnel certificate on a tunnel connect (set below).
+    // The pairing that names us to the device is beside the certificate the connect uses: the
+    // login's
+    // client certificate, or the tunnel certificate on a tunnel connect (set below).
     var pairingCertificate = clientCertificate(target.authentication());
-    // `tunnel` opts a Wi-Fi LAN connect into a broker-managed tunnel: bb-link brings the tunnel up
-    // (through the daemon) and reaches the device over its ULA, so the user connects with the LAN
-    // address and never handles the ULA. USB and a direct ULA connect need no tunnel; login/pairing
-    // over a plain LAN address stays tunnel-free, since bringing a tunnel up needs an enrolled
-    // cert.
-    if (params.flag("tunnel") && needsTunnel(target.path())) {
+    var tunnelCert = params.optionalString("tunnelCertificate").map(Path::of).orElse(null);
+    if (needsTunnel(target.path()) && tunnelCert != null) {
       var socket =
           params
               .optionalString("brokerSocket")
               .map(Path::of)
               .orElse(TunnelBrokerClient.DEFAULT_SOCKET);
-      // The tunnel's client identity (the device's enrolled cert) is passed by path to the daemon,
-      // so
-      // its binary embeds no device cert. Absent, the daemon falls back to its own resolution.
-      var tunnelCert = params.optionalString("tunnelCertificate").map(Path::of).orElse(null);
       var tunnelKey = params.optionalString("tunnelKey").map(Path::of).orElse(null);
       var proposedSmbHost = proposedSmbHost(params, tunnelCert);
       session.useTunnel(
           new BrokerTunnelConnector(
               socket, target.host(), proposedSmbHost, "bb-link", tunnelCert, tunnelKey));
-      if (tunnelCert != null) {
-        pairingCertificate = tunnelCert;
-      }
+      pairingCertificate = tunnelCert;
     }
-    // Advertise our friendly name on every connect, not only tunnel connects: the device learns the
-    // name over Wi-Fi mDNS independently of how the command channel reaches it, so it populates the
-    // name whichever way we connect. A login with no pairing beside its certificate advertises
-    // nothing.
     advertiseFriendlyName(session, pairingCertificate);
     return session;
   }

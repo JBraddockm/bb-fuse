@@ -25,12 +25,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * Tests the {@code tunnel} opt-in of {@link LinkService#open}: a Wi-Fi LAN connect with {@code
- * tunnel} is given a broker tunnel to bring up, a USB connect is not, and a bring-up failure is
+ * Tests the automatic tunnel of {@link LinkService#open}: a Wi-Fi LAN connect that carries a tunnel
+ * identity is given a broker tunnel to bring up, a USB connect is not, and a bring-up failure is
  * surfaced as a rejected connect. The broker socket points nowhere, so the connector fails fast
  * without a daemon — the broker round trip itself is covered in bb-tunnel.
  */
-@DisplayName("LinkService: the tunnel opt-in of connect")
+@DisplayName("LinkService: the automatic tunnel of connect")
 class LinkServiceTunnelTest {
 
   private final LinkService service =
@@ -45,20 +45,29 @@ class LinkServiceTunnelTest {
     return "/tmp/bb-link-no-broker-" + System.nanoTime() + ".sock";
   }
 
-  private static RequestParams connect(String host, boolean tunnel, String brokerSocket) {
+  /**
+   * A connect to {@code host} carrying a tunnel identity (a certificate path), so the daemon brings
+   * a tunnel up whenever the address needs one.
+   */
+  private static RequestParams connect(String host, String brokerSocket) {
     return new RequestParams(
         Json.object(
-            "host", host,
-            "authentication", Json.object("type", "none"),
-            "tunnel", tunnel,
-            "brokerSocket", brokerSocket,
-            "deviceInfo", false));
+            "host",
+            host,
+            "authentication",
+            Json.object("type", "none"),
+            "tunnelCertificate",
+            "/tmp/bb-link-tunnel-" + System.nanoTime() + "/tunnel_cert.pem",
+            "brokerSocket",
+            brokerSocket,
+            "deviceInfo",
+            false));
   }
 
   @Test
-  @DisplayName("a Wi-Fi LAN connect with tunnel is given a tunnel to bring up")
+  @DisplayName("a Wi-Fi LAN connect with a tunnel identity is given a tunnel to bring up")
   void lanConnectIsTunnelled() {
-    var session = service.open(connect("192.168.1.50", true, noBrokerSocket()));
+    var session = service.open(connect("192.168.1.50", noBrokerSocket()));
 
     // The connector is attached, so resolving it reaches the (absent) broker and fails.
     assertThatThrownBy(() -> session.establishTunnel(CommandListener.SILENT))
@@ -67,9 +76,9 @@ class LinkServiceTunnelTest {
   }
 
   @Test
-  @DisplayName("a USB connect is never tunnelled, even with tunnel set")
+  @DisplayName("a USB connect is never tunnelled, even with a tunnel identity")
   void usbConnectIsNotTunnelled() {
-    var session = service.open(connect("169.254.0.2", true, noBrokerSocket()));
+    var session = service.open(connect("169.254.0.2", noBrokerSocket()));
 
     // No connector was attached for USB, so resolving is a no-op and never touches the broker.
     assertThatCode(() -> session.establishTunnel(CommandListener.SILENT))
@@ -78,9 +87,30 @@ class LinkServiceTunnelTest {
   }
 
   @Test
+  @DisplayName("a Wi-Fi LAN connect with no tunnel identity stays tunnel-free (login only)")
+  void lanConnectWithoutIdentityIsNotTunnelled() {
+    var params =
+        new RequestParams(
+            Json.object(
+                "host",
+                "192.168.1.50",
+                "authentication",
+                Json.object("type", "none"),
+                "deviceInfo",
+                false));
+
+    var session = service.open(params);
+
+    // With no tunnel certificate, no connector is attached, so the LAN connect reaches only login.
+    assertThatCode(() -> session.establishTunnel(CommandListener.SILENT))
+        .doesNotThrowAnyException();
+    session.close();
+  }
+
+  @Test
   @DisplayName("a tunnel that cannot be brought up makes the connect fail, not hang")
   void bringUpFailureRejectsTheConnect() {
-    var params = connect("192.168.1.50", true, noBrokerSocket());
+    var params = connect("192.168.1.50", noBrokerSocket());
     var session = service.open(params);
     var reply =
         Reply.standalone(
