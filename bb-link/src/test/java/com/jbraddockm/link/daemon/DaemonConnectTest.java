@@ -218,7 +218,8 @@ class DaemonConnectTest {
               Resources.text(DaemonConnectTest.class, "connect--fields.txt").lines().toList());
       assertThat(connected)
           .containsEntry("host", "127.0.0.1")
-          .containsEntry("authentication", "password");
+          .containsEntry("authentication", "password")
+          .containsEntry("tunnel", false); // a direct connect holds no host tunnel
       assertThat(connected.get("port")).isEqualTo((long) device.port());
     }
 
@@ -235,7 +236,7 @@ class DaemonConnectTest {
           .containsEntry("guid", "RkFLRUdVSUQwMDAx")
           .containsEntry("osVersion", "10.3.3.2205")
           .containsEntry("radioVersion", "10.3.3.2206")
-          .containsEntry("tunnelUp", true)
+          .containsEntry("deviceBp2pTunnel", true)
           .containsEntry("fuseEnabled", true);
     }
 

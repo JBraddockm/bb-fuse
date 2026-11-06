@@ -118,7 +118,7 @@ public final class DeviceSession implements ServiceSession {
     try {
       return ConversationRunner.run(
           command.conversation(),
-          (request, _) -> {
+          (_, _) -> {
             var next = remaining.poll();
             if (next == null) {
               throw new IOException("the recording has no answer for this request");
@@ -220,6 +220,23 @@ public final class DeviceSession implements ServiceSession {
           new DeviceTarget(binding.ula(), target.port(), target.scheme(), target.authentication());
       tunnelSmbHost = binding.smbHost();
       listener.onLog(LogLevel.INFO, "The Wi-Fi tunnel is up");
+    } finally {
+      lock.unlock();
+    }
+  }
+
+  /**
+   * Whether this session holds a host-brought-up tunnel to the device: {@code true} only once
+   * {@link #establishTunnel} has brought one up and it has not dropped, {@code false} for a USB or
+   * direct connect. This is the host side — whether <em>we</em> hold a tunnel — distinct from the
+   * device's own {@code Bp2pTunnelStatus}.
+   *
+   * @return {@code true} while a tunnel is held
+   */
+  public boolean hasTunnel() {
+    lock.lock();
+    try {
+      return tunnelBinding != null && !tunnelBinding.isDown();
     } finally {
       lock.unlock();
     }

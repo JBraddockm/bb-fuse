@@ -2,4 +2,5 @@ session
 host
 port
 authentication
+tunnel
 smb

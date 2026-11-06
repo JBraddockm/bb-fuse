@@ -257,7 +257,7 @@ class LinkServiceTest {
           .containsEntry("guid", "RkFLRUdVSUQwMDAx")
           .containsEntry("osVersion", "10.3.3.2205")
           .containsEntry("radioVersion", "10.3.3.2206")
-          .containsEntry("tunnelUp", true)
+          .containsEntry("deviceBp2pTunnel", true)
           .containsEntry("developerMode", true)
           .containsEntry("fuseEnabled", true)
           .containsEntry("hasPower", false);

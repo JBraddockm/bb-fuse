@@ -105,6 +105,9 @@ public final class LinkService implements Service<DeviceSession> {
         "host", session.target().host(),
         "port", session.target().port(),
         "authentication", session.target().authentication().type().wireName(),
+        // Whether this host holds a broker tunnel to the device — true only for a tunnelled Wi-Fi
+        // connect, false for USB/direct. Distinct from the device's own bp2p flag in `device`.
+        "tunnel", session.hasTunnel(),
         "device", summary != null ? summary.toJson() : null,
         "smb", session.smbCredentials().map(SmbCredentials::toJson).orElse(null));
   }

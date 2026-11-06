@@ -89,7 +89,7 @@ class GetDeviceCharacteristicsTest {
     void readsTheStatus() {
       assertThat(characteristics.batteryLevel()).isEqualTo(100);
       assertThat(characteristics.developerMode()).isTrue();
-      assertThat(characteristics.tunnelUp()).isTrue();
+      assertThat(characteristics.deviceBp2pTunnel()).isTrue();
       assertThat(characteristics.screenWidth()).isEqualTo(720);
       assertThat(characteristics.screenHeight()).isEqualTo(1280);
       assertThat(characteristics.flashSize()).isEqualTo(14_157_856_768L);

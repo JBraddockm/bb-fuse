@@ -41,7 +41,7 @@ class DeviceCharacteristicsTest {
             "imei",
             "batteryLevel",
             "developerMode",
-            "tunnelUp",
+            "deviceBp2pTunnel",
             "screenWidth",
             "screenHeight",
             "flashSize",

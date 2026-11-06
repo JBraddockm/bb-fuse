@@ -10,7 +10,7 @@
   "hasPower": true,
   "batteryLevel": 87,
   "batteryStateOfHealth": 95,
-  "tunnelUp": null,
+  "deviceBp2pTunnel": null,
   "developerMode": null,
   "flashSize": null,
   "sdCard": null,
