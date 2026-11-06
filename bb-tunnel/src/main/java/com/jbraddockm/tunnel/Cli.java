@@ -23,6 +23,10 @@ public final class Cli {
   private Cli() {}
 
   static void main(String[] args) throws Throwable {
+    if (args.length > 0 && (args[0].equals("--version") || args[0].equals("version"))) {
+      IO.println("bb-tunnel " + BuildInfo.VERSION);
+      return;
+    }
     if (!supportedOs(System.getProperty("os.name", ""))) {
       // The tunnel brings up a macOS utun; refuse cleanly elsewhere rather than crash on bring-up
       // (and so an installed service does not crash-loop under a service manager).
@@ -124,7 +128,7 @@ public final class Cli {
 
   /** Whether the tunnel's macOS-only {@code utun} layer is available on this OS. */
   static boolean supportedOs(String osName) {
-    return osName != null && osName.toLowerCase(java.util.Locale.ROOT).contains("mac");
+    return Platform.isMac(osName);
   }
 
   /** The value after a flag, or a clear error if it is missing. */

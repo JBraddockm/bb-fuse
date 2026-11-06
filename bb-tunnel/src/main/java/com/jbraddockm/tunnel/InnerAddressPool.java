@@ -4,9 +4,8 @@ import java.util.BitSet;
 
 /**
  * Hands out distinct inner-IPv4 pairs so several paired devices can hold <b>concurrent</b> tunnels
- * without colliding. The device binds whatever valid {@code 169.254.0.0/16} address we send it
- * (live-verified — see {@code analysis/TUNNEL-MULTIDEVICE-MODEL.md}), so the pair is ours to choose
- * per session; this pool is how we choose it.
+ * without colliding. The device binds whatever valid {@code 169.254.0.0/16} address it is sent, so
+ * the pair is ours to choose per session; this pool is how we choose it.
  *
  * <p>Each pair takes a distinct third octet {@code k}: device {@code 169.254.k.1}, pc {@code
  * 169.254.k.2}. {@code k = 0} ({@code 169.254.0.0/24} — the USB NCM interface and RFC-3927's

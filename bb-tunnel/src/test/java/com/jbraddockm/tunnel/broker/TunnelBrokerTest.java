@@ -32,6 +32,33 @@ class TunnelBrokerTest {
     return new RequestParams(Json.object(keysAndValues));
   }
 
+  @Nested
+  @DisplayName("the drop-log reason")
+  class DropReason {
+
+    @Test
+    @DisplayName("maps a benign 'Socket closed' to calm text, not the exception class")
+    void socketClosed() {
+      assertThat(TunnelBroker.friendlyCause(new java.net.SocketException("Socket closed")))
+          .isEqualTo("connection closed");
+    }
+
+    @Test
+    @DisplayName("maps a connection reset to a short reason")
+    void reset() {
+      assertThat(TunnelBroker.friendlyCause(new java.io.IOException("Connection reset by peer")))
+          .isEqualTo("connection reset");
+    }
+
+    @Test
+    @DisplayName("keeps a genuine message otherwise, and is null for no cause")
+    void otherwise() {
+      assertThat(TunnelBroker.friendlyCause(new RuntimeException("device said no")))
+          .isEqualTo("device said no");
+      assertThat(TunnelBroker.friendlyCause(null)).isNull();
+    }
+  }
+
   /**
    * A {@link Tunnels} stand-in: one shared, ref-counted entry per host with canned coordinates, and
    * a hook to fire a spontaneous drop. The real pool and ref-count are covered by {@code
@@ -340,8 +367,7 @@ class TunnelBrokerTest {
 
       logged.acquire("c1", params("host", "192.168.1.118", "consumer", "bb-link"));
 
-      assertThat(log)
-          .anyMatch(line -> line.startsWith("tunnel up: ") && line.contains("192.168.1.118"));
+      assertThat(log).anyMatch(line -> line.startsWith("192.168.1.118 [bb-link] up"));
     }
 
     @Test
@@ -354,8 +380,10 @@ class TunnelBrokerTest {
       logged.release(params("token", lease.get("token")));
 
       assertThat(log)
-          .anyMatch(line -> line.startsWith("identified: ") && line.contains("2C1E7583"));
-      assertThat(log).contains("tunnel down: 192.168.1.118");
+          .anyMatch(line -> line.startsWith("2C1E7583 identified") && line.contains("GUID-1"));
+      assertThat(log)
+          .anyMatch(
+              line -> line.startsWith("2C1E7583 [unknown] down") && line.contains("tunnel closed"));
     }
 
     @Test
@@ -366,7 +394,7 @@ class TunnelBrokerTest {
 
       tunnels.drop("192.168.1.118", new IllegalStateException("link lost"));
 
-      assertThat(log).anyMatch(line -> line.startsWith("tunnel dropped: 192.168.1.118"));
+      assertThat(log).anyMatch(line -> line.startsWith("192.168.1.118 dropped"));
     }
   }
 }

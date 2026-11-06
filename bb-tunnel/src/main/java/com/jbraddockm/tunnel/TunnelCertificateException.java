@@ -3,8 +3,7 @@ package com.jbraddockm.tunnel;
 /**
  * The client identity for a tunnel could not be loaded: the certificate or key file is missing,
  * unreadable, or not valid PEM. Carries a short machine {@link #code} so the broker can report a
- * clear, structured reason to its consumers instead of a generic failure (see {@code
- * analysis/TUNNEL-BROKER-DAEMON-PLAN.md} §cert loading).
+ * clear, structured reason to its consumers instead of a generic failure.
  *
  * <p>Codes: {@code cert_not_found}, {@code cert_unreadable}, {@code cert_malformed}, {@code
  * key_not_found}, {@code key_unreadable}, {@code key_malformed}, {@code identity_missing} (no

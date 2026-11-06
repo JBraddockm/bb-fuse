@@ -8,6 +8,7 @@ LABEL="com.jbraddockm.bb-tunneld"
 PLIST="/Library/LaunchDaemons/${LABEL}.plist"
 BIN="/usr/local/libexec/bb-tunneld"
 SOCKET="/tmp/bb-tunneld.sock"
+LOG="/var/log/bb-tunneld.log"
 
 # Removing a LaunchDaemon is root-only; elevate once.
 if [ "$(id -u)" -ne 0 ]; then
@@ -16,6 +17,6 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 launchctl bootout system "${PLIST}" 2>/dev/null || true
-rm -f "${PLIST}" "${BIN}" "${SOCKET}"
+rm -f "${PLIST}" "${BIN}" "${SOCKET}" "${LOG}"
 
 echo "bb-tunneld: uninstalled."

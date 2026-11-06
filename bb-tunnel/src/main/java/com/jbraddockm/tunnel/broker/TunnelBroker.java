@@ -18,8 +18,7 @@ import java.util.function.Consumer;
 /**
  * The shared, thread-safe core of the tunnel broker daemon: it layers consumer-facing leases,
  * identity and events on top of {@link Tunnels}, the one-shared-tunnel-per-device transport.
- * bb-link and Blend are peer consumers; neither owns a tunnel's lifecycle (see {@code
- * analysis/TUNNEL-BROKER-DAEMON-PLAN.md}).
+ * bb-link and Blend are peer consumers; neither owns a tunnel's lifecycle.
  *
  * <p>This class is transport-agnostic — it speaks {@link RequestParams}/JSON maps and knows nothing
  * of sockets — so it is unit-tested directly. {@link BrokerServer} wraps it in a Unix-domain-socket
@@ -100,21 +99,47 @@ final class TunnelBroker {
    */
   private static String pinFrom(RequestParams params) {
     var explicit = params.optionalString("pin");
-    return explicit.orElseGet(() ->
-        params
-            .optionalString("certificate")
-            .map(Path::of)
-            .map(Path::getParent)
-            .map(Path::getFileName)
-            .map(Path::toString)
-            .filter(name -> name.matches("[A-Za-z0-9]{1,16}"))
-            .orElse(null));
+    return explicit.orElseGet(
+        () ->
+            params
+                .optionalString("certificate")
+                .map(Path::of)
+                .map(Path::getParent)
+                .map(Path::getFileName)
+                .map(Path::toString)
+                .filter(name -> name.matches("[A-Za-z0-9]{1,16}"))
+                .orElse(null));
   }
 
-  /** A device's coordinates for a log line: host, inner SMB host, ULA, and PIN when known. */
-  private static String describeTunnel(String host, DeviceInfo info) {
-    var line = host + "  smb " + info.innerIpv4 + "  ula " + info.ula;
-    return info.pin == null ? line : line + "  pin " + info.pin;
+  /** The label a log line leads with: the device PIN when known, else the transport host. */
+  private static String deviceLabel(String host, String pin) {
+    return pin != null && !pin.isBlank() ? pin : host;
+  }
+
+  /**
+   * A short, human reason for a drop log line. A bare {@code SocketException: Socket closed} / EOF
+   * reads like an error, but it is just the link going away, so it is mapped to calmer text. The
+   * full raw cause stays in the machine {@code dropped} event for debugging and is kept out of the
+   * human line.
+   */
+  static String friendlyCause(Throwable cause) {
+    if (cause == null) {
+      return null;
+    }
+    var message = cause.getMessage();
+    if (message != null) {
+      var lower = message.toLowerCase(java.util.Locale.ROOT);
+      if (lower.contains("closed") || lower.contains("eof")) {
+        return "connection closed";
+      }
+      if (lower.contains("reset")) {
+        return "connection reset";
+      }
+      if (lower.contains("timed out") || lower.contains("timeout")) {
+        return "timed out";
+      }
+    }
+    return message != null && !message.isBlank() ? message : cause.getClass().getSimpleName();
   }
 
   /** Registers a connection and where to write its events. Call before handling its requests. */
@@ -126,23 +151,25 @@ final class TunnelBroker {
 
   /** Forgets a connection and releases every lease it still held (its socket closed). */
   void disconnected(String connection) {
-    List<String> downHosts = new ArrayList<>();
+    List<String> lines = new ArrayList<>();
     synchronized (lock) {
       connections.remove(connection);
-      var toRelease =
-          byToken.values().stream()
-              .filter(hold -> hold.connection.equals(connection))
-              .map(Hold::token)
-              .toList();
-      for (var token : toRelease) {
-        var hold = byToken.get(token);
-        var host = hold == null ? null : hold.host;
-        if (releaseLocked(token) == 0 && host != null) {
-          downHosts.add(host);
-        }
+      var holds =
+          byToken.values().stream().filter(hold -> hold.connection.equals(connection)).toList();
+      for (var hold : holds) {
+        var info = byHost.get(hold.host);
+        var label = deviceLabel(hold.host, info == null ? null : info.pin);
+        var remaining = releaseLocked(hold.token);
+        lines.add(
+            label
+                + " ["
+                + hold.consumer
+                + "] down  (socket closed, refs "
+                + remaining
+                + (remaining == 0 ? ", tunnel closed)" : ")"));
       }
     }
-    downHosts.forEach(host -> log.accept("tunnel down: " + host));
+    lines.forEach(log);
   }
 
   /**
@@ -192,12 +219,19 @@ final class TunnelBroker {
       var token = "t" + tokens.incrementAndGet();
       byToken.put(token, new Hold(token, host, connection, consumer, lease));
       var refs = holdsFor(host).size();
+      var label = deviceLabel(host, info.pin);
       message =
-          (refs == 1 ? "tunnel up: " : "tunnel joined (refs " + refs + "): ")
-              + describeTunnel(host, info)
-              + "  ["
-              + consumer
-              + "]";
+          refs == 1
+              ? label
+                  + " ["
+                  + consumer
+                  + "] up  "
+                  + host
+                  + "  ula "
+                  + info.ula
+                  + "  smb "
+                  + info.innerIpv4
+              : label + " [" + consumer + "] joined  (refs " + refs + ")";
       coordinates = describe(token, host, info);
     }
     log.accept(message);
@@ -222,29 +256,39 @@ final class TunnelBroker {
     }
     return fallbackIdentity
         .resolve(params)
-        .orElseThrow(() ->
-            new BrokerException(
-                "identity_missing",
-                "no client certificate for the tunnel: pass 'certificate' and 'key' paths, or"
-                    + " give the daemon a device identity (--cert/--key, BB_DEVICE, or a"
-                    + " devices/<PIN>/ folder beside the binary)"));
+        .orElseThrow(
+            () ->
+                new BrokerException(
+                    "identity_missing",
+                    "no client certificate for the tunnel: pass 'certificate' and 'key' paths, or"
+                        + " give the daemon a device identity (--cert/--key, BB_DEVICE, or a"
+                        + " devices/<PIN>/ folder beside the binary)"));
   }
 
   /** Releases one lease by token. Idempotent; reports the references remaining for the device. */
   Map<String, Object> release(RequestParams params) {
     var token = params.requireString("token");
     int remaining;
-    String downHost;
+    String line = null;
     synchronized (lock) {
       var hold = byToken.get(token);
-      downHost = hold == null ? null : hold.host;
-      remaining = releaseLocked(token);
-      if (remaining != 0) {
-        downHost = null;
+      if (hold == null) {
+        remaining = 0;
+      } else {
+        var info = byHost.get(hold.host);
+        var label = deviceLabel(hold.host, info == null ? null : info.pin);
+        remaining = releaseLocked(token);
+        line =
+            label
+                + " ["
+                + hold.consumer
+                + "] down  (refs "
+                + remaining
+                + (remaining == 0 ? ", tunnel closed)" : ")");
       }
     }
-    if (downHost != null) {
-      log.accept("tunnel down: " + downHost);
+    if (line != null) {
+      log.accept(line);
     }
     return Json.object("refs", (long) remaining);
   }
@@ -254,35 +298,38 @@ final class TunnelBroker {
     var only = params.optionalString("host");
     synchronized (lock) {
       var tunnels = new ArrayList<>();
-      byHost.forEach((host, info) -> {
-        if (only.isPresent() && !only.get().equals(host)) {
-          return;
-        }
-        var holds = holdsFor(host);
-        var consumers = new LinkedHashSet<String>();
-        holds.forEach(hold -> consumers.add(hold.consumer));
-        tunnels.add(
-            Json.object(
-                "host",
-                host,
-                "state",
-                "UP",
-                "ula",
-                info.ula,
-                "innerIpv4",
-                info.innerIpv4,
-                "guid",
-                info.guid,
-                "pin",
-                info.pin,
-                "refs",
-                (long) holds.size(),
-                "consumers",
-                List.copyOf(consumers)));
-      });
+      byHost.forEach(
+          (host, info) -> {
+            if (only.isPresent() && !only.get().equals(host)) {
+              return;
+            }
+            var holds = holdsFor(host);
+            var consumers = new LinkedHashSet<String>();
+            holds.forEach(hold -> consumers.add(hold.consumer));
+            tunnels.add(
+                Json.object(
+                    "host",
+                    host,
+                    "state",
+                    "UP",
+                    "ula",
+                    info.ula,
+                    "innerIpv4",
+                    info.innerIpv4,
+                    "guid",
+                    info.guid,
+                    "pin",
+                    info.pin,
+                    "refs",
+                    (long) holds.size(),
+                    "consumers",
+                    List.copyOf(consumers)));
+          });
       return Json.object("tunnels", tunnels);
     }
   }
+
+  // --- internals -------------------------------------------------------------------------------
 
   /**
    * Records the GUID/PIN a consumer learned for a device it holds, so the {@code acquire {guid}}
@@ -308,19 +355,20 @@ final class TunnelBroker {
       sinks = subscribers(host);
     }
     fan(sinks, event);
-    log.accept("identified: " + host + "  pin " + pin + "  guid " + guid);
+    log.accept(deviceLabel(host, pin) + " identified  guid " + guid);
     return Json.object("ok", true);
   }
-
-  // --- internals -------------------------------------------------------------------------------
 
   /** Called by {@link Tunnels} when a tunnel drops on its own. */
   private void dropped(String host, Throwable cause) {
     List<EventSink> sinks;
     Map<String, Object> event;
+    String label;
     synchronized (lock) {
       // The tunnel is already gone and the manager has evicted it; just forget our holds for it
       // (closing their dead leases is pointless) and notify whoever held it.
+      var info = byHost.get(host);
+      label = deviceLabel(host, info == null ? null : info.pin);
       sinks = subscribers(host);
       holdsFor(host).forEach(hold -> byToken.remove(hold.token));
       byHost.remove(host);
@@ -335,7 +383,8 @@ final class TunnelBroker {
               cause == null ? null : String.valueOf(cause));
     }
     fan(sinks, event);
-    log.accept("tunnel dropped: " + host + (cause == null ? "" : " (" + cause + ")"));
+    var reason = friendlyCause(cause);
+    log.accept(label + " dropped  " + host + (reason == null ? "" : " (" + reason + ")"));
   }
 
   /** Caller holds {@link #lock}. Returns the references remaining for the released device. */

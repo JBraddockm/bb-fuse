@@ -98,6 +98,10 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
+                            <!-- bb-tunnel is a leaf app (run as the native binary or this fat jar),
+                                 not a library others depend on, so the dependency-reduced POM is not
+                                 needed and only leaves a stray file. -->
+                            <createDependencyReducedPom>false</createDependencyReducedPom>
                             <filters>
                                 <filter>
                                     <artifact>*:*</artifact>
@@ -105,6 +109,15 @@
                                         <exclude>META-INF/*.SF</exclude>
                                         <exclude>META-INF/*.DSA</exclude>
                                         <exclude>META-INF/*.RSA</exclude>
+                                        <!-- Metadata the BouncyCastle and module jars overlap on;
+                                             keep one of each (the manifest is rebuilt below) rather
+                                             than emit a shade warning per duplicated file. -->
+                                        <exclude>META-INF/MANIFEST.MF</exclude>
+                                        <exclude>META-INF/LICENSE*</exclude>
+                                        <exclude>META-INF/NOTICE*</exclude>
+                                        <exclude>META-INF/versions/*/module-info.class</exclude>
+                                        <exclude>META-INF/versions/*/OSGI-INF/**</exclude>
+                                        <exclude>module-info.class</exclude>
                                     </excludes>
                                 </filter>
                             </filters>

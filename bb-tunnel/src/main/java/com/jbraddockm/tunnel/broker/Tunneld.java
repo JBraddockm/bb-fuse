@@ -1,25 +1,24 @@
 package com.jbraddockm.tunnel.broker;
 
 import com.jbraddockm.core.tunnel.TunnelBrokerClient;
+import com.jbraddockm.tunnel.BuildInfo;
 import com.jbraddockm.tunnel.DeviceIdentitySources;
 import com.jbraddockm.tunnel.TunnelManager;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.function.Consumer;
 
 /**
  * The tunnel-broker daemon entry point: wires a real {@link TunnelManager} into a {@link
  * TunnelBroker} and serves it on a Unix-domain socket until the process is stopped.
  *
- * <p>Run it from the tunnel CLI as {@code sudo bb-tunnel serve [socket-path]} — {@code sudo} is
- * required because bringing up a tunnel creates a privileged {@code utun}. A launchd root job and a
- * fixed socket path come later (see {@code analysis/TUNNEL-BROKER-DAEMON-PLAN.md} §9.2).
+ * <p>Run it as {@code sudo bb-tunnel serve [socket-path]}, or through the installed launchd
+ * service; root is required because bringing up a tunnel creates a privileged {@code utun}.
  */
 public final class Tunneld {
 
   /** The default socket path when none is given; overridable on the command line. */
   public static final String DEFAULT_SOCKET = TunnelBrokerClient.DEFAULT_SOCKET.toString();
-
-  private static final String VERSION = "1.0";
 
   private Tunneld() {}
 
@@ -38,20 +37,32 @@ public final class Tunneld {
   public static void run(
       Path socketPath, Path certArg, Path keyArg, String deviceArg, Path devicesArg)
       throws IOException {
+    var log = logSink();
     var sources =
         DeviceIdentitySources.fromEnvironment(
             System.getenv(), certArg, keyArg, deviceArg, devicesArg);
     var broker =
         new TunnelBroker(
-            new TunnelManager(),
-            request -> sources.resolve(request.optionalString("pin")),
-            message -> System.err.println("bb-tunneld: " + message));
-    try (var server = new BrokerServer(broker, socketPath, VERSION)) {
+            new TunnelManager(), request -> sources.resolve(request.optionalString("pin")), log);
+    try (var server = new BrokerServer(broker, socketPath, BuildInfo.VERSION)) {
       // Stop the accept loop on SIGTERM/SIGINT so the socket file is removed on a clean signal,
       // not only on a graceful close(). A stale file from a hard kill is cleared at next startup.
       Runtime.getRuntime().addShutdownHook(new Thread(server::close, "bb-tunneld-shutdown"));
-      System.err.println("bb-tunneld: listening on " + socketPath);
+      log.accept("listening on " + socketPath);
       server.serve();
     }
+  }
+
+  /**
+   * Where the daemon's log goes: a size-capped, self-clearing file when {@code BB_TUNNELD_LOG}
+   * names one (the installed launchd service points it at {@code /var/log/bb-tunneld.log}),
+   * otherwise standard error — so a terminal {@code sudo bb-tunnel serve} still prints to the
+   * console.
+   */
+  private static Consumer<String> logSink() {
+    var path = System.getenv("BB_TUNNELD_LOG");
+    return path == null || path.isBlank()
+        ? message -> System.err.println("bb-tunneld: " + message)
+        : CappedLog.to(Path.of(path));
   }
 }

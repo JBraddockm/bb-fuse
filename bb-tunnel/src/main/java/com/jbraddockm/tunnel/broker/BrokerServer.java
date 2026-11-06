@@ -59,30 +59,6 @@ final class BrokerServer implements AutoCloseable {
     this.version = version;
   }
 
-  /** Binds the socket and accepts connections until {@link #close}. Blocks the calling thread. */
-  void serve() throws IOException {
-    Files.deleteIfExists(socketPath);
-    server = ServerSocketChannel.open(StandardProtocolFamily.UNIX);
-    server.bind(UnixDomainSocketAddress.of(socketPath));
-    grantSocketAccess(socketPath);
-    running = true;
-    try {
-      while (running) {
-        SocketChannel channel;
-        try {
-          channel = server.accept();
-        } catch (ClosedChannelException stopping) {
-          break; // close() was called (AsynchronousCloseException is a subtype)
-        }
-        var id = "c" + connections.incrementAndGet();
-        Thread.ofPlatform().daemon().name("broker-" + id).start(() -> handle(id, channel));
-      }
-    } finally {
-      running = false;
-      Files.deleteIfExists(socketPath);
-    }
-  }
-
   /**
    * Makes the freshly-bound socket reachable by its client. Launched as root (under {@code sudo} or
    * launchd), the daemon's socket is root-owned and not connectable by an unprivileged consumer
@@ -119,6 +95,35 @@ final class BrokerServer implements AutoCloseable {
     }
   }
 
+  private static Map<String, Object> error(Object requestId, String code, String message) {
+    return Json.object(
+        "id", requestId, "ok", false, "error", Json.object("code", code, "message", message));
+  }
+
+  /** Binds the socket and accepts connections until {@link #close}. Blocks the calling thread. */
+  void serve() throws IOException {
+    Files.deleteIfExists(socketPath);
+    server = ServerSocketChannel.open(StandardProtocolFamily.UNIX);
+    server.bind(UnixDomainSocketAddress.of(socketPath));
+    grantSocketAccess(socketPath);
+    running = true;
+    try {
+      while (running) {
+        SocketChannel channel;
+        try {
+          channel = server.accept();
+        } catch (ClosedChannelException stopping) {
+          break; // close() was called (AsynchronousCloseException is a subtype)
+        }
+        var id = "c" + connections.incrementAndGet();
+        Thread.ofPlatform().daemon().name("broker-" + id).start(() -> handle(id, channel));
+      }
+    } finally {
+      running = false;
+      Files.deleteIfExists(socketPath);
+    }
+  }
+
   @Override
   public void close() {
     running = false;
@@ -126,17 +131,18 @@ final class BrokerServer implements AutoCloseable {
     if (listener != null) {
       try {
         listener.close();
-      } catch (IOException ignore) {
+      } catch (IOException _) {
         // best effort: the accept loop also observes running=false
       }
     }
   }
 
   private void handle(String id, SocketChannel channel) {
-    var out = new PrintStream(Channels.newOutputStream(channel), false, StandardCharsets.UTF_8);
-    broker.connected(id, event -> writeLine(out, event));
-    writeLine(
-        out,
+    var writer =
+        new ConnectionWriter(
+            new PrintStream(Channels.newOutputStream(channel), false, StandardCharsets.UTF_8));
+    broker.connected(id, writer::write);
+    writer.write(
         Json.object(
             "event", "hello",
             "protocol", PROTOCOL_VERSION,
@@ -149,31 +155,31 @@ final class BrokerServer implements AutoCloseable {
       String line;
       while ((line = reader.readLine()) != null) {
         if (!line.isBlank()) {
-          dispatch(id, line, out);
+          dispatch(id, line, writer);
         }
       }
-    } catch (IOException dropped) {
+    } catch (IOException _) {
       // the client went away; the finally block reclaims its leases
     } finally {
       broker.disconnected(id);
       try {
         channel.close();
-      } catch (IOException ignore) {
+      } catch (IOException _) {
         // nothing more to do
       }
     }
   }
 
-  private void dispatch(String id, String line, PrintStream out) {
+  private void dispatch(String id, String line, ConnectionWriter writer) {
     Object parsed;
     try {
       parsed = Json.parse(line);
     } catch (Json.JsonException malformed) {
-      writeLine(out, error(null, "bad_json", malformed.getMessage()));
+      writer.write(error(null, "bad_json", malformed.getMessage()));
       return;
     }
     if (!(parsed instanceof Map<?, ?> request)) {
-      writeLine(out, error(null, "bad_request", "a request must be a JSON object"));
+      writer.write(error(null, "bad_request", "a request must be a JSON object"));
       return;
     }
     var requestId = request.get("id");
@@ -194,27 +200,24 @@ final class BrokerServer implements AutoCloseable {
           };
       var reply = Json.object("id", requestId, "ok", true);
       reply.putAll(result);
-      writeLine(out, reply);
+      writer.write(reply);
     } catch (BrokerException refused) {
-      writeLine(out, error(requestId, refused.code(), refused.getMessage()));
+      writer.write(error(requestId, refused.code(), refused.getMessage()));
     } catch (InvalidArgumentException invalid) {
-      writeLine(out, error(requestId, "invalid_argument", invalid.getMessage()));
+      writer.write(error(requestId, "invalid_argument", invalid.getMessage()));
     } catch (Exception failure) {
-      writeLine(out, error(requestId, "internal", String.valueOf(failure)));
+      writer.write(error(requestId, "internal", String.valueOf(failure)));
     }
   }
 
-  private static Map<String, Object> error(Object requestId, String code, String message) {
-    return Json.object(
-        "id", requestId, "ok", false, "error", Json.object("code", code, "message", message));
-  }
-
   /**
-   * One JSON object per line. Synchronised on the stream so replies and events never interleave.
+   * One connection's output. Every reply and pushed event goes through {@link #write}, serialised
+   * on the writer so a connection's lines never interleave.
    */
-  private static void writeLine(PrintStream out, Map<String, Object> message) {
-    var bytes = (Json.write(message) + "\n").getBytes(StandardCharsets.UTF_8);
-    synchronized (out) {
+  private record ConnectionWriter(PrintStream out) {
+
+    synchronized void write(Map<String, Object> message) {
+      var bytes = (Json.write(message) + "\n").getBytes(StandardCharsets.UTF_8);
       out.write(bytes, 0, bytes.length);
       out.flush();
     }

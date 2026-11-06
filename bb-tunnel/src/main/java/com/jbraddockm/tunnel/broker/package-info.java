@@ -7,6 +7,6 @@
  * (leases, identity, events over {@link com.jbraddockm.tunnel.TunnelManager}); {@link
  * com.jbraddockm.tunnel.broker.BrokerServer} serves it on a socket; {@link
  * com.jbraddockm.tunnel.broker.Tunneld} is the entry point. The client lives in bb-core ({@code
- * com.jbraddockm.core.tunnel}). See {@code analysis/TUNNEL-BROKER-DAEMON-PLAN.md}.
+ * com.jbraddockm.core.tunnel}).
  */
 package com.jbraddockm.tunnel.broker;

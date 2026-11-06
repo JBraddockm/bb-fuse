@@ -62,28 +62,26 @@ final class TunDevice implements AutoCloseable {
   private static final String UTUN_CONTROL_NAME = "com.apple.net.utun_control";
   private final Linker linker = Linker.nativeLinker();
   private final SymbolLookup std = linker.defaultLookup();
-  private final MethodHandle socket,
-      ioctl,
-      connect,
-      read,
-      write,
-      close,
-      getsockopt,
-      strerror,
-      errnoLoc;
+  private final MethodHandle read, write, close, strerror, errnoLoc;
   private final int fd;
   private final String ifName;
   private final Arena arena = Arena.ofShared();
 
   TunDevice() throws Throwable {
+    if (!Platform.isMac()) {
+      // The bring-up seam: refuse on a non-macOS host with a clear message rather than failing
+      // partway through the utun syscalls. A cross-platform backend would attach here.
+      throw new UnsupportedOperationException(
+          "the tunnel's utun layer is macOS-only (this is " + System.getProperty("os.name") + ")");
+    }
     // Bind the libc functions we need as Panama downcall handles.
-    socket = h("socket", FunctionDescriptor.of(JAVA_INT, JAVA_INT, JAVA_INT, JAVA_INT));
-    ioctl = h("ioctl", FunctionDescriptor.of(JAVA_INT, JAVA_INT, JAVA_LONG, ADDRESS));
-    connect = h("connect", FunctionDescriptor.of(JAVA_INT, JAVA_INT, ADDRESS, JAVA_INT));
+    var socket = h("socket", FunctionDescriptor.of(JAVA_INT, JAVA_INT, JAVA_INT, JAVA_INT));
+    var ioctl = h("ioctl", FunctionDescriptor.of(JAVA_INT, JAVA_INT, JAVA_LONG, ADDRESS));
+    var connect = h("connect", FunctionDescriptor.of(JAVA_INT, JAVA_INT, ADDRESS, JAVA_INT));
     read = h("read", FunctionDescriptor.of(JAVA_LONG, JAVA_INT, ADDRESS, JAVA_LONG));
     write = h("write", FunctionDescriptor.of(JAVA_LONG, JAVA_INT, ADDRESS, JAVA_LONG));
     close = h("close", FunctionDescriptor.of(JAVA_INT, JAVA_INT));
-    getsockopt =
+    var getsockopt =
         h(
             "getsockopt",
             FunctionDescriptor.of(JAVA_INT, JAVA_INT, JAVA_INT, JAVA_INT, ADDRESS, ADDRESS));

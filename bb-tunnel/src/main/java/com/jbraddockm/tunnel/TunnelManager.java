@@ -8,8 +8,8 @@ import java.util.function.Consumer;
 
 /**
  * Opens and shares one bp2p tunnel per device, each with a distinct inner-IPv4 pair from an {@link
- * InnerAddressPool}, so several devices can be connected at once without the fixed-address
- * collision (see {@code analysis/TUNNEL-MULTIDEVICE-MODEL.md}).
+ * InnerAddressPool}, so several devices can be connected at once without an inner-address
+ * collision.
  *
  * <p>The tunnel is a <b>shared transport</b>: bb-link and Blend are peers that each {@link
  * #acquire} a device's tunnel and {@link Lease#close release} it. One tunnel is kept per device,

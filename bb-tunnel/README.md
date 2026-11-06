@@ -11,8 +11,8 @@ The tunnel also brings up a link-local inner IPv4, so the device's **SMB share**
 drive) is reachable at `smb://<inner-IPv4>/` — that address is returned alongside the login's SMB
 credentials. The inner IPv4 is **allocated per device** by `TunnelManager` from an `InnerAddressPool`
 (a distinct `169.254.k.1/.2` each), so several devices can use the SMB plane at once; a consumer can
-propose a specific host (e.g. the stable `169.254.1.1`), honoured when free and otherwise countered
-(see [`PROTOCOL.md`](PROTOCOL.md) §2.2).
+propose a specific host (e.g. the stable `169.254.1.1`), honoured when free and otherwise countered (see [
+`PROTOCOL.md`](PROTOCOL.md) §2.2).
 
 ## Opening a tunnel: `TunnelManager`
 
@@ -23,14 +23,19 @@ IPv4, and hands a consumer the coordinates to connect with:
 TunnelManager manager = new TunnelManager();
 var identity = new Tunnels.Identity(certPem, keyPem); // the device's enrolled tunnel cert + key
 // Propose an SMB host (null = let the pool choose); honoured if free, else countered.
-try (TunnelManager.Lease lease = manager.acquire(deviceHost, "169.254.1.1", identity)) {
-  lease.deviceUla();  // the device's tunnel ULA — the host bb-link / Blend connect to
-  lease.deviceIpv4(); // the GRANTED inner IPv4 — the SMB host (bb-link's `smbHost` connect param)
+try(
+TunnelManager.Lease lease = manager.acquire(deviceHost, "169.254.1.1", identity)){
+        lease.
+
+deviceUla();  // the device's tunnel ULA — the host bb-link / Blend connect to
+  lease.
+
+deviceIpv4(); // the GRANTED inner IPv4 — the SMB host (bb-link's `smbHost` connect param)
 }
 ```
 
-`acquire(host, proposedSmbHost, identity)` is keyed by the transport address the tunnel is opened with
-(the device's USB host−1 or its Wi-Fi LAN address — the only identity known before the tunnel exists;
+`acquire(host, proposedSmbHost, identity)` is keyed by the transport address the tunnel is opened with (the device's USB
+host−1 or its Wi-Fi LAN address — the only identity known before the tunnel exists;
 the ULA is learned from `CONNECT_RESP`). It is ref-counted: the first consumer opens the tunnel, the
 last to close its `Lease` brings it down and returns the inner IPv4 to the pool. `proposedSmbHost` (a
 `169.254.k.1` address, or `null` for none) is **honoured** when the octet is free and valid, else the
@@ -63,11 +68,17 @@ the last `release` (or a dropped connection) brings it down. Consumers use the c
 is in [`PROTOCOL.md`](PROTOCOL.md) §7; the design, decisions and roadmap are in
 [`../analysis/TUNNEL-BROKER-DAEMON.md`](../analysis/TUNNEL-BROKER-DAEMON.md).
 
+**Installed service (no per-run sudo).** `scripts/install-tunneld.sh` registers the daemon as a
+macOS LaunchDaemon, so launchd runs it as root on demand and consumers connect with no password; it
+logs to a small self-capping file (the last ~100 lines) at `/var/log/bb-tunneld.log`, and
+`scripts/uninstall-tunneld.sh` removes it. `bb-tunnel --version` prints the build version; on a
+non-macOS host the daemon refuses with a clear message instead of crashing.
+
 End to end, from a device's **Wi-Fi LAN address** — bb-link asks the daemon to bring the tunnel up and
 runs the whole session over the device's ULA, so you never type the ULA **[verified]**:
 
 ```sh
-sudo ./build/bb-tunnel serve                                   # the broker, on /tmp/bb-tunneld.sock
+sudo ./build/bb-tunnel serve   # the broker, on /tmp/bb-tunneld.sock
 ./bblink connect --host 192.168.1.118 --tunnel --device 2C1E7583
 ```
 
@@ -116,8 +127,10 @@ return traffic to us, and the device surface (CGIs, WebDAV, Blend) answers over 
 
 ## Troubleshooting
 
-**Daemon log.** `bb-tunnel serve` prints one line per lifecycle event — `tunnel up` / `tunnel down` /
-`tunnel dropped` and `identified`, each with the host, SMB host, ULA and (when known) PIN. The
+**Daemon log.** The daemon writes one line per lifecycle event, each leading with the device PIN (or
+host) and the consumer: `<pin> [<consumer>] up` / `joined` / `down`, plus `dropped` and `identified`.
+A terminal `bb-tunnel serve` prints these to the console; the installed service writes them to a
+self-capping log (the last ~100 lines) at `/var/log/bb-tunneld.log`. The
 low-level bring-up and data-plane trace (`ifconfig`/`route` output, the control-message flow,
 `HANDSHAKE OK` / `DTLS HANDSHAKE OK`) is **gated** — enable it with `-Dbb.tunnel.trace` or
 `BB_TUNNEL_TRACE=1`.
@@ -133,10 +146,11 @@ tunnel in the forward direction**, both IPv6 and IPv4.
 Because **both handshakes succeed**, the tunnel certificate is enrolled and trusted and our ULA is
 consistent — so this is **not** the certificate, the pairing, or bb-link. It is a stuck device-side
 bp2p data-plane/peer state. **Re-renewing or re-pairing does not fix it; a device restart does.**
-(Observed on a Passport `2BD63247` / SQW100-1: `CONNECT_RESP flags=0x0200` and a flood of skipped
-`NOTIFY 0x05` control messages accompanied the stuck state, but a reboot cleared it and the tunnel
-worked. Whether `flags=0x0200` / the `NOTIFY 0x05` stream is a real bb-tunnel data-gate gap or just a
-symptom of the stuck device state is **still open** — recorded here until we find the root cause.)
+(Observed on a Passport `2BD63247` / SQW100-1 during a stuck episode: `CONNECT_RESP flags=0x0200` and
+a flood of skipped `NOTIFY 0x05` control messages. **`flags=0x0200` is not a reliable marker,
+though** — it has since been seen on a perfectly healthy tunnel — so a real discriminator for the
+stuck state (a flag that changes mid-session, or the `NOTIFY 0x05` rate) is **still open**, recorded
+here until we find the root cause.)
 
 ## Requirements
 

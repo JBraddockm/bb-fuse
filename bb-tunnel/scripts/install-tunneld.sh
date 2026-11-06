@@ -13,6 +13,7 @@ PLIST="/Library/LaunchDaemons/${LABEL}.plist"
 BIN="/usr/local/libexec/bb-tunneld"
 # The default socket that clients connect to.
 SOCKET="/tmp/bb-tunneld.sock"
+# The daemon's self-capping log (it keeps only the last ~100 lines, then clears).
 LOG="/var/log/bb-tunneld.log"
 
 if [ "$(uname -s)" != "Darwin" ]; then
@@ -46,6 +47,7 @@ echo "bb-tunneld: installing ${SRC} -> ${BIN}  (socket ${SOCKET}, owner ${OWNER}
 
 # Stop any previous instance before replacing the binary and plist.
 launchctl bootout system "${PLIST}" 2>/dev/null || true
+rm -f "${LOG}"  # start the self-capping log fresh (the daemon recreates it)
 
 install -d -m 755 "$(dirname "${BIN}")"
 install -m 755 "${SRC}" "${BIN}"
@@ -67,6 +69,8 @@ cat > "${PLIST}" <<EOF
     <dict>
         <key>BB_TUNNELD_SOCKET_OWNER</key>
         <string>${OWNER}</string>
+        <key>BB_TUNNELD_LOG</key>
+        <string>${LOG}</string>
     </dict>
     <key>RunAtLoad</key>
     <true/>
@@ -75,9 +79,9 @@ cat > "${PLIST}" <<EOF
     <key>ProcessType</key>
     <string>Background</string>
     <key>StandardOutPath</key>
-    <string>${LOG}</string>
+    <string>/dev/null</string>
     <key>StandardErrorPath</key>
-    <string>${LOG}</string>
+    <string>/dev/null</string>
 </dict>
 </plist>
 EOF
