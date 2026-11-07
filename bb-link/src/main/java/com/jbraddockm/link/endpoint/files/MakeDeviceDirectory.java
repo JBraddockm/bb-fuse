@@ -16,7 +16,7 @@ public record MakeDeviceDirectory(SmbLocation path) implements FileCommand<FileC
   public CommandOutcome<FileChange> run(FileStore store) {
     try {
       store.makeDirectory(path);
-      return CommandOutcome.succeeded(new FileChange("created", path, null));
+      return CommandOutcome.succeeded(FileChange.created(path));
     } catch (SmbTransferException failure) {
       return CommandOutcome.failed(failure.toServiceError());
     }

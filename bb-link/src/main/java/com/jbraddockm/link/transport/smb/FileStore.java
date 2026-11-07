@@ -64,8 +64,8 @@ public interface FileStore {
    * indexes only the finished file.
    *
    * @param source the local file to read
-   * @param destination the file on the share to write; its parent directories are created, and an
-   *     existing file is replaced
+   * @param destination the file on the share to write; its parent directories are created, an
+   *     existing file is replaced, and a directory at that path is refused rather than overwritten
    * @param progress receives the running byte count as the copy proceeds
    * @return the number of bytes copied
    * @throws SmbTransferException if the source cannot be read or the destination cannot be written

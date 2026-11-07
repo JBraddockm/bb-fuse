@@ -50,7 +50,6 @@ class GetDeviceThumbnailTest {
   @DisplayName("request")
   class Request {
 
-    @SuppressWarnings("unchecked")
     private CgiRequest.Download download(GetDeviceThumbnail command) {
       var step = command.conversation().start();
       assertThat(step).isInstanceOf(Step.Send.class);
@@ -92,7 +91,6 @@ class GetDeviceThumbnailTest {
   @DisplayName("answer")
   class Answer {
 
-    @SuppressWarnings("unchecked")
     @Test
     @DisplayName("a streamed image is the result")
     void image() {

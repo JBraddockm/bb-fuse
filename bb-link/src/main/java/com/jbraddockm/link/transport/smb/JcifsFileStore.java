@@ -28,6 +28,9 @@ import org.codelibs.jcifs.smb1.SmbFileOutputStream;
  * credentials of its latest login. A fresh store is made for each operation from the session's
  * current {@link SmbCredentials}, because the share password changes with every login; it holds no
  * connection of its own between calls.
+ *
+ * <p>The jcifs-confined behaviour is verified against a real device rather than in unit tests; the
+ * host-side path arithmetic (see {@link #parentOf}) is unit-tested.
  */
 public final class JcifsFileStore implements FileStore {
 
@@ -75,7 +78,13 @@ public final class JcifsFileStore implements FileStore {
         name, directory, directory ? 0 : file.length(), Instant.ofEpochMilli(file.lastModified()));
   }
 
-  private static SmbLocation parentOf(SmbLocation location) {
+  /**
+   * The parent directory of a location. A top-level path yields the share root (an empty path).
+   *
+   * @param location the location whose parent is wanted
+   * @return the parent location, on the same share
+   */
+  static SmbLocation parentOf(SmbLocation location) {
     var path = location.path();
     var cut = path.lastIndexOf('/');
     return new SmbLocation(location.share(), cut < 0 ? "" : path.substring(0, cut));
@@ -168,6 +177,11 @@ public final class JcifsFileStore implements FileStore {
       }
       var target = file(destination, false);
       if (target.exists()) {
+        if (target.isDirectory()) {
+          // Never let a file overwrite a directory: jcifs delete() would recurse and wipe its
+          // contents. Refuse instead, as delete/move/copy already refuse a directory.
+          throw notADirectory(destination, "is a directory; a file cannot replace it");
+        }
         target.delete();
       }
       tempFile.renameTo(target);
@@ -190,10 +204,7 @@ public final class JcifsFileStore implements FileStore {
         throw notFound(path);
       }
       if (file.isDirectory()) {
-        throw new SmbTransferException(
-            LinkErrorCode.NOT_A_DIRECTORY,
-            path.share() + "/" + path.path() + " is a directory; delete removes files only",
-            Json.object("share", path.share(), "path", path.path()));
+        throw notADirectory(path, "is a directory; delete removes files only");
       }
       file.delete();
     } catch (IOException failure) {
@@ -209,10 +220,7 @@ public final class JcifsFileStore implements FileStore {
         throw notFound(path);
       }
       if (!node.isDirectory()) {
-        throw new SmbTransferException(
-            LinkErrorCode.NOT_A_DIRECTORY,
-            path.share() + "/" + path.path() + " is a file; use delete to remove a file",
-            Json.object("share", path.share(), "path", path.path()));
+        throw notADirectory(path, "is a file; use delete to remove a file");
       }
       // Confined to an empty directory: jcifs SmbFile.delete() recurses, so an emptiness check is
       // what keeps this from wiping a tree. Listing uses the directory (trailing-slash) form.
@@ -320,6 +328,13 @@ public final class JcifsFileStore implements FileStore {
     return new SmbTransferException(
         LinkErrorCode.ALREADY_EXISTS,
         path.share() + "/" + path.path() + " already exists on the device",
+        Json.object("share", path.share(), "path", path.path()));
+  }
+
+  private static SmbTransferException notADirectory(SmbLocation path, String explanation) {
+    return new SmbTransferException(
+        LinkErrorCode.NOT_A_DIRECTORY,
+        path.share() + "/" + path.path() + " " + explanation,
         Json.object("share", path.share(), "path", path.path()));
   }
 

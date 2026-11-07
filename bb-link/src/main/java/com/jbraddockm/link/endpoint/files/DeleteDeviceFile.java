@@ -17,7 +17,7 @@ public record DeleteDeviceFile(SmbLocation path) implements FileCommand<FileChan
   public CommandOutcome<FileChange> run(FileStore store) {
     try {
       store.delete(path);
-      return CommandOutcome.succeeded(new FileChange("deleted", path, null));
+      return CommandOutcome.succeeded(FileChange.deleted(path));
     } catch (SmbTransferException failure) {
       return CommandOutcome.failed(failure.toServiceError());
     }

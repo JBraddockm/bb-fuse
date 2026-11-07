@@ -53,7 +53,7 @@ public record GetDeviceThumbnail(Long fid, Long aid, Path destination)
         CgiRequest.Download.to(
                 Endpoint.METADATA, destination, 0, ThumbnailPhase.FETCHING, THUMBNAIL)
             .withText(FormField.TYPE, THUMBNAIL)
-            .withText(field, Long.toUnsignedString(id))
+            .withText(field, String.valueOf(id))
             .describedAs("Fetching a media thumbnail");
     return new ThumbnailConversation(request);
   }

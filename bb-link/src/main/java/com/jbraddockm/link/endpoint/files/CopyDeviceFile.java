@@ -17,7 +17,7 @@ public record CopyDeviceFile(SmbLocation from, SmbLocation to) implements FileCo
   public CommandOutcome<FileChange> run(FileStore store) {
     try {
       store.copy(from, to);
-      return CommandOutcome.succeeded(new FileChange("copied", from, to));
+      return CommandOutcome.succeeded(FileChange.copied(from, to));
     } catch (SmbTransferException failure) {
       return CommandOutcome.failed(failure.toServiceError());
     }

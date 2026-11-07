@@ -18,7 +18,7 @@ public record RemoveDeviceDirectory(SmbLocation path) implements FileCommand<Fil
   public CommandOutcome<FileChange> run(FileStore store) {
     try {
       store.removeDirectory(path);
-      return CommandOutcome.succeeded(new FileChange("removed", path, null));
+      return CommandOutcome.succeeded(FileChange.removed(path));
     } catch (SmbTransferException failure) {
       return CommandOutcome.failed(failure.toServiceError());
     }
