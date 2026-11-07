@@ -14,8 +14,9 @@
         <module>bb-link</module>
         <module>bb-connect</module>
         <module>bb-packager</module>
-        <module>bb-smb</module>
+        <module>bb-dev</module>
         <module>bb-tunnel</module>
+        <module>bb-blend-spa</module>
     </modules>
 
     <properties>
