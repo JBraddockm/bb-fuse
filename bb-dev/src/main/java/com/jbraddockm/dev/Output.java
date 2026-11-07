@@ -44,4 +44,29 @@ public final class Output {
     }
     return NOT_IMPLEMENTED;
   }
+
+  /**
+   * Prints a progress note — only in plain-text mode, so JSON output stays a single object.
+   *
+   * @param text the note
+   */
+  public void note(String text) {
+    if (!json) {
+      stream.println(text);
+    }
+  }
+
+  /**
+   * Writes a tool's final result and returns its exit status: the JSON object when {@code --json}
+   * was given, otherwise the plain text.
+   *
+   * @param exitCode the status to return
+   * @param text the plain-text line
+   * @param jsonObject the JSON object (a map, as {@link Json#object} builds)
+   * @return {@code exitCode}
+   */
+  public int emit(int exitCode, String text, Object jsonObject) {
+    stream.println(json ? Json.write(jsonObject) : text);
+    return exitCode;
+  }
 }

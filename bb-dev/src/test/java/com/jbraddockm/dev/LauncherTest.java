@@ -66,39 +66,41 @@ class LauncherTest {
   class Routing {
 
     @ParameterizedTest
-    @ValueSource(strings = {"connect", "deploy", "package"})
-    @DisplayName("routes each namespace to its tool")
-    void routesEachNamespace(String namespace) {
+    @ValueSource(strings = {"deploy", "package"})
+    @DisplayName("routes a not-yet-built namespace to its stub")
+    void routesStubNamespace(String namespace) {
       assertThat(dispatch(namespace)).isEqualTo(Output.NOT_IMPLEMENTED);
       assertThat(out()).contains("bb-dev " + namespace + ": not implemented yet");
     }
 
     @Test
-    @DisplayName("emits a JSON object when --json precedes the namespace")
+    @DisplayName("emits a JSON object for a stub namespace when --json precedes it")
     void jsonBeforeNamespace() {
-      assertThat(dispatch("--json", "connect")).isEqualTo(Output.NOT_IMPLEMENTED);
+      assertThat(dispatch("--json", "deploy")).isEqualTo(Output.NOT_IMPLEMENTED);
       var parsed = Json.parse(out().strip());
       assertThat(parsed).isInstanceOf(Map.class);
       @SuppressWarnings("unchecked")
       var object = (Map<String, Object>) parsed;
       assertThat(object)
           .containsEntry("ok", false)
-          .containsEntry("namespace", "connect")
+          .containsEntry("namespace", "deploy")
           .containsEntry("error", "not implemented");
     }
 
     @Test
     @DisplayName("accepts --json after the namespace too")
     void jsonAfterNamespace() {
-      assertThat(dispatch("deploy", "--json")).isEqualTo(Output.NOT_IMPLEMENTED);
+      assertThat(dispatch("package", "--json")).isEqualTo(Output.NOT_IMPLEMENTED);
       assertThat(Json.parse(out().strip())).isInstanceOf(Map.class);
     }
 
     @Test
-    @DisplayName("routes when tool options follow the namespace")
-    void toolOptionsFollow() {
-      assertThat(dispatch("connect", "192.168.1.118", "-password", "12345"))
-          .isEqualTo(Output.NOT_IMPLEMENTED);
+    @DisplayName("routes to the connect tool, which then validates its own options")
+    void connectRoutesAndValidates() {
+      // No -sshPublicKey, so the connect tool itself reports a usage error — which proves the
+      // namespace word was consumed and the remaining options were handed to the tool.
+      assertThat(dispatch("connect", "192.168.1.118", "-password", "12345")).isEqualTo(2);
+      assertThat(out()).contains("Usage: bb-dev connect");
     }
   }
 }
