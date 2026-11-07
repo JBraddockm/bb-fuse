@@ -55,6 +55,8 @@ final class EndpointReachability {
           // same reachability guard as the other management programs applies.
           Map.entry(LinkMethod.GET_DEVICE_CHARACTERISTICS, Endpoint.DISCOVERY),
           Map.entry(LinkMethod.GET_SMB_CREDENTIALS, Endpoint.LOGIN),
+          // metadata.cgi is served over USB and the tunnel but not the plain Wi-Fi LAN.
+          Map.entry(LinkMethod.GET_DEVICE_METADATA, Endpoint.METADATA),
           Map.entry(LinkMethod.LIST_PIM_ACCOUNTS, Endpoint.PIM_SYNC),
           Map.entry(LinkMethod.FIND_PIM_ACCOUNT, Endpoint.PIM_SYNC),
           Map.entry(LinkMethod.GET_PIM_ITEMS, Endpoint.PIM_SYNC),

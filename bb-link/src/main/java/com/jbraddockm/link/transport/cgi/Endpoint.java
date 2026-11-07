@@ -15,6 +15,9 @@ public enum Endpoint {
   /** Backup and restore. */
   BACKUP("backup.cgi"),
 
+  /** The read-only media inventory: pictures, videos, music, documents, playlists, thumbnails. */
+  METADATA("metadata.cgi"),
+
   /** Rebooting the device. */
   RESET("reset.cgi"),
 

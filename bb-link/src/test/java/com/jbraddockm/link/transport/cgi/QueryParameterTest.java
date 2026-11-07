@@ -38,9 +38,9 @@ class QueryParameterTest {
 
   @Test
   @DisplayName("no two parameters have the same name, and there are no others than these")
-  void thereAreSixteenDistinctParameters() {
+  void thereAreTwentyDistinctParameters() {
     assertThat(Arrays.stream(QueryParameter.values()).map(QueryParameter::wireName))
         .doesNotHaveDuplicates()
-        .hasSize(16);
+        .hasSize(20);
   }
 }

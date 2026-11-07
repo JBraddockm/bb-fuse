@@ -32,9 +32,9 @@ class EndpointTest {
 
   @Test
   @DisplayName("there is no endpoint that this table does not know")
-  void thereAreNineEndpoints() {
+  void thereAreTenEndpoints() {
     assertThat(Arrays.stream(Endpoint.values()).map(Endpoint::fileName))
         .doesNotHaveDuplicates()
-        .hasSize(9);
+        .hasSize(10);
   }
 }

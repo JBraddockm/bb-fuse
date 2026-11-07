@@ -26,6 +26,11 @@ import com.jbraddockm.link.endpoint.files.ListDeviceFiles;
 import com.jbraddockm.link.endpoint.files.PullFile;
 import com.jbraddockm.link.endpoint.files.PushFile;
 import com.jbraddockm.link.endpoint.files.StatDeviceFile;
+import com.jbraddockm.link.endpoint.metadata.GetDeviceMetadata;
+import com.jbraddockm.link.endpoint.metadata.MediaSource;
+import com.jbraddockm.link.endpoint.metadata.MediaType;
+import com.jbraddockm.link.endpoint.metadata.MusicCollection;
+import com.jbraddockm.link.endpoint.metadata.SortOrder;
 import com.jbraddockm.link.endpoint.pairing.CertificateRetrieval;
 import com.jbraddockm.link.endpoint.pairing.CertificateRetrievalRequest;
 import com.jbraddockm.link.endpoint.pairing.GetAuthenticationCertificate;
@@ -107,6 +112,9 @@ enum LinkMethod {
 
   /** Copies a file from the device's file share to the host. */
   PULL_FILE("pullFile"),
+
+  /** Enumerates a media collection on the device's read-only {@code metadata.cgi}. */
+  GET_DEVICE_METADATA("getDeviceMetadata"),
 
   /** Lists the accounts of the device's personal information sync. */
   LIST_PIM_ACCOUNTS("listPimAccounts"),
@@ -417,6 +425,7 @@ enum LinkMethod {
           STAT_DEVICE_FILE,
           PUSH_FILE,
           PULL_FILE,
+          GET_DEVICE_METADATA,
           LIST_DEVICES,
           INSPECT_PACKAGE,
           INSPECT_CERTIFICATE,
@@ -480,6 +489,22 @@ enum LinkMethod {
                   new PullFile(
                       DeviceShares.locate(params.requireString("devicePath")),
                       params.requirePath("destination")));
+      case GET_DEVICE_METADATA ->
+          onSession(
+              params ->
+                  new GetDeviceMetadata(
+                      params.flag("summary")
+                          ? MediaType.SUMMARY
+                          : MediaType.of(params.requireString("type")),
+                      params
+                          .optionalString("source")
+                          .map(MediaSource::of)
+                          .orElse(MediaSource.INTERNAL),
+                      params.optionalString("order").map(SortOrder::of).orElse(SortOrder.DEFAULT),
+                      params
+                          .optionalString("collection")
+                          .map(MusicCollection::of)
+                          .orElse(MusicCollection.NONE)));
       case LIST_PIM_ACCOUNTS -> onSession(_ -> new ListPimAccounts());
       case FIND_PIM_ACCOUNT ->
           onSession(params -> new FindPimAccount(params.requireString("workstationId")));

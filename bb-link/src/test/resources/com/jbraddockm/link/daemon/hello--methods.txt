@@ -9,6 +9,7 @@ listDeviceFiles
 statDeviceFile
 pushFile
 pullFile
+getDeviceMetadata
 listPimAccounts
 findPimAccount
 getPimItems

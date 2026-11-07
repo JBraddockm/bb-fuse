@@ -33,8 +33,20 @@ public enum QueryParameter implements WireValue {
   /** Where to start when the items are returned in pages. */
   OFFSET("offset"),
 
-  /** The kind of package that is uploaded. */
+  /** The kind of package that is uploaded, or the media collection a metadata query enumerates. */
   TYPE("type"),
+
+  /** The storage area a metadata query reads: {@code sdcard} or {@code work}. */
+  SOURCE("source"),
+
+  /** The sort direction of a metadata list: {@code asc} or {@code desc}. */
+  ORDER("order"),
+
+  /** The music grouping of a metadata query: {@code album}, {@code artist} or {@code genre}. */
+  COLLECTION("collection"),
+
+  /** Asks {@code metadata.cgi} for the whole-library summary; a flag, read by its presence. */
+  SUMMARY("summary"),
 
   /** The version of the protocol that a request to {@code login.cgi} speaks. */
   REQUEST_VERSION("request_version"),

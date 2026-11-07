@@ -18,6 +18,9 @@ public enum ResponseElement {
   /** The device characteristics from {@code discovery.cgi}. */
   DEVICE_CHARACTERISTICS("DeviceCharacteristics"),
 
+  /** The media rows from {@code metadata.cgi}, as JSON inside a CDATA block. */
+  METADATA("Metadata"),
+
   /** The device's answer to a reboot or power-off through {@code reset.cgi}. */
   RESET("Reset"),
 
