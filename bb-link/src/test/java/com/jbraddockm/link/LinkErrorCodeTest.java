@@ -24,7 +24,7 @@ class LinkErrorCodeTest {
   @Test
   @DisplayName("are twelve, and are errors of the protocol")
   void areTwelve() {
-    assertThat(LinkErrorCode.values()).hasSize(12).allMatch(ErrorCode.class::isInstance);
+    assertThat(LinkErrorCode.values()).hasSize(13).allMatch(ErrorCode.class::isInstance);
   }
 
   @Test

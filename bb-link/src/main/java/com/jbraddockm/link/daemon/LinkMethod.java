@@ -30,6 +30,7 @@ import com.jbraddockm.link.endpoint.files.MakeDeviceDirectory;
 import com.jbraddockm.link.endpoint.files.MoveDeviceFile;
 import com.jbraddockm.link.endpoint.files.PullFile;
 import com.jbraddockm.link.endpoint.files.PushFile;
+import com.jbraddockm.link.endpoint.files.RemoveDeviceDirectory;
 import com.jbraddockm.link.endpoint.files.SetDeviceFileTime;
 import com.jbraddockm.link.endpoint.files.StatDeviceFile;
 import com.jbraddockm.link.endpoint.metadata.GetDeviceMetadata;
@@ -126,6 +127,9 @@ enum LinkMethod {
 
   /** Creates a directory on the device's file share. Changes the device. */
   MAKE_DEVICE_DIRECTORY("makeDeviceDirectory"),
+
+  /** Removes an empty directory on the device's file share. Changes the device. */
+  REMOVE_DEVICE_DIRECTORY("removeDeviceDirectory"),
 
   /** Renames or moves a file or directory on the device's file share. Changes the device. */
   MOVE_DEVICE_FILE("moveDeviceFile"),
@@ -484,6 +488,7 @@ enum LinkMethod {
           PULL_FILE,
           DELETE_DEVICE_FILE,
           MAKE_DEVICE_DIRECTORY,
+          REMOVE_DEVICE_DIRECTORY,
           MOVE_DEVICE_FILE,
           COPY_DEVICE_FILE,
           GET_DEVICE_DISK_FREE,
@@ -563,6 +568,11 @@ enum LinkMethod {
           onFiles(
               params ->
                   new MakeDeviceDirectory(DeviceShares.locate(params.requireString("devicePath"))));
+      case REMOVE_DEVICE_DIRECTORY ->
+          onFiles(
+              params ->
+                  new RemoveDeviceDirectory(
+                      DeviceShares.locate(params.requireString("devicePath"))));
       case MOVE_DEVICE_FILE ->
           onFiles(
               params ->

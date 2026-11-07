@@ -169,6 +169,7 @@ class LinkMethodTest {
       "PULL_FILE, pullFile",
       "DELETE_DEVICE_FILE, deleteDeviceFile",
       "MAKE_DEVICE_DIRECTORY, makeDeviceDirectory",
+      "REMOVE_DEVICE_DIRECTORY, removeDeviceDirectory",
       "MOVE_DEVICE_FILE, moveDeviceFile",
       "COPY_DEVICE_FILE, copyDeviceFile",
       "GET_DEVICE_DISK_FREE, getDeviceDiskFree",
@@ -213,7 +214,7 @@ class LinkMethodTest {
     @DisplayName("are 44, and distinct")
     void areFortyFourAndDistinct() {
       assertThat(Arrays.stream(LinkMethod.values()).map(LinkMethod::wireName))
-          .hasSize(45)
+          .hasSize(46)
           .doesNotHaveDuplicates();
     }
 

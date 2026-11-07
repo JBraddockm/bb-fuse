@@ -33,6 +33,7 @@ final class FakeFileStore implements FileStore {
   boolean pullResume;
   SmbLocation deleted;
   SmbLocation made;
+  SmbLocation removedDirectory;
   SmbLocation movedFrom;
   SmbLocation movedTo;
   SmbLocation copiedFrom;
@@ -105,6 +106,12 @@ final class FakeFileStore implements FileStore {
   @Override
   public void makeDirectory(SmbLocation path) throws SmbTransferException {
     made = path;
+    raise();
+  }
+
+  @Override
+  public void removeDirectory(SmbLocation path) throws SmbTransferException {
+    removedDirectory = path;
     raise();
   }
 

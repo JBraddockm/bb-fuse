@@ -202,6 +202,35 @@ public final class JcifsFileStore implements FileStore {
   }
 
   @Override
+  public void removeDirectory(SmbLocation path) throws SmbTransferException {
+    try {
+      var node = file(path, false);
+      if (!node.exists()) {
+        throw notFound(path);
+      }
+      if (!node.isDirectory()) {
+        throw new SmbTransferException(
+            LinkErrorCode.NOT_A_DIRECTORY,
+            path.share() + "/" + path.path() + " is a file; use delete to remove a file",
+            Json.object("share", path.share(), "path", path.path()));
+      }
+      // Confined to an empty directory: jcifs SmbFile.delete() recurses, so an emptiness check is
+      // what keeps this from wiping a tree. Listing uses the directory (trailing-slash) form.
+      var directory = file(path, true);
+      var children = directory.listFiles();
+      if (children.length > 0) {
+        throw new SmbTransferException(
+            LinkErrorCode.DIRECTORY_NOT_EMPTY,
+            path.share() + "/" + path.path() + " is not empty; remove its contents first",
+            Json.object("share", path.share(), "path", path.path(), "entries", children.length));
+      }
+      directory.delete();
+    } catch (IOException failure) {
+      throw SmbErrorMapper.map(failure, "delete", path);
+    }
+  }
+
+  @Override
   public void makeDirectory(SmbLocation path) throws SmbTransferException {
     try {
       var directory = file(path, true);

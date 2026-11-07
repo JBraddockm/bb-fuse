@@ -54,7 +54,12 @@ public enum LinkErrorCode implements ErrorCode {
   NOT_A_DIRECTORY,
 
   /** A file or directory the device was asked to create or move to already exists. */
-  ALREADY_EXISTS;
+  ALREADY_EXISTS,
+
+  /**
+   * A directory the device was asked to remove is not empty; its contents must be removed first.
+   */
+  DIRECTORY_NOT_EMPTY;
 
   @Override
   public String wireName() {

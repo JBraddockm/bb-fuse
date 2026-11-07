@@ -100,6 +100,16 @@ public interface FileStore {
   void delete(SmbLocation path) throws SmbTransferException;
 
   /**
+   * Removes an empty directory on the device's share. A non-empty directory is refused — removing a
+   * tree is a client's concern, not a primitive (so a single call can never wipe a directory's
+   * contents).
+   *
+   * @param path the directory to remove
+   * @throws SmbTransferException if the path is missing, is a file, or the directory is not empty
+   */
+  void removeDirectory(SmbLocation path) throws SmbTransferException;
+
+  /**
    * Creates a directory, and any missing parent directories.
    *
    * @param path the directory to create

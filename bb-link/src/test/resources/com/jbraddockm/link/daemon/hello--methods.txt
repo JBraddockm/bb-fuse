@@ -11,6 +11,7 @@ pushFile
 pullFile
 deleteDeviceFile
 makeDeviceDirectory
+removeDeviceDirectory
 moveDeviceFile
 copyDeviceFile
 getDeviceDiskFree
