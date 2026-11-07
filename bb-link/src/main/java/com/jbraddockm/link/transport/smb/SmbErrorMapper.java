@@ -90,10 +90,11 @@ final class SmbErrorMapper {
               place + " is not the expected kind of path",
               where,
               status);
+      case NtStatus.NT_STATUS_OBJECT_NAME_COLLISION ->
+          at(LinkErrorCode.ALREADY_EXISTS, place + " already exists on the device", where, status);
       case NtStatus.NT_STATUS_ACCESS_DENIED,
           NtStatus.NT_STATUS_SHARING_VIOLATION,
-          NtStatus.NT_STATUS_CANNOT_DELETE,
-          NtStatus.NT_STATUS_OBJECT_NAME_COLLISION ->
+          NtStatus.NT_STATUS_CANNOT_DELETE ->
           at(
               CoreErrorCode.COMMAND_FAILED,
               "The device refused to " + action + " " + place,

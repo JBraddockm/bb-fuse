@@ -51,7 +51,10 @@ public enum LinkErrorCode implements ErrorCode {
   NO_SUCH_PATH,
 
   /** A path on the device's share is a directory where a file was expected, or the reverse. */
-  NOT_A_DIRECTORY;
+  NOT_A_DIRECTORY,
+
+  /** A file or directory the device was asked to create or move to already exists. */
+  ALREADY_EXISTS;
 
   @Override
   public String wireName() {

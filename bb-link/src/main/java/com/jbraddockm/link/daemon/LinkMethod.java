@@ -20,9 +20,12 @@ import com.jbraddockm.link.endpoint.backup.ListCategories;
 import com.jbraddockm.link.endpoint.backup.PackageType;
 import com.jbraddockm.link.endpoint.backup.RestoreRequest;
 import com.jbraddockm.link.endpoint.characteristics.GetDeviceCharacteristics;
+import com.jbraddockm.link.endpoint.files.DeleteDeviceFile;
 import com.jbraddockm.link.endpoint.files.FileAccess;
 import com.jbraddockm.link.endpoint.files.FileCommand;
 import com.jbraddockm.link.endpoint.files.ListDeviceFiles;
+import com.jbraddockm.link.endpoint.files.MakeDeviceDirectory;
+import com.jbraddockm.link.endpoint.files.MoveDeviceFile;
 import com.jbraddockm.link.endpoint.files.PullFile;
 import com.jbraddockm.link.endpoint.files.PushFile;
 import com.jbraddockm.link.endpoint.files.StatDeviceFile;
@@ -112,6 +115,15 @@ enum LinkMethod {
 
   /** Copies a file from the device's file share to the host. */
   PULL_FILE("pullFile"),
+
+  /** Deletes a single file on the device's file share. Changes the device. */
+  DELETE_DEVICE_FILE("deleteDeviceFile"),
+
+  /** Creates a directory on the device's file share. Changes the device. */
+  MAKE_DEVICE_DIRECTORY("makeDeviceDirectory"),
+
+  /** Renames or moves a file or directory on the device's file share. Changes the device. */
+  MOVE_DEVICE_FILE("moveDeviceFile"),
 
   /** Enumerates a media collection on the device's read-only {@code metadata.cgi}. */
   GET_DEVICE_METADATA("getDeviceMetadata"),
@@ -425,6 +437,9 @@ enum LinkMethod {
           STAT_DEVICE_FILE,
           PUSH_FILE,
           PULL_FILE,
+          DELETE_DEVICE_FILE,
+          MAKE_DEVICE_DIRECTORY,
+          MOVE_DEVICE_FILE,
           GET_DEVICE_METADATA,
           LIST_DEVICES,
           INSPECT_PACKAGE,
@@ -489,6 +504,20 @@ enum LinkMethod {
                   new PullFile(
                       DeviceShares.locate(params.requireString("devicePath")),
                       params.requirePath("destination")));
+      case DELETE_DEVICE_FILE ->
+          onFiles(
+              params ->
+                  new DeleteDeviceFile(DeviceShares.locate(params.requireString("devicePath"))));
+      case MAKE_DEVICE_DIRECTORY ->
+          onFiles(
+              params ->
+                  new MakeDeviceDirectory(DeviceShares.locate(params.requireString("devicePath"))));
+      case MOVE_DEVICE_FILE ->
+          onFiles(
+              params ->
+                  new MoveDeviceFile(
+                      DeviceShares.locate(params.requireString("devicePath")),
+                      DeviceShares.locate(params.requireString("destination"))));
       case GET_DEVICE_METADATA ->
           onSession(
               params ->

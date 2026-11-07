@@ -9,6 +9,9 @@ listDeviceFiles
 statDeviceFile
 pushFile
 pullFile
+deleteDeviceFile
+makeDeviceDirectory
+moveDeviceFile
 getDeviceMetadata
 listPimAccounts
 findPimAccount

@@ -63,12 +63,18 @@ class SmbErrorMapperTest {
         ints = {
           NtStatus.NT_STATUS_ACCESS_DENIED,
           NtStatus.NT_STATUS_SHARING_VIOLATION,
-          NtStatus.NT_STATUS_CANNOT_DELETE,
-          NtStatus.NT_STATUS_OBJECT_NAME_COLLISION
+          NtStatus.NT_STATUS_CANNOT_DELETE
         })
     @DisplayName("a refusal by the device is a failed command")
     void refused(int status) {
       assertThat(codeOf(new SmbException(status, false))).isEqualTo(CoreErrorCode.COMMAND_FAILED);
+    }
+
+    @Test
+    @DisplayName("an existing-name collision is already-exists")
+    void collision() {
+      assertThat(codeOf(new SmbException(NtStatus.NT_STATUS_OBJECT_NAME_COLLISION, false)))
+          .isEqualTo(LinkErrorCode.ALREADY_EXISTS);
     }
   }
 

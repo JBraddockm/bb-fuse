@@ -28,6 +28,10 @@ final class FakeFileStore implements FileStore {
   SmbLocation pushedDestination;
   SmbLocation pulledSource;
   Path pulledDestination;
+  SmbLocation deleted;
+  SmbLocation made;
+  SmbLocation movedFrom;
+  SmbLocation movedTo;
 
   FakeFileStore withListing(SmbLocation directory, List<SmbEntry> entries) {
     listings.put(directory, entries);
@@ -79,6 +83,25 @@ final class FakeFileStore implements FileStore {
     pushedDestination = destination;
     raise();
     return bytes;
+  }
+
+  @Override
+  public void delete(SmbLocation path) throws SmbTransferException {
+    deleted = path;
+    raise();
+  }
+
+  @Override
+  public void makeDirectory(SmbLocation path) throws SmbTransferException {
+    made = path;
+    raise();
+  }
+
+  @Override
+  public void move(SmbLocation from, SmbLocation to) throws SmbTransferException {
+    movedFrom = from;
+    movedTo = to;
+    raise();
   }
 
   private void raise() throws SmbTransferException {

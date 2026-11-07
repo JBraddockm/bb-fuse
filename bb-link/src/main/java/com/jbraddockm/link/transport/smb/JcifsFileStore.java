@@ -99,10 +99,7 @@ public final class JcifsFileStore implements FileStore {
     try {
       var file = file(path, false);
       if (!file.exists()) {
-        throw new SmbTransferException(
-            LinkErrorCode.NO_SUCH_PATH,
-            path.share() + "/" + path.path() + " does not exist on the device",
-            Json.object("share", path.share(), "path", path.path()));
+        throw notFound(path);
       }
       return toEntry(file);
     } catch (IOException failure) {
@@ -164,6 +161,72 @@ public final class JcifsFileStore implements FileStore {
       deleteQuietly(temp);
       throw SmbErrorMapper.map(failure, "write", destination);
     }
+  }
+
+  @Override
+  public void delete(SmbLocation path) throws SmbTransferException {
+    try {
+      var file = file(path, false);
+      if (!file.exists()) {
+        throw notFound(path);
+      }
+      if (file.isDirectory()) {
+        throw new SmbTransferException(
+            LinkErrorCode.NOT_A_DIRECTORY,
+            path.share() + "/" + path.path() + " is a directory; delete removes files only",
+            Json.object("share", path.share(), "path", path.path()));
+      }
+      file.delete();
+    } catch (IOException failure) {
+      throw SmbErrorMapper.map(failure, "delete", path);
+    }
+  }
+
+  @Override
+  public void makeDirectory(SmbLocation path) throws SmbTransferException {
+    try {
+      var directory = file(path, true);
+      if (directory.exists()) {
+        throw alreadyExists(path);
+      }
+      directory.mkdirs();
+    } catch (IOException failure) {
+      throw SmbErrorMapper.map(failure, "create", path);
+    }
+  }
+
+  @Override
+  public void move(SmbLocation from, SmbLocation to) throws SmbTransferException {
+    try {
+      var source = file(from, false);
+      if (!source.exists()) {
+        throw notFound(from);
+      }
+      if (file(to, false).exists()) {
+        throw alreadyExists(to);
+      }
+      var parent = file(parentOf(to), true);
+      if (!parent.exists()) {
+        parent.mkdirs();
+      }
+      source.renameTo(file(to, false));
+    } catch (IOException failure) {
+      throw SmbErrorMapper.map(failure, "move", from);
+    }
+  }
+
+  private static SmbTransferException notFound(SmbLocation path) {
+    return new SmbTransferException(
+        LinkErrorCode.NO_SUCH_PATH,
+        path.share() + "/" + path.path() + " does not exist on the device",
+        Json.object("share", path.share(), "path", path.path()));
+  }
+
+  private static SmbTransferException alreadyExists(SmbLocation path) {
+    return new SmbTransferException(
+        LinkErrorCode.ALREADY_EXISTS,
+        path.share() + "/" + path.path() + " already exists on the device",
+        Json.object("share", path.share(), "path", path.path()));
   }
 
   private void deleteQuietly(SmbLocation location) {

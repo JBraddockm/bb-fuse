@@ -55,4 +55,32 @@ public interface FileStore {
    */
   long push(Path source, SmbLocation destination, LongConsumer progress)
       throws SmbTransferException;
+
+  /**
+   * Deletes a single file. Directories are refused — removing a directory tree is a client's
+   * concern, not a primitive.
+   *
+   * @param path the file to delete
+   * @throws SmbTransferException if the path does not exist, is a directory, or cannot be removed
+   */
+  void delete(SmbLocation path) throws SmbTransferException;
+
+  /**
+   * Creates a directory, and any missing parent directories.
+   *
+   * @param path the directory to create
+   * @throws SmbTransferException if the directory already exists or cannot be created
+   */
+  void makeDirectory(SmbLocation path) throws SmbTransferException;
+
+  /**
+   * Renames or moves a file or directory on the device. The destination's parent directories are
+   * created if missing.
+   *
+   * @param from the existing path
+   * @param to the new path
+   * @throws SmbTransferException if the source does not exist, the destination already exists, or
+   *     the move cannot be made
+   */
+  void move(SmbLocation from, SmbLocation to) throws SmbTransferException;
 }

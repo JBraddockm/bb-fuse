@@ -167,6 +167,9 @@ class LinkMethodTest {
       "STAT_DEVICE_FILE, statDeviceFile",
       "PUSH_FILE, pushFile",
       "PULL_FILE, pullFile",
+      "DELETE_DEVICE_FILE, deleteDeviceFile",
+      "MAKE_DEVICE_DIRECTORY, makeDeviceDirectory",
+      "MOVE_DEVICE_FILE, moveDeviceFile",
       "GET_DEVICE_METADATA, getDeviceMetadata",
       "LIST_PIM_ACCOUNTS, listPimAccounts",
       "FIND_PIM_ACCOUNT, findPimAccount",
@@ -203,10 +206,10 @@ class LinkMethodTest {
     }
 
     @Test
-    @DisplayName("are 38, and distinct")
-    void areThirtyEightAndDistinct() {
+    @DisplayName("are 41, and distinct")
+    void areFortyOneAndDistinct() {
       assertThat(Arrays.stream(LinkMethod.values()).map(LinkMethod::wireName))
-          .hasSize(38)
+          .hasSize(41)
           .doesNotHaveDuplicates();
     }
 
@@ -386,6 +389,9 @@ class LinkMethodTest {
           "STAT_DEVICE_FILE",
           "PUSH_FILE",
           "PULL_FILE",
+          "DELETE_DEVICE_FILE",
+          "MAKE_DEVICE_DIRECTORY",
+          "MOVE_DEVICE_FILE",
           "GET_DEVICE_METADATA",
           "LIST_DEVICES",
           "INSPECT_PACKAGE",
@@ -446,6 +452,9 @@ class LinkMethodTest {
           "STAT_DEVICE_FILE",
           "PUSH_FILE",
           "PULL_FILE",
+          "DELETE_DEVICE_FILE",
+          "MAKE_DEVICE_DIRECTORY",
+          "MOVE_DEVICE_FILE",
           "GET_DEVICE_METADATA",
           "LIST_PIM_ACCOUNTS",
           "FIND_PIM_ACCOUNT",
