@@ -53,7 +53,8 @@ public final class JcifsFileStore implements FileStore {
         new NtlmPasswordAuthentication(workgroup, credentials.user(), credentials.password());
   }
 
-  private static long copy(InputStream in, OutputStream out, LongConsumer progress)
+  private static long copy(
+      InputStream in, OutputStream out, LongConsumer progress, long alreadyDone)
       throws IOException {
     var buffer = new byte[BUFFER_BYTES];
     var total = 0L;
@@ -61,7 +62,7 @@ public final class JcifsFileStore implements FileStore {
     while ((read = in.read(buffer)) != -1) {
       out.write(buffer, 0, read);
       total += read;
-      progress.accept(total);
+      progress.accept(alreadyDone + total);
     }
     return total;
   }
@@ -108,30 +109,40 @@ public final class JcifsFileStore implements FileStore {
   }
 
   @Override
-  public long pull(SmbLocation source, Path destination, LongConsumer progress)
+  public long pull(SmbLocation source, Path destination, LongConsumer progress, boolean resume)
       throws SmbTransferException {
     var temp = destination.resolveSibling(destination.getFileName() + ".bblink.tmp");
     try {
+      var startAt = resume && Files.exists(temp) ? Files.size(temp) : 0L;
       long copied;
       try (InputStream in = new SmbFileInputStream(file(source, false));
           OutputStream out =
-              Files.newOutputStream(
-                  temp,
-                  StandardOpenOption.CREATE,
-                  StandardOpenOption.TRUNCATE_EXISTING,
-                  StandardOpenOption.WRITE)) {
-        copied = copy(in, out, progress);
+              startAt > 0
+                  ? Files.newOutputStream(temp, StandardOpenOption.APPEND, StandardOpenOption.WRITE)
+                  : Files.newOutputStream(
+                      temp,
+                      StandardOpenOption.CREATE,
+                      StandardOpenOption.TRUNCATE_EXISTING,
+                      StandardOpenOption.WRITE)) {
+        if (startAt > 0) {
+          in.skipNBytes(startAt);
+        }
+        copied = copy(in, out, progress, startAt);
       }
       Files.move(temp, destination, StandardCopyOption.REPLACE_EXISTING);
-      return copied;
+      return startAt + copied;
     } catch (IOException failure) {
-      deleteQuietly(temp);
+      // A resumable pull keeps the partial file so a later call can continue it; otherwise clean
+      // up.
+      if (!resume) {
+        deleteQuietly(temp);
+      }
       throw SmbErrorMapper.map(failure, "read", source);
     }
   }
 
   @Override
-  public long push(Path source, SmbLocation destination, LongConsumer progress)
+  public long push(Path source, SmbLocation destination, LongConsumer progress, boolean resume)
       throws SmbTransferException {
     if (!Files.isRegularFile(source)) {
       throw new SmbTransferException(
@@ -146,19 +157,27 @@ public final class JcifsFileStore implements FileStore {
         parent.mkdirs();
       }
       var tempFile = file(temp, false);
+      var startAt = resume && tempFile.exists() ? tempFile.length() : 0L;
       long copied;
       try (InputStream in = Files.newInputStream(source);
-          OutputStream out = new SmbFileOutputStream(tempFile)) {
-        copied = copy(in, out, progress);
+          OutputStream out = new SmbFileOutputStream(tempFile, startAt > 0)) {
+        if (startAt > 0) {
+          in.skipNBytes(startAt);
+        }
+        copied = copy(in, out, progress, startAt);
       }
       var target = file(destination, false);
       if (target.exists()) {
         target.delete();
       }
       tempFile.renameTo(target);
-      return copied;
+      return startAt + copied;
     } catch (IOException failure) {
-      deleteQuietly(temp);
+      // A resumable push keeps the partial temp so a later call can continue it; otherwise clean
+      // up.
+      if (!resume) {
+        deleteQuietly(temp);
+      }
       throw SmbErrorMapper.map(failure, "write", destination);
     }
   }
@@ -197,6 +216,30 @@ public final class JcifsFileStore implements FileStore {
 
   @Override
   public void move(SmbLocation from, SmbLocation to) throws SmbTransferException {
+    relocate(from, to, "move", SmbFile::renameTo);
+  }
+
+  @Override
+  public void copy(SmbLocation from, SmbLocation to) throws SmbTransferException {
+    relocate(from, to, "copy", SmbFile::copyTo);
+  }
+
+  /**
+   * A terminal device-side relocation of one share node onto another: a rename, or a server copy.
+   */
+  @FunctionalInterface
+  private interface Relocation {
+    void apply(SmbFile source, SmbFile target) throws IOException;
+  }
+
+  /**
+   * Relocates {@code from} to {@code to} on the share with a single terminal operation shared by
+   * {@link #move} and {@link #copy}: guards that the source exists and the destination does not,
+   * ensures the destination's parent directory, then applies {@code relocation}. {@code verb} names
+   * the operation for error mapping.
+   */
+  private void relocate(SmbLocation from, SmbLocation to, String verb, Relocation relocation)
+      throws SmbTransferException {
     try {
       var source = file(from, false);
       if (!source.exists()) {
@@ -209,9 +252,31 @@ public final class JcifsFileStore implements FileStore {
       if (!parent.exists()) {
         parent.mkdirs();
       }
-      source.renameTo(file(to, false));
+      relocation.apply(source, file(to, false));
     } catch (IOException failure) {
-      throw SmbErrorMapper.map(failure, "move", from);
+      throw SmbErrorMapper.map(failure, verb, from);
+    }
+  }
+
+  @Override
+  public long freeSpace(SmbLocation path) throws SmbTransferException {
+    try {
+      return file(SmbLocation.root(path.share()), true).getDiskFreeSpace();
+    } catch (IOException failure) {
+      throw SmbErrorMapper.map(failure, "read", path);
+    }
+  }
+
+  @Override
+  public void setModifiedTime(SmbLocation path, Instant time) throws SmbTransferException {
+    try {
+      var file = file(path, false);
+      if (!file.exists()) {
+        throw notFound(path);
+      }
+      file.setLastModified(time.toEpochMilli());
+    } catch (IOException failure) {
+      throw SmbErrorMapper.map(failure, "update", path);
     }
   }
 

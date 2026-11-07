@@ -25,10 +25,11 @@ class PushFileTest {
   void sendsFile() {
     var store = new FakeFileStore().returning(2048);
 
-    var outcome = new PushFile(SOURCE, DESTINATION).run(store);
+    var outcome = new PushFile(SOURCE, DESTINATION, false).run(store);
 
     assertThat(store.pushedSource).isEqualTo(SOURCE);
     assertThat(store.pushedDestination).isEqualTo(DESTINATION);
+    assertThat(store.pushResume).isFalse();
     assertThat(outcome).isInstanceOf(CommandOutcome.Succeeded.class);
     assertThat(((CommandOutcome.Succeeded<FileTransfer>) outcome).result().toJson())
         .containsEntry("device", "/accounts/1000/shared/documents/report.txt")
@@ -44,10 +45,20 @@ class PushFileTest {
             .failingWith(
                 new SmbTransferException(CoreErrorCode.CONNECTION_LOST, "dropped", Map.of()));
 
-    var outcome = new PushFile(SOURCE, DESTINATION).run(store);
+    var outcome = new PushFile(SOURCE, DESTINATION, false).run(store);
 
     assertThat(outcome).isInstanceOf(CommandOutcome.Failed.class);
     assertThat(((CommandOutcome.Failed<FileTransfer>) outcome).error().code())
         .isEqualTo(CoreErrorCode.CONNECTION_LOST);
+  }
+
+  @Test
+  @DisplayName("passes the resume flag through to the store")
+  void passesResume() {
+    var store = new FakeFileStore().returning(2048);
+
+    new PushFile(SOURCE, DESTINATION, true).run(store);
+
+    assertThat(store.pushResume).isTrue();
   }
 }

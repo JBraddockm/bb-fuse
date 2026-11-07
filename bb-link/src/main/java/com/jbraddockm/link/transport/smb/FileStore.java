@@ -1,6 +1,7 @@
 package com.jbraddockm.link.transport.smb;
 
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.List;
 import java.util.function.LongConsumer;
 
@@ -38,7 +39,23 @@ public interface FileStore {
    * @return the number of bytes copied
    * @throws SmbTransferException if the source cannot be read or the destination cannot be written
    */
-  long pull(SmbLocation source, Path destination, LongConsumer progress)
+  default long pull(SmbLocation source, Path destination, LongConsumer progress)
+      throws SmbTransferException {
+    return pull(source, destination, progress, false);
+  }
+
+  /**
+   * Copies a file from the device to the host, optionally resuming a partial transfer.
+   *
+   * @param source the file on the share
+   * @param destination the local file to write
+   * @param progress receives the running byte count
+   * @param resume when {@code true} and a partial download is present, continue from where it
+   *     stopped instead of starting over
+   * @return the number of bytes in the finished file
+   * @throws SmbTransferException if the source cannot be read or the destination cannot be written
+   */
+  long pull(SmbLocation source, Path destination, LongConsumer progress, boolean resume)
       throws SmbTransferException;
 
   /**
@@ -53,7 +70,24 @@ public interface FileStore {
    * @return the number of bytes copied
    * @throws SmbTransferException if the source cannot be read or the destination cannot be written
    */
-  long push(Path source, SmbLocation destination, LongConsumer progress)
+  default long push(Path source, SmbLocation destination, LongConsumer progress)
+      throws SmbTransferException {
+    return push(source, destination, progress, false);
+  }
+
+  /**
+   * Copies a host file onto the device, optionally resuming a partial transfer. The bytes are
+   * written to a temporary name and then renamed into place.
+   *
+   * @param source the local file to read
+   * @param destination the file on the share to write
+   * @param progress receives the running byte count
+   * @param resume when {@code true} and a partial upload is present, continue from where it stopped
+   *     instead of starting over
+   * @return the number of bytes in the finished file
+   * @throws SmbTransferException if the source cannot be read or the destination cannot be written
+   */
+  long push(Path source, SmbLocation destination, LongConsumer progress, boolean resume)
       throws SmbTransferException;
 
   /**
@@ -83,4 +117,33 @@ public interface FileStore {
    *     the move cannot be made
    */
   void move(SmbLocation from, SmbLocation to) throws SmbTransferException;
+
+  /**
+   * Copies a file to another path on the device, server-side — the bytes never travel to the host.
+   * The destination's parent directories are created if missing.
+   *
+   * @param from the existing file
+   * @param to the new file
+   * @throws SmbTransferException if the source does not exist, the destination already exists, or
+   *     the copy cannot be made
+   */
+  void copy(SmbLocation from, SmbLocation to) throws SmbTransferException;
+
+  /**
+   * Returns the free space, in bytes, of the share the path is on.
+   *
+   * @param path any path on the share to measure
+   * @return the free space in bytes
+   * @throws SmbTransferException if the share cannot be reached
+   */
+  long freeSpace(SmbLocation path) throws SmbTransferException;
+
+  /**
+   * Sets a file's last-modified time.
+   *
+   * @param path the file
+   * @param time the new last-modified time
+   * @throws SmbTransferException if the path does not exist or the time cannot be set
+   */
+  void setModifiedTime(SmbLocation path, Instant time) throws SmbTransferException;
 }

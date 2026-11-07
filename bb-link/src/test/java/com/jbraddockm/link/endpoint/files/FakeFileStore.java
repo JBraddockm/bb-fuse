@@ -5,6 +5,7 @@ import com.jbraddockm.link.transport.smb.SmbEntry;
 import com.jbraddockm.link.transport.smb.SmbLocation;
 import com.jbraddockm.link.transport.smb.SmbTransferException;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,10 +29,18 @@ final class FakeFileStore implements FileStore {
   SmbLocation pushedDestination;
   SmbLocation pulledSource;
   Path pulledDestination;
+  boolean pushResume;
+  boolean pullResume;
   SmbLocation deleted;
   SmbLocation made;
   SmbLocation movedFrom;
   SmbLocation movedTo;
+  SmbLocation copiedFrom;
+  SmbLocation copiedTo;
+  SmbLocation freeSpaceOf;
+  long freeSpace;
+  SmbLocation timeSetOn;
+  Instant timeSet;
 
   FakeFileStore withListing(SmbLocation directory, List<SmbEntry> entries) {
     listings.put(directory, entries);
@@ -68,19 +77,21 @@ final class FakeFileStore implements FileStore {
   }
 
   @Override
-  public long pull(SmbLocation source, Path destination, LongConsumer progress)
+  public long pull(SmbLocation source, Path destination, LongConsumer progress, boolean resume)
       throws SmbTransferException {
     pulledSource = source;
     pulledDestination = destination;
+    pullResume = resume;
     raise();
     return bytes;
   }
 
   @Override
-  public long push(Path source, SmbLocation destination, LongConsumer progress)
+  public long push(Path source, SmbLocation destination, LongConsumer progress, boolean resume)
       throws SmbTransferException {
     pushedSource = source;
     pushedDestination = destination;
+    pushResume = resume;
     raise();
     return bytes;
   }
@@ -102,6 +113,32 @@ final class FakeFileStore implements FileStore {
     movedFrom = from;
     movedTo = to;
     raise();
+  }
+
+  @Override
+  public void copy(SmbLocation from, SmbLocation to) throws SmbTransferException {
+    copiedFrom = from;
+    copiedTo = to;
+    raise();
+  }
+
+  @Override
+  public long freeSpace(SmbLocation path) throws SmbTransferException {
+    freeSpaceOf = path;
+    raise();
+    return freeSpace;
+  }
+
+  @Override
+  public void setModifiedTime(SmbLocation path, Instant time) throws SmbTransferException {
+    timeSetOn = path;
+    timeSet = time;
+    raise();
+  }
+
+  FakeFileStore withFreeSpace(long bytes) {
+    this.freeSpace = bytes;
+    return this;
   }
 
   private void raise() throws SmbTransferException {

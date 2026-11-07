@@ -20,14 +20,17 @@ import com.jbraddockm.link.endpoint.backup.ListCategories;
 import com.jbraddockm.link.endpoint.backup.PackageType;
 import com.jbraddockm.link.endpoint.backup.RestoreRequest;
 import com.jbraddockm.link.endpoint.characteristics.GetDeviceCharacteristics;
+import com.jbraddockm.link.endpoint.files.CopyDeviceFile;
 import com.jbraddockm.link.endpoint.files.DeleteDeviceFile;
 import com.jbraddockm.link.endpoint.files.FileAccess;
 import com.jbraddockm.link.endpoint.files.FileCommand;
+import com.jbraddockm.link.endpoint.files.GetDeviceDiskFree;
 import com.jbraddockm.link.endpoint.files.ListDeviceFiles;
 import com.jbraddockm.link.endpoint.files.MakeDeviceDirectory;
 import com.jbraddockm.link.endpoint.files.MoveDeviceFile;
 import com.jbraddockm.link.endpoint.files.PullFile;
 import com.jbraddockm.link.endpoint.files.PushFile;
+import com.jbraddockm.link.endpoint.files.SetDeviceFileTime;
 import com.jbraddockm.link.endpoint.files.StatDeviceFile;
 import com.jbraddockm.link.endpoint.metadata.GetDeviceMetadata;
 import com.jbraddockm.link.endpoint.metadata.MediaSource;
@@ -76,6 +79,7 @@ import com.jbraddockm.link.transport.smb.DeviceShares;
 import java.nio.file.Path;
 import java.time.Clock;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -124,6 +128,15 @@ enum LinkMethod {
 
   /** Renames or moves a file or directory on the device's file share. Changes the device. */
   MOVE_DEVICE_FILE("moveDeviceFile"),
+
+  /** Copies a file to another path on the device, server-side. Changes the device. */
+  COPY_DEVICE_FILE("copyDeviceFile"),
+
+  /** Reads the free space of the device's file share. */
+  GET_DEVICE_DISK_FREE("getDeviceDiskFree"),
+
+  /** Sets a file's last-modified time on the device's file share. Changes the device. */
+  SET_DEVICE_FILE_TIME("setDeviceFileTime"),
 
   /** Enumerates a media collection on the device's read-only {@code metadata.cgi}. */
   GET_DEVICE_METADATA("getDeviceMetadata"),
@@ -333,6 +346,20 @@ enum LinkMethod {
             params.optionalInteger("offset", 0, Integer.MAX_VALUE)));
   }
 
+  /**
+   * A file-access method that runs one {@link FileCommand} on the session's share. The parameters
+   * are read, and the device path resolved, before anything is queued, so a bad path is answered at
+   * once. Reads the {@code time} parameter as epoch milliseconds; a bad value is reported at once.
+   */
+  private static Instant epochMillis(RequestParams params) {
+    var text = params.requireString("time");
+    try {
+      return Instant.ofEpochMilli(Long.parseLong(text.strip()));
+    } catch (NumberFormatException _) {
+      throw new InvalidArgumentException("time", "must be epoch milliseconds, not " + text);
+    }
+  }
+
   String wireName() {
     return wireName;
   }
@@ -440,6 +467,9 @@ enum LinkMethod {
           DELETE_DEVICE_FILE,
           MAKE_DEVICE_DIRECTORY,
           MOVE_DEVICE_FILE,
+          COPY_DEVICE_FILE,
+          GET_DEVICE_DISK_FREE,
+          SET_DEVICE_FILE_TIME,
           GET_DEVICE_METADATA,
           LIST_DEVICES,
           INSPECT_PACKAGE,
@@ -485,121 +515,113 @@ enum LinkMethod {
       case SET_DEVICE_NAME -> onSession(params -> new SetDeviceName(params.requireString("name")));
       case GET_DEVICE_CHARACTERISTICS -> onSession(_ -> new GetDeviceCharacteristics());
       case LIST_DEVICE_FILES ->
-          onFiles(
-              params ->
-                  new ListDeviceFiles(DeviceShares.locate(params.requireString("devicePath"))));
+          onFiles(params ->
+              new ListDeviceFiles(DeviceShares.locate(params.requireString("devicePath"))));
       case STAT_DEVICE_FILE ->
-          onFiles(
-              params ->
-                  new StatDeviceFile(DeviceShares.locate(params.requireString("devicePath"))));
+          onFiles(params ->
+              new StatDeviceFile(DeviceShares.locate(params.requireString("devicePath"))));
       case PUSH_FILE ->
-          onFiles(
-              params ->
-                  new PushFile(
-                      params.requirePath("source"),
-                      DeviceShares.locate(params.requireString("devicePath"))));
+          onFiles(params ->
+              new PushFile(
+                  params.requirePath("source"),
+                  DeviceShares.locate(params.requireString("devicePath")),
+                  params.flag("resume")));
       case PULL_FILE ->
-          onFiles(
-              params ->
-                  new PullFile(
-                      DeviceShares.locate(params.requireString("devicePath")),
-                      params.requirePath("destination")));
+          onFiles(params ->
+              new PullFile(
+                  DeviceShares.locate(params.requireString("devicePath")),
+                  params.requirePath("destination"),
+                  params.flag("resume")));
       case DELETE_DEVICE_FILE ->
-          onFiles(
-              params ->
-                  new DeleteDeviceFile(DeviceShares.locate(params.requireString("devicePath"))));
+          onFiles(params ->
+              new DeleteDeviceFile(DeviceShares.locate(params.requireString("devicePath"))));
       case MAKE_DEVICE_DIRECTORY ->
-          onFiles(
-              params ->
-                  new MakeDeviceDirectory(DeviceShares.locate(params.requireString("devicePath"))));
+          onFiles(params ->
+              new MakeDeviceDirectory(DeviceShares.locate(params.requireString("devicePath"))));
       case MOVE_DEVICE_FILE ->
-          onFiles(
-              params ->
-                  new MoveDeviceFile(
-                      DeviceShares.locate(params.requireString("devicePath")),
-                      DeviceShares.locate(params.requireString("destination"))));
+          onFiles(params ->
+              new MoveDeviceFile(
+                  DeviceShares.locate(params.requireString("devicePath")),
+                  DeviceShares.locate(params.requireString("destination"))));
+      case COPY_DEVICE_FILE ->
+          onFiles(params ->
+              new CopyDeviceFile(
+                  DeviceShares.locate(params.requireString("devicePath")),
+                  DeviceShares.locate(params.requireString("destination"))));
+      case GET_DEVICE_DISK_FREE ->
+          onFiles(params ->
+              new GetDeviceDiskFree(DeviceShares.locate(params.requireString("devicePath"))));
+      case SET_DEVICE_FILE_TIME ->
+          onFiles(params ->
+              new SetDeviceFileTime(
+                  DeviceShares.locate(params.requireString("devicePath")), epochMillis(params)));
       case GET_DEVICE_METADATA ->
-          onSession(
-              params ->
-                  new GetDeviceMetadata(
-                      params.flag("summary")
-                          ? MediaType.SUMMARY
-                          : MediaType.of(params.requireString("type")),
-                      params
-                          .optionalString("source")
-                          .map(MediaSource::of)
-                          .orElse(MediaSource.INTERNAL),
-                      params.optionalString("order").map(SortOrder::of).orElse(SortOrder.DEFAULT),
-                      params
-                          .optionalString("collection")
-                          .map(MusicCollection::of)
-                          .orElse(MusicCollection.NONE)));
+          onSession(params ->
+              new GetDeviceMetadata(
+                  params.flag("summary")
+                      ? MediaType.SUMMARY
+                      : MediaType.of(params.requireString("type")),
+                  params.optionalString("source").map(MediaSource::of).orElse(MediaSource.INTERNAL),
+                  params.optionalString("order").map(SortOrder::of).orElse(SortOrder.DEFAULT),
+                  params
+                      .optionalString("collection")
+                      .map(MusicCollection::of)
+                      .orElse(MusicCollection.NONE)));
       case LIST_PIM_ACCOUNTS -> onSession(_ -> new ListPimAccounts());
       case FIND_PIM_ACCOUNT ->
           onSession(params -> new FindPimAccount(params.requireString("workstationId")));
       case GET_PIM_ITEMS -> onSession(LinkMethod::getPimItems);
       case CREATE_PIM_ACCOUNT ->
-          onSession(
-              params ->
-                  new CreatePimAccount(
-                      params.requireString("workstationId"),
-                      params.requireString("workstationName")));
+          onSession(params ->
+              new CreatePimAccount(
+                  params.requireString("workstationId"), params.requireString("workstationName")));
       case UPDATE_PIM_ACCOUNT ->
-          onSession(
-              params ->
-                  new UpdatePimAccount(
-                      params.requireString("workstationId"),
-                      params.requireString("workstationName")));
+          onSession(params ->
+              new UpdatePimAccount(
+                  params.requireString("workstationId"), params.requireString("workstationName")));
       case DELETE_PIM_ACCOUNT ->
           onSession(params -> new DeletePimAccount(params.requireString("workstationId")));
       case SET_DEFAULT_CALENDAR ->
-          onSession(
-              params ->
-                  new SetDefaultCalendar(
-                      params.requireString("workstationId"), params.requireString("objectId")));
+          onSession(params ->
+              new SetDefaultCalendar(
+                  params.requireString("workstationId"), params.requireString("objectId")));
       case DELETE_PIM_ITEM ->
-          onSession(
-              params ->
-                  new DeletePimItem(
-                      params.requireString("workstationId"),
-                      PimService.of(params.requireString("service")),
-                      params.requireString("objectId")));
+          onSession(params ->
+              new DeletePimItem(
+                  params.requireString("workstationId"),
+                  PimService.of(params.requireString("service")),
+                  params.requireString("objectId")));
       case PUT_PIM_ITEM ->
-          onSession(
-              params ->
-                  new PutPimItem(
-                      params.requireString("workstationId"),
-                      PimService.of(params.requireString("service")),
-                      params.requireObjectMap("item")));
+          onSession(params ->
+              new PutPimItem(
+                  params.requireString("workstationId"),
+                  PimService.of(params.requireString("service")),
+                  params.requireObjectMap("item")));
       case SUMMARIZE_PIM_SYNC ->
-          onSession(
-              params ->
-                  new SummarizePimSync(
-                      params.requireString("workstationId"),
-                      PimService.of(params.requireString("service"))));
+          onSession(params ->
+              new SummarizePimSync(
+                  params.requireString("workstationId"),
+                  PimService.of(params.requireString("service"))));
       case FINISH_PIM_SYNC ->
-          onSession(
-              params ->
-                  new FinishPimSync(
-                      params.requireString("workstationId"),
-                      PimService.of(params.requireString("service")),
-                      params.requireObjectMap("payload")));
+          onSession(params ->
+              new FinishPimSync(
+                  params.requireString("workstationId"),
+                  PimService.of(params.requireString("service")),
+                  params.requireObjectMap("payload")));
       case GET_PIM_PHOTO ->
-          onSession(
-              params ->
-                  new GetPimPhoto(
-                      params.requireString("workstationId"),
-                      params.requireString("path"),
-                      params.requirePath("destination"),
-                      params.optionalString("updatedTime")));
+          onSession(params ->
+              new GetPimPhoto(
+                  params.requireString("workstationId"),
+                  params.requireString("path"),
+                  params.requirePath("destination"),
+                  params.optionalString("updatedTime")));
       case PUT_PIM_PHOTO ->
-          onSession(
-              params ->
-                  new PutPimPhoto(
-                      params.requireString("workstationId"),
-                      params.requireString("accountId"),
-                      params.requireString("objectId"),
-                      params.requirePath("file")));
+          onSession(params ->
+              new PutPimPhoto(
+                  params.requireString("workstationId"),
+                  params.requireString("accountId"),
+                  params.requireString("objectId"),
+                  params.requirePath("file")));
       case UNINSTALL_PACKAGES -> onSession(LinkMethod::uninstallPackages);
       case PAIR_DEVICE ->
           new CommandSpec.SessionScoped<>(wireName, params -> pairDevice(params, pairing));
@@ -809,11 +831,6 @@ enum LinkMethod {
         });
   }
 
-  /**
-   * A file-access method that runs one {@link FileCommand} on the session's share. The parameters
-   * are read, and the device path resolved, before anything is queued, so a bad path is answered at
-   * once.
-   */
   private <R extends CommandResult> CommandSpec<DeviceSession> onFiles(
       Function<RequestParams, FileCommand<R>> commandFactory) {
     return new CommandSpec.SessionScoped<>(

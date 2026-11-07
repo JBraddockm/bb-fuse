@@ -12,6 +12,9 @@ pullFile
 deleteDeviceFile
 makeDeviceDirectory
 moveDeviceFile
+copyDeviceFile
+getDeviceDiskFree
+setDeviceFileTime
 getDeviceMetadata
 listPimAccounts
 findPimAccount
