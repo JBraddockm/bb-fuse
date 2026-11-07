@@ -21,14 +21,6 @@
     </description>
 
     <dependencies>
-        <!-- BAR archive inspection (core.bar.BarInspector). Optional so it does not leak onto the
-             classpath of consumers that only use the JSON/daemon packages (e.g. bb-tunnel); modules
-             that use core.bar (bb-link) declare it themselves. -->
-        <dependency>
-            <groupId>local.qconn</groupId>
-            <artifactId>BarLibrary</artifactId>
-            <optional>true</optional>
-        </dependency>
         <!-- mDNS/DNS-SD for core.mdns (the shared advertise/browse facility). Optional so it does not
              leak onto the classpath of consumers that do not use mDNS (e.g. bb-tunnel); modules that
              use core.mdns (bb-link) declare it themselves. -->

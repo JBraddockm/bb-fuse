@@ -53,7 +53,8 @@ class BarArchiveTest {
   void rejectsNonZip() throws Exception {
     var notZip = Files.write(folder.resolve("x.bar"), new byte[] {1, 2, 3, 4, 5});
 
-    assertThatThrownBy(() -> BarArchive.open(notZip)).isInstanceOf(InvalidBarException.class);
+    assertThatThrownBy(() -> BarArchive.open(notZip).close())
+        .isInstanceOf(InvalidBarException.class);
   }
 
   @Test

@@ -49,16 +49,11 @@
         </dependency>
 
         <!-- Original BlackBerry tooling (versions managed by the parent). BarDeploy drives the device
-             scan and login (com.qnx.bbt.deploy.*); BarLibrary backs bb-core's core.bar, which bb-link
-             uses directly (it is optional there, so declared here); the Apache HTTP stack is the CGI
-             transport BarDeploy runs over. -->
+             scan and login (com.qnx.bbt.deploy.*); the Apache HTTP stack is the CGI transport
+             BarDeploy runs over. -->
         <dependency>
             <groupId>local.qconn</groupId>
             <artifactId>BarDeploy</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>local.qconn</groupId>
-            <artifactId>BarLibrary</artifactId>
         </dependency>
         <dependency>
             <groupId>local.qconn</groupId>

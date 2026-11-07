@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-import com.blackberry.tools.bar.PackageType;
 import com.jbraddockm.core.testing.Resources;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.FileSystems;
@@ -178,26 +177,26 @@ class BarInspectorTest {
 
     @ParameterizedTest(name = "{0}, patch of {1}, system {2}, {3}: {4}")
     @CsvSource({
-      "APPLICATION, , , , APPLICATION",
-      "APPLICATION, , radio, radio.bar, APPLICATION",
-      "SYSTEM, , , os.bar, OPERATING_SYSTEM",
-      "SYSTEM, , radio, os.bar, RADIO",
-      "SYSTEM, , RADIO, os.bar, RADIO",
-      "SYSTEM, , , MyRadio.bar, RADIO",
-      "PATCH, system, , p.bar, OPERATING_SYSTEM",
-      "PATCH, SYSTEM, , p.bar, OPERATING_SYSTEM",
-      "PATCH, system, radio, p.bar, RADIO",
-      "PATCH, application, , p.bar, OTHER",
-      "PATCH, , , p.bar, OTHER",
-      "DEBUG_TOKEN, , , d.bar, OTHER",
-      "DEVICE_CONFIG, , , d.bar, OTHER",
-      "SYSTEM_DATA, , , d.bar, OTHER"
+      "application, , , , APPLICATION",
+      "application, , radio, radio.bar, APPLICATION",
+      "system, , , os.bar, OPERATING_SYSTEM",
+      "system, , radio, os.bar, RADIO",
+      "system, , RADIO, os.bar, RADIO",
+      "system, , , MyRadio.bar, RADIO",
+      "patch, system, , p.bar, OPERATING_SYSTEM",
+      "patch, SYSTEM, , p.bar, OPERATING_SYSTEM",
+      "patch, system, radio, p.bar, RADIO",
+      "patch, application, , p.bar, OTHER",
+      "patch, , , p.bar, OTHER",
+      "debug-token, , , d.bar, OTHER",
+      "device-configuration, , , d.bar, OTHER",
+      "system-data, , , d.bar, OTHER"
     })
     @DisplayName(
         "classify gives the kind for each type, whatever the case of the words, and an application"
             + " is never firmware")
     void classify(
-        PackageType type,
+        String type,
         String patchPackageType,
         String systemType,
         String fileName,
@@ -293,13 +292,13 @@ class BarInspectorTest {
     }
 
     @Test
-    @DisplayName("a manifest that cannot be read, with the words of the library")
+    @DisplayName("a manifest whose text is not a manifest at all, with words that say so")
     void aManifestThatCannotBeRead() throws Exception {
       var file = BarFiles.withManifest(folder, "g.bar", "manifest--garbage.mf");
 
       assertThatThrownBy(() -> BarInspector.inspect(file))
           .isInstanceOf(InvalidBarException.class)
-          .hasMessageStartingWith("its manifest cannot be read: ");
+          .hasMessageContaining("entry with no name");
     }
 
     @Test

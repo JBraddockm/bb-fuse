@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.zip.ZipEntry;
@@ -40,6 +41,9 @@ public final class BarArchive implements AutoCloseable {
   public static BarArchive open(Path file) throws IOException, InvalidBarException {
     if (Files.isDirectory(file)) {
       throw new InvalidBarException("it is a folder, not a file");
+    }
+    if (Files.notExists(file)) {
+      throw new NoSuchFileException(file.toString());
     }
     if (!Files.isReadable(file)) {
       throw new AccessDeniedException(file.toString());
