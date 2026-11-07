@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<qnx>
+  <id>com.example.myapp</id>
+  <name>My App</name>
+  <versionNumber>1.0.0</versionNumber>
+  <asset dest="binary" path="arm/binary" type="Qnx/Elf"/>
+  <asset path="public.key"/>
+</qnx>

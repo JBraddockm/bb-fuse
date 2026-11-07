@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE qnx SYSTEM "bar-descriptor.dtd" >
+<qnx>
+  <id>com.example.minimal</id>
+  <name>Minimal</name>
+  <versionNumber>1.0.0</versionNumber>
+  <asset path="arm/minimal" entry="true"/>
+</qnx>

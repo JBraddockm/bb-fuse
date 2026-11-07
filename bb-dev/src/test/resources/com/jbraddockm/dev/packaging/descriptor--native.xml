@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE qnx SYSTEM "bar-descriptor.dtd" >
+<qnx>
+  <id>com.example.myapp</id>
+  <name>My App</name>
+  <description>This is a great app</description>
+  <versionNumber>1.0.0</versionNumber>
+  <initialWindow>
+    <autoOrients>false</autoOrients>
+    <aspectRatio>portrait</aspectRatio>
+  </initialWindow>
+  <icon>
+    <image>myapp-icon.png</image>
+  </icon>
+  <author>Jane Doe</author>
+  <authorId>exampleAuthorId</authorId>
+  <buildIdFile>buildIdFile.txt</buildIdFile>
+  <category>core.games</category>
+  <env value="DEBUG" var="1"/>
+  <splashscreen>splashscreen.jpg:splash_portrait.jpg</splashscreen>
+  <permission>access_internet</permission>
+  <permission>use_camera</permission>
+  <asset dest="binary" path="arm/binary" type="Qnx/Elf" entry="true"/>
+  <platformVersion>2.0.0.0</platformVersion>
+  <configuration id="id1" name="Device-Debug">
+    <platformArchitecture>armv7-le</platformArchitecture>
+    <arg>-v</arg>
+  </configuration>
+  <configuration id="id3" name="Device-Release">
+    <platformArchitecture>armv7-le</platformArchitecture>
+    <asset path="public.key"/>
+  </configuration>
+</qnx>

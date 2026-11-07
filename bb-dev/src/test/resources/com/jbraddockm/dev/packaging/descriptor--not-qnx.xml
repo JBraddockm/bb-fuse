@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<application>
+  <id>com.example.myapp</id>
+  <name>My App</name>
+  <versionNumber>1.0.0</versionNumber>
+  <asset path="arm/binary" entry="true"/>
+</application>
