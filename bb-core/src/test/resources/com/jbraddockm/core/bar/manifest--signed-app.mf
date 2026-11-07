@@ -1,0 +1,2042 @@
+Archive-Manifest-Version: 1.5
+Archive-Created-By: BlackBerry Cascades BAR Packager 1.11
+
+Package-Type: application
+Package-Author: Toysoft
+Package-Author-Id: gYAAgK5QWaqVESfenYd7oB8X4OY
+Package-Name: PowerTools
+Package-Id: gYABgPDgFfPoXLpNVzWX_c5N47M
+Package-Version: 7.7.4.1
+Package-Version-Id: gYACgPq3dAI0qjuIcgKcmNLPhmI
+Package-Architecture: armle-v7
+Package-Author-Certificate-Hash: BvNzak4enAWaWcExXDquWB3AhnWhqq9-pew7Q2ssSCvtqJ48AQgRNpkeq63Jh3oRcCbAGUUxwZlUJraGrQ-dCw
+Package-Issue-Date: 2016-04-10T15:02:50Z
+
+Application-Name: Power Tools
+Application-Id: gYADgHbk3QjvrMDnRb-9oktBM8U
+Application-Description: The Power Tools application
+Application-Version: 7.7.4.1
+Application-Version-Id: gYAEgLU6mHldfktbHlHxhBAOHPI
+Application-Requires-System: BlackBerry 10/10.2.0.0
+Application-Development-Mode: false
+
+Entry-Point-Name: Power Tools
+Entry-Point-Key: Power_Tools
+Entry-Point: LD_LIBRARY_PATH=app/native/lib:/usr/lib/qt4/lib CASCADES_THEME=dark app/native/Power_Tools.so
+Entry-Point-Type: Qnx/Cascades
+Entry-Point-Icon: native/icon.png
+Entry-Point-Orientation: auto
+Entry-Point-User-Actions: post_notification,access_shared,access_phone,control_phone,access_led_control,access_notify_settings_control,access_pimdomain_contacts,access_pimdomain_messages,access_sms_mms,access_location_services,read_geolocation,read_radio_modem_data,access_wifi_public,r
+ un_when_backgrounded,use_camera,read_phonecall_details,read_device_identifying_information,access_internet
+Entry-Point-System-Actions: _sys_headless_large,run_native
+
+Entry-Point-Name: Power_Tools Service
+Entry-Point-Key: Power_ToolsService
+Entry-Point: LD_LIBRARY_PATH=app/native/lib:/usr/lib/qt4/lib CASCADES_THEME=dark app/native/Power_ToolsService
+Entry-Point-Type: Qnx/Elf
+Entry-Point-Icon: native/icon.png
+Entry-Point-Orientation: auto
+Entry-Point-User-Actions: post_notification,access_shared,access_phone,control_phone,access_led_control,access_notify_settings_control,access_pimdomain_contacts,access_pimdomain_messages,access_sms_mms,access_location_services,read_geolocation,read_radio_modem_data,access_wifi_public,r
+ un_when_backgrounded,use_camera,read_phonecall_details,read_device_identifying_information,access_internet
+Entry-Point-System-Actions: _sys_run_headless,_sys_headless_nostop,_sys_headless_large,run_native
+
+Invoke-Target-Key: com.example.PowerTools3
+Invoke-Target-Label: Power_Tools Service
+Invoke-Target-Entry-Point-Ref: Power_ToolsService
+Invoke-Target-Type: application.headless
+Invoke-Target-Filter: actions=bb.action.system.STARTED;types=application/vnd.blackberry.system.event.STARTED;uris=data://local;
+Invoke-Target-Filter: actions=com.example.Power_ToolsService.RESET;types=*;uris=headless:;
+
+Invoke-Target-Key: com.example.Power_Tools
+Invoke-Target-Label: Power_Tools
+Invoke-Target-Icon: {114x114}native/icon.png
+Invoke-Target-Entry-Point-Ref: Power_Tools
+Invoke-Target-Type: application
+Invoke-Target-Filter: actions=bb.action.VIEW;types=*;uris=file://;exts=pt1;
+
+Invoke-Target-Key: com.powertools.invocation.previewer3
+Invoke-Target-Label: Power Tools
+Invoke-Target-Icon: {81x81}native/icon81x81.png
+Invoke-Target-Entry-Point-Ref: Power_Tools
+Invoke-Target-Type: card.previewer
+Invoke-Target-Filter: actions=bb.action.SHARE;types=text/plain;
+Invoke-Target-Filter: actions=bb.action.SHARE;types=message/rfc822;uris=pim:;
+Invoke-Target-Filter: actions=bb.action.VIEW,bb.action.SHARE,bb.action.OPEN;types=*;uris=file://,list://;exts=text,log,enc1,csv,jpg,png,gif,bmp,tif,mp3,wav,ogg,m4a,wma,amr,aac,avi,mp4,mkv,3gp,flv,mov,vcs,swf,psd,eps,apk,com,exe,jar,rom,dwg,dxf,txt,doc,rtf,pdf,xls,vcf,vcs,crypt,dat,rar,
+ zip,gz,tgz,cbr,pkg,sitx,bin,dmg,msi,,iso,html,htm,asp,fon,fnt,ttf,cab,ddl,ico,sys,xml,pps,ppt,pptx;
+
+Invoke-Target-Key: com.powertools.invocation.invoke
+Invoke-Target-Label: PowerTools
+Invoke-Target-Entry-Point-Ref: Power_Tools
+Invoke-Target-Type: application
+Invoke-Target-Filter: actions=bb.action.OPEN;types=text/plain;
+
+Archive-Asset-Name: native/bar-descriptor.xml
+Archive-Asset-SHA-512-Digest: 4ZEwkvXKn-qUs-OB1fDWhCVI9vTwaWBK6Mj8eDBvzmZFK537A-_7hVvGICWqsy4UdiOBc42yiMD9ee7oYQQmdg
+
+Archive-Asset-Name: native/icon.png
+Archive-Asset-SHA-512-Digest: SnJd3SmvgYotBqymBUZcFTC5FtUR8c52oJ49WFOrNfps6-x9TTBObJNOf7k3S05frwzTNCLiwGYKm030UJq8Pw
+
+Archive-Asset-Name: native/assets/About.qml
+Archive-Asset-SHA-512-Digest: gZ9lRSAQb4xFipXdEoJpY9vusO6qH5APZK39_VLeI5vMErixocZnBbQUSPuMqTwyd0cig9_15neSGTb_Yz9qBA
+
+Archive-Asset-Name: native/assets/AdvancedBlocking.qml
+Archive-Asset-SHA-512-Digest: DJjlBZ8DzAsZm5MpW6J8hkjh1wtTlSsH_VlgLKAu8uj6p3c_6wWycnjXPG87ZYMxDWGiLDtR_rDDzQk5rWB-pw
+
+Archive-Asset-Name: native/assets/AppSettings.qml
+Archive-Asset-SHA-512-Digest: QfoS_URIPJiyKTJgBMbVCPFhq-6Vai1vjM5pLmuqh8OIDk6YGgXjcNndru9cZfe_OmQaiUosh6TFc78ZZnD0uQ
+
+Archive-Asset-Name: native/assets/BatchProcess.qml
+Archive-Asset-SHA-512-Digest: TW3U00feqXH6UhXhM9JehgPSkiFwVgIbrtKFJARTj1-XG5jfZStyJcGKwh_mGdbh4J01kBiPwkH-cbGWtnLhpw
+
+Archive-Asset-Name: native/assets/Battery.qml
+Archive-Asset-SHA-512-Digest: reiku8by1crQl1cMf_Dnpuyq9QMC17av5aQxrntAT3IndEnU8fJVa1Vt_oYbkos0T0opSAQIloTN1sMxW5NxbQ
+
+Archive-Asset-Name: native/assets/BatteryInfo.qml
+Archive-Asset-SHA-512-Digest: IFE5ceF8bPKCnGjdfJrtKuoWfLaSycwQnDJjrZu_tNK3xnOLOVV-TRjK3pCDcASMH43xM99SjJO9quvxXYP1Yg
+
+Archive-Asset-Name: native/assets/blank.qml
+Archive-Asset-SHA-512-Digest: -uYIkJBdm1wI0yFZVfF8fsne2VOT3boHDtdeoV5wzl7e5yCBpYhoN1JOOq0y9SCFfQBydrOCNM-Y3iq_9rpAdA
+
+Archive-Asset-Name: native/assets/BlockCalls.qml
+Archive-Asset-SHA-512-Digest: 4gVAIOlEDykE6vWVNcPg1UkAeeVe_9X2j49ClwCu95t3uq7NgKeyGzXDpxnn_k0F-_9rHDWz1lnXyrBDytbsxA
+
+Archive-Asset-Name: native/assets/blocking.qml
+Archive-Asset-SHA-512-Digest: F-BUkw2s1bm-rW1A4O2skn8KnIo_eQpNOkRf1Lpwd-2iBviqVCDiloLcgdAvg25kqH50tyhxMlfthPPyJNdBOQ
+
+Archive-Asset-Name: native/assets/BlockStatus.qml
+Archive-Asset-SHA-512-Digest: 8aTRX92ngTg1S_-iFfK4nHFU5wkeMwjOHE7m7Isk0Wgi5r4lOHG2jksFoWZOqnulavQ9elVN1ErryZ2TucHwTg
+
+Archive-Asset-Name: native/assets/CardNewMessageFilter.qml
+Archive-Asset-SHA-512-Digest: m4m2mtDnOqizS8TbVaaq6tOr3y8NCj7tb0llaN9reA_q1honnYBrbMfj50kCi3tkoJy9WZsqzkqGjovWlaDJlw
+
+Archive-Asset-Name: native/assets/cellsignalsetting.qml
+Archive-Asset-SHA-512-Digest: 7dL1Aoe7TewKOSHMAw27s7FSBrGXT1PceU151UVoilLei6MeEGs-uAet7H_TcBGBikHh7t8NBVlpIfAmedMvQw
+
+Archive-Asset-Name: native/assets/ColorPicker.qml
+Archive-Asset-SHA-512-Digest: JEA-H2Nxr8ALAMgJHu9HjFklmphG-q9D0BPBEXU6-9WaDDroW9VSnnOzWO8xi86pFVPQqK_UL2S-J2YO5qi3bQ
+
+Archive-Asset-Name: native/assets/connectsetting.qml
+Archive-Asset-SHA-512-Digest: K2jfBqKbIk1Y_YLBDWGdyQRCgAdB0R-Q49_XPDe3R2BVTC1fY7i3EsLT922etMuNX6z1BKZJfafwYxVJDRqAxg
+
+Archive-Asset-Name: native/assets/Debug.qml
+Archive-Asset-SHA-512-Digest: K8hOEBMcQqd5Jgilvsw_PbpJyq42mPN308HaUkFirwV3yhEtVFjfi6g0ehGGmTnVw-jCzqXFJjv4lOlKRREkZQ
+
+Archive-Asset-Name: native/assets/EditAccountName.qml
+Archive-Asset-SHA-512-Digest: St_Ksrb2PcOUQIdd0vjiK-G6J1RZpdnZ2cXqTsYcn9Cc5wRTIDtMif6uHhJI1iR7sP52slcG-xld2vh6OqwtHg
+
+Archive-Asset-Name: native/assets/EditBlackList.qml
+Archive-Asset-SHA-512-Digest: iC2tBAJA5MOXTr2f8mFnUD0aeA-Ck7fnpp2toJZohAjmlNFCvnv48hD6djHcpwC0F445Ojp9-BTxwwzk_05Bnw
+
+Archive-Asset-Name: native/assets/EditCellID.qml
+Archive-Asset-SHA-512-Digest: 3y7loxp6E11PatsfWMA81-UaxtUrL4JQdJanHinXgJaOvIUBr1MI6D-sTEAdHXnKfAgqk_BQlOG31FplrG9d8A
+
+Archive-Asset-Name: native/assets/EditPhoto.qml
+Archive-Asset-SHA-512-Digest: uPqDRWxK5CNon8VRRw83r5iNTIrWaWmS7WAWiWxl83XkRntkP6OoZIY5ZesN_iHpT5cXJaDtGpbbwx49ER1Q0Q
+
+Archive-Asset-Name: native/assets/EditTalktimeList.qml
+Archive-Asset-SHA-512-Digest: FHBVZ9DwTyGdIS26_Dz1ZU5hrgA5lGwwmnGQxI6nbhrlgnexVcV4kmVFNG41yRYgk9x6ZfmnDcQsjdH46fSHTA
+
+Archive-Asset-Name: native/assets/EditWhiteList.qml
+Archive-Asset-SHA-512-Digest: _PpaArZKysfpYEHahfvOm3g3sAtIRo_SmGIJQ0bjFzYDIlqevj2d6bIjk3cfEVkcu4-y0i8bFZoQmZ8Brp-UQQ
+
+Archive-Asset-Name: native/assets/EncryptionSetting.qml
+Archive-Asset-SHA-512-Digest: nLFHNtxLV-CX4-n0JjhxDKIpI0NN9tDFCTRJx_e1uLXIYWO4aFSCmfslmw6zJcbeFT7d13Kw1tQM_Cn2Z1lclw
+
+Archive-Asset-Name: native/assets/eventsoundssetting.qml
+Archive-Asset-SHA-512-Digest: iDZpBcF5pdioAJsKy-2CbJdyWALjVMZ9rkHQA8wolDw1GfS3ao_Uhu_UF3PXGxCimOEPz3ARSNYOCyJy-LaiyQ
+
+Archive-Asset-Name: native/assets/FileLock.qml
+Archive-Asset-SHA-512-Digest: hfXVo6JzLlKTUVDycYRcyHhfe-_O9OybWJ5k9RpgScbxBq8zrHox1C9Km-5CB392WXCMPSEM5cT06U0ehYiVgA
+
+Archive-Asset-Name: native/assets/GeneralInfo.qml
+Archive-Asset-SHA-512-Digest: 7ObXJm-fo2pP0tuuaPG3KQJxOyaX9RDV4jkvx3CZ9NytDcZsklVUae4YAN09IWcyzaRf8FfpJs-DNz91CspO8g
+
+Archive-Asset-Name: native/assets/GetGPSLocation.qml
+Archive-Asset-SHA-512-Digest: lkdAAY4jrSb-my-J5MT1GmFUSw2sIXkpOEpv_BNdU8kzF23F73To60lBwmVUUM1JAZRNFklKrvd_83jXVWr_wg
+
+Archive-Asset-Name: native/assets/Help.qml
+Archive-Asset-SHA-512-Digest: VRHsd9aD3Yt4JLbI0ftcz6ZjbMXLI-uQgzkbQvQT89xbWV4-5GtAQriwQtwm9aGWEOMaHZjflfxXmEcLIVhf4g
+
+Archive-Asset-Name: native/assets/HelpScreen_Alarms.qml
+Archive-Asset-SHA-512-Digest: -9qqYbgfHhQeBD1z1wYKCpcF3WmJeUjqIQvh54ain-HI3KFiE6hWr_jaP6GXVjA3VHcQS5S3VlxHTOKxKkBZOQ
+
+Archive-Asset-Name: native/assets/HelpScreen_BatchProcessing.qml
+Archive-Asset-SHA-512-Digest: Z4fV0XeCUwjhVz3VP87s8FCfj0wMHnXQwUtzj_VZ5GbSC-izM9-4b63UmPU7pTXpROAFDw70HStOaO3mlaKnlQ
+
+Archive-Asset-Name: native/assets/HelpScreen_Cell_Geofence.qml
+Archive-Asset-SHA-512-Digest: kn_9Q3UhFEa2LWWyJlOJl4-fCoQXYG4IK3-MpcuGqsdD1i_PqduRQUII6MqRyPE0xXVkv--IKx1vVCS6dY_Pgw
+
+Archive-Asset-Name: native/assets/HelpScreen_Encryption.qml
+Archive-Asset-SHA-512-Digest: K2S7kzOH2ce0DD_nXYSnJYJlPuffm91YVEibZ9uVPDswKPy9mT2uh4Tzd0D_RBlgT7kDbjKo7mp8pq17E9uNjQ
+
+Archive-Asset-Name: native/assets/HelpScreen_hidefiles.qml
+Archive-Asset-SHA-512-Digest: aYs6Qe3hygFsFghGiizGMcazRzxHzkwHp3RJsxb4jGAmhARIS1Oj4_f3PjiHL5Td0UizP5UKwf5R6VTvFA1OSA
+
+Archive-Asset-Name: native/assets/HelpScreen_NewLed.qml
+Archive-Asset-SHA-512-Digest: 4FhwQupqZUlEko0UKD4LGt4XMDO90GJ2oFctU12vm9i0DEpgLB21CzmbFy49ypmLFoojAbFmr7iV50bqKLI-Qg
+
+Archive-Asset-Name: native/assets/HelpScreen_NewMessageFilter.qml
+Archive-Asset-SHA-512-Digest: -glklZQEQivZOmsa6CVDfKkOKJkB4IG5uOsA3lRFr-38O0vQJ2Yo_QkKdRyVf_DnylfblDcN3n6lKuxcfF8xWw
+
+Archive-Asset-Name: native/assets/HelpScreen_remotecmd.qml
+Archive-Asset-SHA-512-Digest: zWd6zEiAznCA0ZBlRYMnqIeFGLK2HXqYS96LUknN4-xn6uMvdnjmdt0sS2fqG0T0sugOuzGFbrJooNBFkW4aWg
+
+Archive-Asset-Name: native/assets/HelpScreen_Scheduler.qml
+Archive-Asset-SHA-512-Digest: 5Nwtod0L-x3umUPFZYTsjRjTtPK0oXnEsvheF0gDAcCiUh7nsnkz8nJMv9vrw84qvI3EPx75DIP3635dr3jUcw
+
+Archive-Asset-Name: native/assets/HelpScreen_SoundProfile.qml
+Archive-Asset-SHA-512-Digest: UZ2jyFd5ZATTRbBj34Le2w0OtO3qUwIvdsWhxGi95leTaZfR7u6055Ts6GjA5JCJs5xGBJ9sqg-1_OJxjvujmQ
+
+Archive-Asset-Name: native/assets/HelpScreen_wallpaper.qml
+Archive-Asset-SHA-512-Digest: DqRDxJD6IK7mjgZsVjaxzRzruOJQrtopqVA_lhKFUSZcwETyrusSH24Y6WHCVQ5fzwYCvGTKsVHl5NIYl2Rduw
+
+Archive-Asset-Name: native/assets/HelpScreen_weather.qml
+Archive-Asset-SHA-512-Digest: _wBt1UaS80lbex7l1-6mhHBGSXs6QuL842g813k-VMMB35n-6Z4WXihyxTf8twqEwvUdtvvx4znjZkLtvUNOQg
+
+Archive-Asset-Name: native/assets/Help_Callblocking.qml
+Archive-Asset-SHA-512-Digest: E_jSoK1_z_Ga4_rPb6vqLumgOSTjanDWO0i2yTWY6lAVr6QFQPXzgbBS01VeIVIVs8wuTEncWhXprgjybYDR4w
+
+Archive-Asset-Name: native/assets/Help_flip_wave.qml
+Archive-Asset-SHA-512-Digest: BEm4lAPq6jKmmHlNPyMBFWuh1Rvg28cEmK0GbHGj8w81MmsxRyw0eWQkdtSPdGHr1jH-Q3EnyUKR5qs26B4rDA
+
+Archive-Asset-Name: native/assets/Help_geofencing.qml
+Archive-Asset-SHA-512-Digest: BPb4j92SjJsBx77vaTPahGuGGFOZHgY8IAD91ePXr3KjwTM8CKfhaWTaxxdMfD5y8VrBBtbmOx-u4S8_Nmm7QA
+
+Archive-Asset-Name: native/assets/Help_headless.qml
+Archive-Asset-SHA-512-Digest: a2M_G2TftaCqYi-HDOSBO0iYvEctrRaPbPNcFJ0T7JxvI_JVIldBhLTTXdM0x2SN1KRWgij6tr792mO79Yky4A
+
+Archive-Asset-Name: native/assets/Help_led_setup.qml
+Archive-Asset-SHA-512-Digest: rzju6OJBELsovg29wI8MJ25qGEQTdRXEamWhXWjpPJlUgfidWSw8TC_HkhLZzk3i5rOgQfIfUFR7tNjdSXO5oQ
+
+Archive-Asset-Name: native/assets/Help_message_blocker.qml
+Archive-Asset-SHA-512-Digest: DTk5nvozo_XNlq9cHDKsbJicN44P_8ctnFVmIBQiREFJXnIvkXOaFnnPm3p3RJPLJ9U1pKviFyFNAY6ULbTL-Q
+
+Archive-Asset-Name: native/assets/Help_permissions.qml
+Archive-Asset-SHA-512-Digest: Fj6B4sbTcieRFAdk7lQb9jxx6XCy18X_eE4kIoXF-ZLMQj29fymdnPEYS7mC-Z06Wdm6aPc69Rdenf777_5qTQ
+
+Archive-Asset-Name: native/assets/Help_privacy.qml
+Archive-Asset-SHA-512-Digest: Zg1JhpxM_dWmN4nXpiT6nAl0YC6RWu5e_wRwwWw3I25RzI8I7XJ0jmPQWga67zmp96bWsfP_4XIfhKs9vRetzA
+
+Archive-Asset-Name: native/assets/Help_sound_notification.qml
+Archive-Asset-SHA-512-Digest: xV_ujCvsxG7QCoMSy9Q7FWSOv0TuUi14obhlpGprnoduWA1cm8CCntDPTxx1ExsYLLUHqexVcQdfX7gsTsplVg
+
+Archive-Asset-Name: native/assets/Help_statusinfo.qml
+Archive-Asset-SHA-512-Digest: bpPBBxw47TjJa8kgoKGmXEkZsPGazdbHsYBEgvGdgAkiPU6vSPuzJByChPDl0WC-6dzWzy_4CjO-0jbdyzfQhg
+
+Archive-Asset-Name: native/assets/Help_talktime.qml
+Archive-Asset-SHA-512-Digest: WGePwZKx73-Hv8zSTKojniI1bSuJBz4UNuVj56Tr1QZ8zlN678PbEBagZI14oMf-w3iXVvqJNuz_nqKaR9Ke6Q
+
+Archive-Asset-Name: native/assets/Help_whatis.qml
+Archive-Asset-SHA-512-Digest: D4hWq6ZSg1GpqT4PSbcThnI7JP7TYhOy25GQuuBtvA-IZUG7ztH9z-WrbLNsa0mD0XNPXOLC5fwN_zxVH7W2Mg
+
+Archive-Asset-Name: native/assets/HiddenFolder.qml
+Archive-Asset-SHA-512-Digest: gLUnDfh0OnrvaqhIbGWiZlSRc9AzTkTaJMwqEufkEfIMT0V9hSsZDzrcoNMYwRLlh-Sf1jYpYEGfga_ObRSKhg
+
+Archive-Asset-Name: native/assets/Holster.qml
+Archive-Asset-SHA-512-Digest: z5LO899Kz2ilafYKvSXYu1HzB0KSH6Xv_WhuMBJGyRtl_IdPJcLkRwIrXBeZYRVqI5uXWyXCBVM1_ZhCsorN9Q
+
+Archive-Asset-Name: native/assets/Holster2.qml
+Archive-Asset-SHA-512-Digest: ghp1EQVOQ9mTNS5UVa5z8RWX9BnaixxpzJZScJtqxo80UalUVwJlVXsS-3TqVWYrrMTMNmCVYdIFBs6HUiTWRQ
+
+Archive-Asset-Name: native/assets/HubMessage.qml
+Archive-Asset-SHA-512-Digest: iSaQDC-UKIqKvx-3sO2nAza5X2WpaShAyEauOE64g0CTm9jSjPROh-DgfhSV57X8a8k_8jmzXh1APTywH1RkgA
+
+Archive-Asset-Name: native/assets/images/01d.png
+Archive-Asset-SHA-512-Digest: Hai9zvAkF3t-g-hLB0AOfmn6ei1LTY-_MQIkFicQcv6Ydygk4GErJrk4ezrQk6GM0YV4chMntifBnVktO3QXFg
+
+Archive-Asset-Name: native/assets/images/01n.png
+Archive-Asset-SHA-512-Digest: IMcYn0SlgiEDV5uqToO5l89TJWGIvbnFEHn4f2N_kIAtxVMLZCLGZAmlu2-fE5oR4ROhHY9W8DcC8CNDz9ApWg
+
+Archive-Asset-Name: native/assets/images/02d.png
+Archive-Asset-SHA-512-Digest: yP-eDEyVU77Nh6SXW1wSkHgsY0hARLGgv_I4WU7c0QJ800s2T5tXtua6DUns86M52imNuwqTqBAvKMhryAQMSw
+
+Archive-Asset-Name: native/assets/images/02n.png
+Archive-Asset-SHA-512-Digest: _A_XxPeL61_h7hzKh5LgfWEwRNghr4lE8zTVU6P2JvCXZg2kmBZQQ69kjSwb5G8DP_RveG3jW_h9G-_1mIV8Cw
+
+Archive-Asset-Name: native/assets/images/03d.png
+Archive-Asset-SHA-512-Digest: 8z5F8MGfCvyvEfDjWwzjRG2bteh0h6eko-B36gUF8jeUYg2AS3BmtUtekvJdeNZjNdYt7xizMQLQVvpq8BKFSw
+
+Archive-Asset-Name: native/assets/images/03n.png
+Archive-Asset-SHA-512-Digest: vzEyile-EjtYX2kt2iO0gg6LyFIAKvVRXUgHyjx39I3zWXxQD3OCHU_yIitE_x9oZYcd3POp_KIfhaI9z9N04Q
+
+Archive-Asset-Name: native/assets/images/04d.png
+Archive-Asset-SHA-512-Digest: 5iL2gaMSoddBy5L_YGkrDjvQ-aMio0wUl4-Bl_w0TQ4_-zXmVecBK4ASbwcWb_LrLBtTYQhIbZUjZqxkIJDWUw
+
+Archive-Asset-Name: native/assets/images/04n.png
+Archive-Asset-SHA-512-Digest: VnX8dQ-mL1HT2JKNbwN19ljpgYsyPWiHT4gHLeLI4Pp4oV2pHQsmNz2qgjwBgLNgleYix3wxW0OLIapIgnVu4w
+
+Archive-Asset-Name: native/assets/images/09d.png
+Archive-Asset-SHA-512-Digest: 23kf94ZmuddVl9pvt7AXXtt2jHXe-3550NN9q367ij0RnxuEMT4Ex0vGMwZMBhJ5KzVxrW2KpYVxX2dd0Ah3xg
+
+Archive-Asset-Name: native/assets/images/09n.png
+Archive-Asset-SHA-512-Digest: pZPiI73nRKx55qCZa9-mc5J9Jgq3HceH3ygbAi793KoWttPJedVQZgWRiA6Menh2fAq9SJ_NDuqjWPTFia6SPA
+
+Archive-Asset-Name: native/assets/images/10d.png
+Archive-Asset-SHA-512-Digest: X0Vwtepvo-B4nbwP7ZuqHljbW8M-avMGIPdI6UR6xTrp1pRICFPF466GibcgDElo1kJ1GspuAD_AJN2YwehUVQ
+
+Archive-Asset-Name: native/assets/images/10n.png
+Archive-Asset-SHA-512-Digest: iHw6V2VnG2XGOvOGhfNCxwttw5OBtynHWqJlSR68WPc21GMxGHFY_L-gqa4vcBsOha2vTgLJm4qGI2jJ8UTRHA
+
+Archive-Asset-Name: native/assets/images/11d.png
+Archive-Asset-SHA-512-Digest: oYNBVeaPTuRc6LMM8nKkzN1hWVC4fwud4zDxFZss2t7_LMjs9Nel9On7ZelIkKmM4LhAeO9qUSr167Evbqda5w
+
+Archive-Asset-Name: native/assets/images/11n.png
+Archive-Asset-SHA-512-Digest: v1RkFp2M8HrPAFQ_UBsKgIWXqZ97tVWSI_-BrnH6ZudUYzmd1gbahRfxMMWiCtjZ1XMczDEmCg3h4U4xioKQug
+
+Archive-Asset-Name: native/assets/images/13d.png
+Archive-Asset-SHA-512-Digest: pyyUI808m-qacu9b9PCH_BO4aStvBQaGA_NL0rKclZ8Zxwb6h3rz1iShtGxS2C9FHMHsBauhh6ccd3liQRnjyw
+
+Archive-Asset-Name: native/assets/images/13n.png
+Archive-Asset-SHA-512-Digest: pA9MJv91dsu682ga0G8zeAWqyi99AfuTTbT0XLB6eAG2yIiQWd2SPof7B4wv5eniX6Ww2MZSXZQ98geby2PWEQ
+
+Archive-Asset-Name: native/assets/images/256x256/01d.png
+Archive-Asset-SHA-512-Digest: exWevGTYmxKPStWb_KCjZS9_I1itYqJijMQAEZ8FRoAicJ6QgfSftGQ8S8Jo92qFA5dM71T3xxGUcm0nLdy6Ug
+
+Archive-Asset-Name: native/assets/images/256x256/01n.png
+Archive-Asset-SHA-512-Digest: IBABVGc56GoT3qd1fglEXjAKoEHtswcRjWLBnQo7bZVK42If0foLnga2Gwk1Q-75BwfeG3P1SNgL-FvENIEsOQ
+
+Archive-Asset-Name: native/assets/images/256x256/02d.png
+Archive-Asset-SHA-512-Digest: sKZ55cL5Tviebh0BTUgpyKvx3Zwqv2zIvBS-zoSr9w_h6b297BQUWh9mXPcpuknnvrC1WoFGuHymdkUa9U7I3w
+
+Archive-Asset-Name: native/assets/images/256x256/02n.png
+Archive-Asset-SHA-512-Digest: 7MSBlE_m1wflb-Lqjzw9yNikIWIFknfg9F526yn3RgbD3c5k_4fCl68q7vSTSNQtPbGiulq28szuCbU8Ln0EDg
+
+Archive-Asset-Name: native/assets/images/256x256/03d.png
+Archive-Asset-SHA-512-Digest: Terb6yOg1UJ6YbAlFDZZ8dU2DhFW4NFzMK-SoML5iwJPuQAC38DxfOAylyGnuAnJ9Ix4x_pDXcar2lK2nxPeCw
+
+Archive-Asset-Name: native/assets/images/256x256/03n.png
+Archive-Asset-SHA-512-Digest: BEgC1TUbsr24hFabvX4V1cfV2xueH54uFS9JbouosV7Mvnb4GXbpROoqpZxQ72632Ew2BwMS7jjHBAdF1IsK1A
+
+Archive-Asset-Name: native/assets/images/256x256/04d.png
+Archive-Asset-SHA-512-Digest: urTES9NuNXhutwADtJxlLDk7o7C77N-DVkgthjwyLqiLJEWn51dsaEvbbCogK6evowqCCfLeCCUZMmQqMjI4zw
+
+Archive-Asset-Name: native/assets/images/256x256/04n.png
+Archive-Asset-SHA-512-Digest: thGItwYA4-twfdWbozRNagxNiNZeKRYQGi9kFTMfG8aK25gOSszf9OuFOpCLBQJI3kPhgU1S-mLPFxz_rsrXYw
+
+Archive-Asset-Name: native/assets/images/256x256/09d.png
+Archive-Asset-SHA-512-Digest: ZT-ddqF0uJ2b3FGqbfQDr_jNiDXxgSpFmkvYx0rMdkd2dX_KsVI-kaITxOPMSK0ugHKUpIQt_wJGnVdzYeHrXg
+
+Archive-Asset-Name: native/assets/images/256x256/09n.png
+Archive-Asset-SHA-512-Digest: NGrQRrgaiShzISGlK9hJyR5ZHv9l_O4Djzg5NfYMfP-3K6LP3d-3EdxXMGZWeDCIn16mfEaNnfPdrBVPAwkEJQ
+
+Archive-Asset-Name: native/assets/images/256x256/10d.png
+Archive-Asset-SHA-512-Digest: 0Y_KRbhWtBqdsRj869Ne9Go_iYfigOXPyztutwnEWdhigYrh_54fcS3GtZQ16THL4Qp4cMGWTQEue5MveKztIQ
+
+Archive-Asset-Name: native/assets/images/256x256/10n.png
+Archive-Asset-SHA-512-Digest: Ifmtio1zJaprqN-OOvqJaQ7aIB_c7CQ2cE0M6t7barQ5-77stRvaFx11zxoK0XJlRhpYKp11YWBjO0_NF11dHA
+
+Archive-Asset-Name: native/assets/images/256x256/11d.png
+Archive-Asset-SHA-512-Digest: gVepmE2KYztYohcqRHWzsu2qY81f6-FGgweEqdGDRfAspOGeeJBoFOXEMaPYIUsKf6pmOzxAvMCsIDCbx5XqhA
+
+Archive-Asset-Name: native/assets/images/256x256/11n.png
+Archive-Asset-SHA-512-Digest: T_cepylJVKz4FSC_Nrus1GOKzeoxWGaOidVYNPT41pHRnEeJGlb0_t3JkU3W2R-FpuhhiJNhNjcIoc61hKhx3g
+
+Archive-Asset-Name: native/assets/images/256x256/13d.png
+Archive-Asset-SHA-512-Digest: _2ktghQTFVQbqYtfFtY_wOBx3JId4nmH0w2kErknC1tOMIpUmBtI_gxFBklQq7I5w3tzxtsney4nGmnFCShQhQ
+
+Archive-Asset-Name: native/assets/images/256x256/13n.png
+Archive-Asset-SHA-512-Digest: Ifmtio1zJaprqN-OOvqJaQ7aIB_c7CQ2cE0M6t7barQ5-77stRvaFx11zxoK0XJlRhpYKp11YWBjO0_NF11dHA
+
+Archive-Asset-Name: native/assets/images/256x256/50d.png
+Archive-Asset-SHA-512-Digest: ouYX6l8zDijH6gmMQ84aHoxUrsyx32H8exBY2SFXHGRHYlW_CGf5yapOfuEKMz59g-9-WqLSn1ToysnwfR0eQQ
+
+Archive-Asset-Name: native/assets/images/256x256/50n.png
+Archive-Asset-SHA-512-Digest: 7Ev8SJrCx6ey9eiyJftQL4DLf_xhLbXKHrjfjeJsCDSKxp0fKYN5TeX_Ze_ZduLaZXjjHjII_gKSz6M1fBgjSw
+
+Archive-Asset-Name: native/assets/images/50d.png
+Archive-Asset-SHA-512-Digest: 16dOGvXvNu9E1zXaBtnocW0Cfs4Jlc-82rKr6vhsJR6xzJji8gqcYRQkWQ3XZbQB-W7l8Gd1vFCz70SJE1nSDw
+
+Archive-Asset-Name: native/assets/images/50n.png
+Archive-Asset-SHA-512-Digest: iINHIIIe7Bq8ZB-tRg7R93Fn6MJFxz3TB8niDplkKejGdTV4iZjEtGQ18TDnpdf2q4wv8-_XxXHi9rHrT66AzA
+
+Archive-Asset-Name: native/assets/images/Adobe-PDF-Document-icon.png
+Archive-Asset-SHA-512-Digest: 6F3EHQbFIzU1q0Vn5I71GJQX0KE437PQJ3NalsvBkTg3CQcRYHajlKrENa4ZUQCJFGqCI1Caa_O3m-9Y5Ykh7g
+
+Archive-Asset-Name: native/assets/images/background.png
+Archive-Asset-SHA-512-Digest: CvXvYOXTk44_CgDK39yYx1iNEdIENJ_fxrQbdarsnfqAxoNNHStPhW6weMs5LWzrp9uZ3FGTWUMVxyCy2izdcw
+
+Archive-Asset-Name: native/assets/images/barChart.png
+Archive-Asset-SHA-512-Digest: b0ADXihAheMMePeQGkvqe17Tk5qlG9nE1eUDZ1J4AuzxK-BKSVGQw6he3HVYcw-r6EXYovbhVTkj6vl-jLjCuQ
+
+Archive-Asset-Name: native/assets/images/battery0.png
+Archive-Asset-SHA-512-Digest: V3BMRD0dVTtO-EP1oW2vnbjNzJUA0Dlehjkdq93GfBFwaSaKX90WTHiUr54TZauXq5O6cYfQJLaFpJJxeBNm-g
+
+Archive-Asset-Name: native/assets/images/battery3.png
+Archive-Asset-SHA-512-Digest: 2uqFap1Lv7BL6g2UMWL9s0iD83XG5lJyxcoqHupLm1_uBcXrN6gVhvt0Oq_2BqybG2YgRdSG9P4o1nDh6-glYg
+
+Archive-Asset-Name: native/assets/images/ca_encryption.png
+Archive-Asset-SHA-512-Digest: JexkXlxGw11qB4Q1dYT64imFiLCxeQaJ-IlbBErdBVzi1df7XfJ3wxkofDhJjbntEs6bj9ok-u_z5rX4_sUo0w
+
+Archive-Asset-Name: native/assets/images/ca_phone_incoming.png
+Archive-Asset-SHA-512-Digest: QQUojZZOcNZ4JgMOBC9t3DkRrxqwOUz9xax1rFHVK9iar-BmXflXbrBmjd5pRUxIzei1ROkzpWfRF209ZtzJwQ
+
+Archive-Asset-Name: native/assets/images/Compressed-File-Zip-icon.png
+Archive-Asset-SHA-512-Digest: gBAxNcbqCPpUxWQHNmdOEJB6C0H8SmJg2Agph4UUL507uaF1UAD-QG4KgT0PCdFaEibavL4TYmuaeI8b7vHs-A
+
+Archive-Asset-Name: native/assets/images/Document-Help-icon.png
+Archive-Asset-SHA-512-Digest: YeWDb_WYfgkdltYFZcE4yBnlLeW_U-Pu0UhPPFL9B5c-FCCF8mG3E63GDoWAj4kSKhBPrf0OUE01m9zQbGNGfQ
+
+Archive-Asset-Name: native/assets/images/Document-Microsoft-Excel-icon.png
+Archive-Asset-SHA-512-Digest: Cvw3VQWm_VR5I1KfC7zgsAE_CNfgqntmIuj_QvX6X8YfSJbIgaJol0NYIPPFIm9M1jnujYmdwkd5oz8MqE0DSw
+
+Archive-Asset-Name: native/assets/images/Document-Microsoft-Word-icon.png
+Archive-Asset-SHA-512-Digest: 8MTgF8zAV99qZnBPa0y3Iv5Wd3t2VdBhH5dM9fzl-UDWH35MBYglPex8vNW92RJO_HFWOE2X6-BhxyWn6BwKfA
+
+Archive-Asset-Name: native/assets/images/Document-ppt-icon.png
+Archive-Asset-SHA-512-Digest: 6Py3ykggbPDlUV3DNA3JvUjbom7XnsCAJsLjbGr7d-3jm2oy_oiaFdmJprWksf9zrKZgqD2Csk8qVVQwL2eZwQ
+
+Archive-Asset-Name: native/assets/images/Document-Text-icon.png
+Archive-Asset-SHA-512-Digest: PJO4tClO8gipsslhPBcWitCkMkcHOUdXaMUrWceAansCC2gH_jicosC3bQSGK-nOgrJmovdNlDH8YQt34zZT-A
+
+Archive-Asset-Name: native/assets/images/File-Audio-icon.png
+Archive-Asset-SHA-512-Digest: EnBb3awrkZ8ldaGRS62S75fCluwPuBhP4KyNWcjRzLITbDKgsN3iFmkTaFomFx0c2oWwAKmWkcmf66NKFHCuNw
+
+Archive-Asset-Name: native/assets/images/File-Video-icon.png
+Archive-Asset-SHA-512-Digest: M6Zvr8AVcHxWBbU07RGtPzjny5fEVuLA90_ZP3Fxuy7HV_a4ildDfXzMOG91DNL8_tJv7lNXTaRHxoWF9cV-2w
+
+Archive-Asset-Name: native/assets/images/icon_create.png
+Archive-Asset-SHA-512-Digest: mAXK79xWV-3wwCCOZIvBh2BhmlfuZNTu6vnv9Fqm5f6qE0a-xXidqMKtk2GjR21YBluG5Nj3aEJn1W8B2CNzRQ
+
+Archive-Asset-Name: native/assets/images/icon_send_delay_email.png
+Archive-Asset-SHA-512-Digest: gTcDMJaosyYsZU3Ogww22ZOQWFTcJyK4ejwLWtbt0ZLgpWwsHyQBKCToXUovJ0E58KqWnmPVZMrCV7Nso4bZNA
+
+Archive-Asset-Name: native/assets/images/ic_activate.png
+Archive-Asset-SHA-512-Digest: QBvG5lHPP6QQfcd9fY6cFihNem4-0u0ocCNb7juEgnFgKnNnqkmzHEtJhpAJaMV2MRbWZFIwYoVSXFCmbgJfYw
+
+Archive-Asset-Name: native/assets/images/ic_activeframe.png
+Archive-Asset-SHA-512-Digest: fixg8lIK7yxyPY7La4XxdEv3rvU3LU9YKhihf16njI8tyVproHwImbymNFFz1wZG1UZ0Vjo3isughpoWbk6UiQ
+
+Archive-Asset-Name: native/assets/images/ic_add.png
+Archive-Asset-SHA-512-Digest: hNZ1lfhXnkPqIP1dLkJwnheKFbMHFvTGGslFhhr7veUutBpNCyWxsc4T_vA_23VG9ZQaJKeV0MYTEdrUYcZXSA
+
+Archive-Asset-Name: native/assets/images/ic_add_bw.png
+Archive-Asset-SHA-512-Digest: rlt6VnB8YlloSa9lp3lYjYAxKpFShZQuVYIxjTXC2L0jVdq5-0tuTPepRZJNmgXNJ1tdBxH2U69Q-dLye6MENw
+
+Archive-Asset-Name: native/assets/images/ic_add_folder.png
+Archive-Asset-SHA-512-Digest: p_QfrueGS9SDDHqzP75GEjttc4WLR5gMap_3ECjlngIg-DPUa1eVvJj_3mzt4yQu6Wtk5_7rsIrWiJHgo57r3Q
+
+Archive-Asset-Name: native/assets/images/ic_add_folder_bw.png
+Archive-Asset-SHA-512-Digest: x14fOcQp8CscGJ4mbJvr8YA2ONDNJXJF_-qsl9Kilyj51AyFK8SVX2raYSwfQIchgWGKBWpDCw9hKgopS9aTHA
+
+Archive-Asset-Name: native/assets/images/ic_advanced_blocking.png
+Archive-Asset-SHA-512-Digest: ADpA2csl4XVeHttsRSxBm0z8nOQojv9kS-nU2EmANb1fIYV08squ2fzHwhKsyTc5c4FLpmbaDyPn4I91BJDRdA
+
+Archive-Asset-Name: native/assets/images/ic_alarm.png
+Archive-Asset-SHA-512-Digest: xh_X_fT1TV5OJudKgegnT2EpQDWbVHo1srqDGgP97nCCAzGuhFMi8j6RUI96WIiiFNAxqt6qArL1HBLmfBGJDA
+
+Archive-Asset-Name: native/assets/images/ic_apps.png
+Archive-Asset-SHA-512-Digest: itvXjzadSx2n3_qCfSGuBsjbhpBptPykc3WsFO_el7b2byaXndq30nCXr9c5lCh5BOVqhdEBWWOvmdk_ldlPDg
+
+Archive-Asset-Name: native/assets/images/ic_arrow_down.png
+Archive-Asset-SHA-512-Digest: Z7Hld8DzU4lTGh9Bm4OhA3SGMgJlsGiVrWPtUWg5x9tvZWMrjWce3pysJHQH3WnsurvbrZCBZkokJx6TMzSPNg
+
+Archive-Asset-Name: native/assets/images/ic_arrow_right.png
+Archive-Asset-SHA-512-Digest: RQKWABz-jbyUtDr1Oc9X9ntRFzNHMPE6esO0dd2S6R6QUsEMqxCKG37bOXX966R7Eg8K_utRV1tBAuAM1Oh6MA
+
+Archive-Asset-Name: native/assets/images/ic_attachment.png
+Archive-Asset-SHA-512-Digest: D4POXazknZggVv5qOUdaOV7YyEvbKH_DeT-j1zIMxFgUArmDLkMznDns1T0ooHKJqMemPBv8TJWiG2dzzY8W-g
+
+Archive-Asset-Name: native/assets/images/ic_audio.png
+Archive-Asset-SHA-512-Digest: dAs-pMNqxnninssrKjWVHuBtl_X8OXAXqFso00X4Ru_F6_3rXh4H-a3QtqNGrgpmr7ixejg-nd4m2Cbxq8tIbA
+
+Archive-Asset-Name: native/assets/images/ic_banned_phone.png
+Archive-Asset-SHA-512-Digest: uXze4gXPTPNxnmG6BE9fLkMd0OLP_1dTva1mr4zZd8Yod4DdaW2cy1mRIeZXAFgvw_jrZY2I7le2TWi2To51Og
+
+Archive-Asset-Name: native/assets/images/ic_batch.png
+Archive-Asset-SHA-512-Digest: KI5AnPl1HnecvrAZjMa97p7dGpJbDp5jnMhVP0HR3ew7OpGnVr5qTstBs8IEt5OSE4JwCzV0Dz20rsNuB7o9Wg
+
+Archive-Asset-Name: native/assets/images/ic_battery.png
+Archive-Asset-SHA-512-Digest: CR3E_rZnZMVTWU8cAS6PKIVBBq-2PzOHO9hfjDrlvb1V1QkckOyG6r_U6MtU2CinD7FeG1Rise65kf0u5K7-bw
+
+Archive-Asset-Name: native/assets/images/ic_battery_10.png
+Archive-Asset-SHA-512-Digest: 5OrPOnX1ih5gVAdfO2PtAX_aHJaq-mjxLjq_3If3RoQzx8xJaal5jCY3viEWSgqorijgtBYvpgQPahU6vo5mPw
+
+Archive-Asset-Name: native/assets/images/ic_battery_100.png
+Archive-Asset-SHA-512-Digest: olk9_pzdQo46V9fMpIhm7MEY3bzt3cc1xuaidVaU_lMEuLAX-LXeWJJlE2YB-KvWajkgZRgQ64Koqrz4CJyoFw
+
+Archive-Asset-Name: native/assets/images/ic_battery_25.png
+Archive-Asset-SHA-512-Digest: AUJ7EKdqMyJ4DxfiKXg4p_4ra14umgZKCbgNpIQ7xn5u-h8ziry3D5Ol5yRNerjI54dnlNFr0eMC0MDgrzzMvg
+
+Archive-Asset-Name: native/assets/images/ic_battery_35.png
+Archive-Asset-SHA-512-Digest: fuPZ35sXYJfVMa2xvcda-yxPRa3GZoJaMxvfVWe924vspqx9skHdRUu1zOC02OAqCEZNoN80jyJQaUz5JV5xNQ
+
+Archive-Asset-Name: native/assets/images/ic_battery_50.png
+Archive-Asset-SHA-512-Digest: yovOFk4aBxsZc-gHb8UWNocYdvhCdIowGYbRPvuiNwXbNPVAEn9YcAho5IcFaztKHEI9bTQBrPoSPLDs5vAuCw
+
+Archive-Asset-Name: native/assets/images/ic_battery_65.png
+Archive-Asset-SHA-512-Digest: D9iIFhSgE7tptQozIi61RfL5eVGyES7MfrDCfq6wcK5nEZ1Icw7LaPfsCl4oI1nTXO0bKWtobO5BFvJi8e2YBQ
+
+Archive-Asset-Name: native/assets/images/ic_battery_75.png
+Archive-Asset-SHA-512-Digest: X6w8In9tAoDGl2BFftvVeOfpU2EHVG2mGL3vycdW70iClKdS0uJjmVT6c7o4mRUygV3_-tBu1jfZdm5Fzy6jBA
+
+Archive-Asset-Name: native/assets/images/ic_battery_85.png
+Archive-Asset-SHA-512-Digest: O4kltvUXTgVzBJ0n8pLn9XUeXVasL0Gt9UJTNa5VezvM1QhT_i9vmbARJhnVovcNEIGrIjW7GUqe7T9QwaWqIA
+
+Archive-Asset-Name: native/assets/images/ic_battery_95.png
+Archive-Asset-SHA-512-Digest: P2OPcAtE3qAKHq9IbqghXkT15HuUGUhU-bbdXzz5amjgvp3ucsaBsbJjBzbU3_HU5PBNnwB4R1TY0pKebw_6zA
+
+Archive-Asset-Name: native/assets/images/ic_battery_a.png
+Archive-Asset-SHA-512-Digest: LIpInUYKjl6prT0rZUdTAASj5I_zugj2fYHYDEJZJjgtpbBaNRGKsFILBEY9z9QsKkIY6Lz5TIIPDJUivnSWdQ
+
+Archive-Asset-Name: native/assets/images/ic_battery_charged.png
+Archive-Asset-SHA-512-Digest: pyKw-CuPPzX7gv9v4YpAxgXYIXF5sHT9E2qUCh-6Fai2b-b76tIGJflJB5W-NKEH-yrk9tAUgHvDgUfnkW_QDQ
+
+Archive-Asset-Name: native/assets/images/ic_battery_charging.png
+Archive-Asset-SHA-512-Digest: zt3eal-r608c6xNx0wSUl9d3v8GA7l01hDgWuAuj27rS4Arxj1j6opFSKeyc7-KLhI8TfMQ8H5iTftRHeJqvZQ
+
+Archive-Asset-Name: native/assets/images/ic_battery_empty.png
+Archive-Asset-SHA-512-Digest: vNkROp8axfnoNfYe4XVMulKVKuE6P9lpNI7kE5bNZ9oNCBMeSAWUoavB2iO-f80Dwunvsw2Hw744fXh3bmLD4g
+
+Archive-Asset-Name: native/assets/images/ic_battery_temperature.png
+Archive-Asset-SHA-512-Digest: QJipySlB041zT2dwn-BbQMkmwSJKnoy53Ao4kueb1WdWwhaMnY_ASO1-ZH1xCZsgQVL8Mti9WGr3XgtKxIewvA
+
+Archive-Asset-Name: native/assets/images/ic_bb.png
+Archive-Asset-SHA-512-Digest: DJjywwU-4Abk4FuXSgsOZAmv4NNgKk74pSHD1CHeHY3jExLJ5_68i6mGudrSpW9JXGIv51oWfNssjEM6FSP4Gg
+
+Archive-Asset-Name: native/assets/images/ic_bbm.png
+Archive-Asset-SHA-512-Digest: oIea4dzClelX5II1AbKreH8OsWwKg6CZ0xqEtmzseUg2uJcW01gl44sxhRmUjiM-R0sVuKCluSlXbMCXpnYxSQ
+
+Archive-Asset-Name: native/assets/images/ic_bbm_contacts.png
+Archive-Asset-SHA-512-Digest: VjgYYtrLxM5gC0RzZgRa8P4pDyJXOWKcYhBzdns8EjkPVnZMGJ2YVgsP3VvGetuiIVp8EaB-yijcD3ExMa2KmQ
+
+Archive-Asset-Name: native/assets/images/ic_blank.png
+Archive-Asset-SHA-512-Digest: GWj1enwtQqwYw11emNS1WQS7OkD_bkF92O3P9zPtGeET6zB9-MtGO13lSPSD9uRutsHzLqOsr8T-GeJuuaCOaQ
+
+Archive-Asset-Name: native/assets/images/ic_blaq.png
+Archive-Asset-SHA-512-Digest: F2e5BbsWYU7iB7N90I1c2Ha46HInZ8-9pKBcWUaz_Xy9Vr0B5M3Iq0HizFMTQDGnhi3BYX3mh20PDP48HVoOHg
+
+Archive-Asset-Name: native/assets/images/ic_block_calls.png
+Archive-Asset-SHA-512-Digest: UCD8hJkAQEMINmQRCsb5uUKTRNhw6gUlgK9WVQ3HTchLDEwn1AD1nN8UkPKPvB1C2bXmUUtZwGu8R-WTUuKh8Q
+
+Archive-Asset-Name: native/assets/images/ic_bt_off.png
+Archive-Asset-SHA-512-Digest: R2ZskgyS0mz-Od5xIaXZsnDuPK4w2uJZhhFVwqMAIX2lIonjX648xNJ_YfqulB-0LCnZmFr49Fj8DKmJxNdlKA
+
+Archive-Asset-Name: native/assets/images/ic_bt_wifi.png
+Archive-Asset-SHA-512-Digest: ubb7C98_i4JzEORiU4PMXSsAajoaR4eyybSPdkIPxW2s0I54dLVpeFP7byl6M7zCLjbAiORw30SnQQeXeKPeZA
+
+Archive-Asset-Name: native/assets/images/ic_cake.png
+Archive-Asset-SHA-512-Digest: EXU4KC6ujgYwiSjHAqXbOVS-8viOTkf4Vb7oOo7AyxMu4Hdle12OmA7F4SAv6gCJc0HBk9IVCJvTydoM95tarw
+
+Archive-Asset-Name: native/assets/images/ic_cake2.png
+Archive-Asset-SHA-512-Digest: oCAwjDQ1u2a2_ZwJ6Ydzxc6ux8L0ny4moJdbhrxK2bjvCylfGlankp2d-z6MTPs3XVR-pDWqgPvqyii9Y8ILbQ
+
+Archive-Asset-Name: native/assets/images/ic_callblocker.png
+Archive-Asset-SHA-512-Digest: yQiH8ZIZd2dkGLgfvHEQfhc9QWl2yfk0KEbH-6eMr7aTmiR5N4bzcmsiQcZ6UGc5J-exE8zUV_mJE8lk8PCyEw
+
+Archive-Asset-Name: native/assets/images/ic_cancel.png
+Archive-Asset-SHA-512-Digest: feeAxZRSp-upLr3rayYXlkXlhbemIJwHyUVGbtqCyXZmPT3rErg5o_87WMxWJDx5P7B0z7d9--WaO98y2XOyig
+
+Archive-Asset-Name: native/assets/images/ic_cellsignal.png
+Archive-Asset-SHA-512-Digest: HeetSIrSIYIB8AeW1Rg5LUnu6ZU8Vcoijls_UbP1Fi6B02ppezqIpEzgy-7HhC4-_8u4Q5wOy6lWNCuZRO1l2A
+
+Archive-Asset-Name: native/assets/images/ic_celltower.png
+Archive-Asset-SHA-512-Digest: DPCx9SN9nY9nZVbImxdzleznL4yLipN1xqvtOBDby8L4Wppg3FVBe64M6gkpd0tk89K28n7MIGL7kkIFN0OKXg
+
+Archive-Asset-Name: native/assets/images/ic_clear - Copy.png
+Archive-Asset-SHA-512-Digest: wsecuhuFjOdk63DwJn7LLU6dFK4d0M2q9IY_nTdzFrT2UVB_CWblwTenywpAlkM8-p8L8YSIUGvCe5_qOQhn8Q
+
+Archive-Asset-Name: native/assets/images/ic_clear.png
+Archive-Asset-SHA-512-Digest: nszuxR9ft8fwfBTHDhSfaZl6-voh2OUPjlF-RCl5vBKFDITClFx8mrbmbFLkN300qBszcaJUqbEitYUgBtj96g
+
+Archive-Asset-Name: native/assets/images/ic_clock.png
+Archive-Asset-SHA-512-Digest: gAfW6emaCqkKHXp01KmP48nClhGqPHwzSE9T4i4jMmH9NhoEhLy9l2NZMfinTee-XPWDuGD1u3mw7gNm5AhzQw
+
+Archive-Asset-Name: native/assets/images/ic_clock_color.png
+Archive-Asset-SHA-512-Digest: gAfW6emaCqkKHXp01KmP48nClhGqPHwzSE9T4i4jMmH9NhoEhLy9l2NZMfinTee-XPWDuGD1u3mw7gNm5AhzQw
+
+Archive-Asset-Name: native/assets/images/ic_close.png
+Archive-Asset-SHA-512-Digest: JXFR6AnXYBTgkMgb0zuukllqc8UJ5FfpzQ1BqQ2dqLoxES8F0iLLTaGayauzsoQWlKI07aza8PUU0hwvZp_P1Q
+
+Archive-Asset-Name: native/assets/images/ic_cold.png
+Archive-Asset-SHA-512-Digest: xdRjZ-054wO6sJDUBM9LA7jLUrMVFtJWeuI8-yyoHUs8Fn3RwPpl8aQFzxRNhKYz8HO3C0DOEqF-8B70njCYLA
+
+Archive-Asset-Name: native/assets/images/ic_command.png
+Archive-Asset-SHA-512-Digest: zyBNlVLt8JL__VecEQMAarb-uvMs1kCyVK8va9buGws8z9i6As56opzvhYTxOktkxi7w2HIIvabJdewj3ghfNA
+
+Archive-Asset-Name: native/assets/images/ic_contact_lookup.png
+Archive-Asset-SHA-512-Digest: QBrZHKSJJUeCXGMgj3s51lM_Wx_cOZDaqFkY1uwmiyQCJMQECqA-l-DZ-V3L8-__7pVOCamwJ-JGHg62MLH5bQ
+
+Archive-Asset-Name: native/assets/images/ic_cpu.png
+Archive-Asset-SHA-512-Digest: vFUxJOXa05VWrjQyg55JGOcBwBKpyvV-JMK5VgS3Bc3CzO7f5oFD9NvNLb7kphrP28GRklr6ZuboSElDcd3rXA
+
+Archive-Asset-Name: native/assets/images/ic_daytime.png
+Archive-Asset-SHA-512-Digest: RieUZINg3bklJPsRhNk_Cz1q8BgQmyi4nLyfrnrBv5gdWdnaO2Jw5pnFYoZPb0cwuQ1zkG8toXlo4sJYP_T5iQ
+
+Archive-Asset-Name: native/assets/images/ic_debug.png
+Archive-Asset-SHA-512-Digest: BnllhO7BPlwQCMujNDloxJHpdBNWOzvn3PVhLjed_yM0FUCdcUO3Vb9wnkmPVAj19RK09ge8irzGUpK65KtpkQ
+
+Archive-Asset-Name: native/assets/images/ic_decrypt.png
+Archive-Asset-SHA-512-Digest: JEDr75TWXJugzlmfiQhm8Rv0AaJiFfiSHB4nkoiXAC9o7NRmYt2r6la-_aVlBAfV3eQb8Lns5s3mL0-cTrvyEA
+
+Archive-Asset-Name: native/assets/images/ic_delete.png
+Archive-Asset-SHA-512-Digest: wTe2I9bJhlTJeAmvf-7wHAlgOOFthT-l3GfiFaIGHWJ9uzTYNX0I7ssFeDGcaYaOFnVakBrPhOwo69Q-S6uWqw
+
+Archive-Asset-Name: native/assets/images/ic_doctype_xls.png
+Archive-Asset-SHA-512-Digest: RDqJP9dVMXGrqB0XlM9-EP_dj90YrdxueJoaEfmzE0coxQYhrVP8Tk5YbwnWpeWzSBtv5VnO7EDV5raftT_iWA
+
+Archive-Asset-Name: native/assets/images/ic_email.png
+Archive-Asset-SHA-512-Digest: jhjqBV9_RD9eee54u3WO5LLc5iQIPLz5iNSKrvFbFfR0896qtqXYbNIPVEk_Od8t-UUCz6wM1N6jYDYCowbj4w
+
+Archive-Asset-Name: native/assets/images/ic_email2.png
+Archive-Asset-SHA-512-Digest: e8WBsZpV_GTG0cFDjtJYK4SToLAtOxILraGfHL1M19xUYhLxM9Sd7A2qyj3iI5iJEgHvsAh_D7grpt2ORbQY2Q
+
+Archive-Asset-Name: native/assets/images/ic_email_attach.png
+Archive-Asset-SHA-512-Digest: 8PvXJfx35v1xbYJot1M2xAOSqfMshj2xssai_nf3y5Jk5PYW2bPmkG_sB-v4OtxD8blHcpqjULLhs4Xr1Qo3_A
+
+Archive-Asset-Name: native/assets/images/ic_encrypt.png
+Archive-Asset-SHA-512-Digest: TReEZKoxSRJrqMJga6ZQHyqDnW6Dm9XMYAjb0GQgyH4jLCvl2_3ILi8r6B704c_KtSHKbHJKO155zTBfqFSoTA
+
+Archive-Asset-Name: native/assets/images/ic_encrypted.png
+Archive-Asset-SHA-512-Digest: eSQvfTihfdWAdRhll7FCRXzWeqmHD652HIEif-xncJLhYrapcxDaZ3XPMQIvTTL6W2lC-wqjzHYD04Sf0r9vgA
+
+Archive-Asset-Name: native/assets/images/ic_encrypted_files.png
+Archive-Asset-SHA-512-Digest: iA6WguLy0ktU7OknmGoU38T2lc3RcFFHkEtWlKk49iXL9F2rgsp0FqhHJnzD_l2vSrRNp08_jo7_cdQ0A6jJdg
+
+Archive-Asset-Name: native/assets/images/ic_facebook.png
+Archive-Asset-SHA-512-Digest: DByCtEZYDE82zfV9gxFsg63W5N5ojpJi9vu7RQxMb9FqHeh6TpZZOhIq7tPbELyXpxNtLKqcmzUy5MXPHs_7-g
+
+Archive-Asset-Name: native/assets/images/ic_filelock_a.png
+Archive-Asset-SHA-512-Digest: BAdN7ABkDbDG_8Xx8NkyIqVzKywUlBamn8I2Bqmwzg9vgcrKjRurHIDRs-79mq4PEcelxdR7JyL_CXolR_ipsA
+
+Archive-Asset-Name: native/assets/images/ic_flip.png
+Archive-Asset-SHA-512-Digest: a_oAcqPhjrVYzjVXW_xoxoZflPi5tnTxlQNGvuodPR0ZwOfUi7--pDDe98R9dDonuOJGnPlea0VIOUJVgRPf2Q
+
+Archive-Asset-Name: native/assets/images/ic_folder_normal.png
+Archive-Asset-SHA-512-Digest: YdD0Mko_K_eAgAESOldih6R2Sdnye92pjL3lOjLB3DGtgwBVXbWVOjyr0L0270xOrb_C1X42NWxdFoIxSlsMpg
+
+Archive-Asset-Name: native/assets/images/ic_geofenching.png
+Archive-Asset-SHA-512-Digest: 3lUMyxhRfeCzca4xI9JH2dP5icWusrsUw6DfVTmhgYvF-oB9oPsvy59WhfeRZD5SJxRY1251xLGzYMau7r_ZsQ
+
+Archive-Asset-Name: native/assets/images/ic_go_home.png
+Archive-Asset-SHA-512-Digest: O-gOqVzU6ZHniKyJaTHDH6_3VqKAkR3GXOYMAknmFP3Et8A7wBAIFJtA10YHiBDa9BmwPoEqvJxq72e8eZdILA
+
+Archive-Asset-Name: native/assets/images/ic_gps.png
+Archive-Asset-SHA-512-Digest: IsABvzdN97CuCYA68W6HBclbXa06iw98cJYiyYzuTwVtN1eOSBJJ6fI96PdGveOi2C61w_Rbq1UHiM5a9WWFpw
+
+Archive-Asset-Name: native/assets/images/ic_graphic.png
+Archive-Asset-SHA-512-Digest: Yv1i37SJg2IosfWy65WwDR14soEiL0uRDzmGSVwA2HFOfEi0hKsM8MrlNI7_pjsJ7iNjbyYFxZdR5VCxry0M7A
+
+Archive-Asset-Name: native/assets/images/ic_hardware.png
+Archive-Asset-SHA-512-Digest: lptPyjGyUxBFZZcYNCBmoPuutsO7nQyEJjepl9eofjev9kQdnm9zNlQvGqig44F8_Lh676zfSFhRJN7VT8H14g
+
+Archive-Asset-Name: native/assets/images/ic_heart.png
+Archive-Asset-SHA-512-Digest: f1x5gj6R-QdQUglwATe7AldciLX2nKV2yEl1-uMnvpVjfqnoEfLsWkYc1WtSgPRW4ZziCuR5zEAJaMvkYQx9zA
+
+Archive-Asset-Name: native/assets/images/ic_help.png
+Archive-Asset-SHA-512-Digest: g5taR71v6HXumsZuQL3zxUCMiyRWZWC4mdVACWdDoocqYJ0ydafjttgrj7M_WpD5swop2WSdthYViGyYtCb_iA
+
+Archive-Asset-Name: native/assets/images/ic_hidden_folder.png
+Archive-Asset-SHA-512-Digest: v4L7_RgoPrAhYENc8d6Bv1DW4yaxsHoyq_yGP179gHrztZHBoQ4WzuI_LZDQ7izjTTm0pdadc22KrGQf_T8Dmw
+
+Archive-Asset-Name: native/assets/images/ic_hide_unhide.png
+Archive-Asset-SHA-512-Digest: a1nVqZ1Oz339VQY611oO9RYRSRwZUbYXcjZQ_87HrlYsSvHo1F1Zeyt06Caij2JRIaPB5GzPdatpUDAlJBkE2g
+
+Archive-Asset-Name: native/assets/images/ic_holster - Copy.png
+Archive-Asset-SHA-512-Digest: c-YhM0-b12O9SQp3oRfTQnYB2zysR156NE7iRij9V3uCBsyAVVMeVMoGdwzcnPNDlFHMXdUm2cSCfeTEmW7yBg
+
+Archive-Asset-Name: native/assets/images/ic_holster.png
+Archive-Asset-SHA-512-Digest: rYp-PNpmPf4jKaQgxHJ7M_9raSAwKksIq3COT-A0lDKcfzdsu7bxMnSUMS3RW2TAmHHngQ8-qqJzL59ZVH_4TQ
+
+Archive-Asset-Name: native/assets/images/ic_hourly.png
+Archive-Asset-SHA-512-Digest: a40jEGgpiG3AeFtX1_A-8vjZf0uaEbHjrjsJ8iVXNyVH4Lo5mytNikzyDPnsD9PIhoOQfmFuVapgO8yP0WiMuA
+
+Archive-Asset-Name: native/assets/images/ic_info.png
+Archive-Asset-SHA-512-Digest: HsmdnPiuaL2nKUy81KW1MIiUyAeKwWhQojoxAetZ1uZEfudljbnoPSkFCPbtLfvZFqVRxnGu1IHM2uvHMMDP6g
+
+Archive-Asset-Name: native/assets/images/ic_info2.png
+Archive-Asset-SHA-512-Digest: QL9r4zkGYq36zjAhUuLHngIaLFcTh4ZLJqeZrXlQ9YLlHk_gn13jhdmAtoSUMUwbefeyUXV9Dl7rQlTGsWWeKQ
+
+Archive-Asset-Name: native/assets/images/ic_launcher.png
+Archive-Asset-SHA-512-Digest: j4VFdP7VqY_dMiMDHwplP7e6Q2lJ2lAt_ImFLnFIL7sGV0ft24pm5OlUY20FxG3kZf-uDSCqGquximc9JMCfDQ
+
+Archive-Asset-Name: native/assets/images/ic_led_blue.png
+Archive-Asset-SHA-512-Digest: MLb9_UVtR2mZrIte1s7NmhkwKJgi3NLwBfZmb6vgeXA8jdBZ6ciQOF-okBvOUy9uW0ttaQ4U01WUE_W7UdySNg
+
+Archive-Asset-Name: native/assets/images/ic_led_blue_blue.png
+Archive-Asset-SHA-512-Digest: 2fJz7jDjC3KxFYTTH0akhFq1GZij4wXSMGLbjV50B23bWGdIDZ9RMnKhJJNbXbssIr_ey2P4VJENnpRCs7vznQ
+
+Archive-Asset-Name: native/assets/images/ic_led_blue_green.png
+Archive-Asset-SHA-512-Digest: aNrSPbby0a-OLKGwqtzcNU_a2CMgqZwUz4Kjxb2P7REiCGCfjwBT1oBIJktovZQSDnmvWNzpF9fKRqcLWoadng
+
+Archive-Asset-Name: native/assets/images/ic_led_blue_white_cyn.png
+Archive-Asset-SHA-512-Digest: R31VqJmsRYF7oAPXOR58eFxmnUnyWdnBKuzNevZ0BVQ_Rgi3S7ynQR7kzcNu6m4BE8Cse94dYzhSfV-pQNCrBA
+
+Archive-Asset-Name: native/assets/images/ic_led_blue_white_green.png
+Archive-Asset-SHA-512-Digest: 5LAo_6VXH9XcDLIugQ6mJNsBHzBM64AkoGHcxMO5sko6RLMJ0ALffnlMCaWgmEzF8sborqoRjSFep8QuOEooSg
+
+Archive-Asset-Name: native/assets/images/ic_led_blue_white_mag.png
+Archive-Asset-SHA-512-Digest: Ya-S6EkH5m9En5ZTulsqqv5Q_kpLOoX0_e_1O0YzDSdq8oZW1IM_JWOuHvtX9OpBQ4tm_2u_eUCTar7LSybwKg
+
+Archive-Asset-Name: native/assets/images/ic_led_blue_white_red.png
+Archive-Asset-SHA-512-Digest: X0n8KjHW8AKDkaBwvVohbn7b8rroehCQRZ8MDk8SME4MpplRExOLjuXD1Z1dy1gT9knNd8L9Qzlvk1K0w2nVtg
+
+Archive-Asset-Name: native/assets/images/ic_led_blue_white_white.png
+Archive-Asset-SHA-512-Digest: sc98b-0TO02M04iaEssEWZIZ-L7sS1W_qTrZ4yniLqnL_TYhgEBsBJ3QNWKX8jaGduLhLlSgtpECqjc9b86YXg
+
+Archive-Asset-Name: native/assets/images/ic_led_blue_white_yellow.png
+Archive-Asset-SHA-512-Digest: LUgmKFUGuCwSzFEy5UDlPdKk8eC-rqBSs4jpvCnDc-j5SXPrCxI-xP4LJ2C4aa2CbcVrbGb3DE6vRPb7ckx_Gw
+
+Archive-Asset-Name: native/assets/images/ic_led_blue_yellow.png
+Archive-Asset-SHA-512-Digest: a6-c5hwRs2CHGmbPL9KLnYF9Q86lEIR8XMyTXIBJKwthYFA2MTmsr8Q3jyPkd_E-KxdbnHchTUhctbc0WXoSeQ
+
+Archive-Asset-Name: native/assets/images/ic_led_cyan.png
+Archive-Asset-SHA-512-Digest: wW_YiFNDrujPJmTYui4HlU0bIxQz2ib69p3Mux2cQNiDww8SgvhEjjFM7tbH4_srpqh_V9WwtfyvqgIOpvodfQ
+
+Archive-Asset-Name: native/assets/images/ic_led_cyan_cyan.png
+Archive-Asset-SHA-512-Digest: CxLIGKubV1cgsTgewz_L_Jhvck-JSFdV3DQCm5DLNEZRHurtP6X_NHctoxGBZljtzuGdp1mlzXOgF-Rc2jIhTg
+
+Archive-Asset-Name: native/assets/images/ic_led_cyan_mag.png
+Archive-Asset-SHA-512-Digest: zQgkO8W2xQ1Fj28XXcSj9ADgHEB3pq30c8JGRWyN8eJRBz83KxlNGE3zZvo28ia1AI2GfTw-QXI9hEpMVP-JoA
+
+Archive-Asset-Name: native/assets/images/ic_led_green.png
+Archive-Asset-SHA-512-Digest: ONsHrhBdDrrbBKPnRi2MhIu52cboGgBqWhcE92an9w7a61nLcrHy6lFyTfZNquRe3TDDA3k3TabbCooVMv1kkg
+
+Archive-Asset-Name: native/assets/images/ic_led_green_blue_cyn.png
+Archive-Asset-SHA-512-Digest: lxqYl1g3H1xR0WfeqZIYWV3LQdF3okFABk1DmTuSpYCt5BxW16fII4h34WDpuhcoBFgT8eHeGVHQ6cUCBc753A
+
+Archive-Asset-Name: native/assets/images/ic_led_green_blue_mag.png
+Archive-Asset-SHA-512-Digest: NdHCJ3hXi-5hP0OrH2Q0V2hunVL-q5cRxrOmic5p-4AnvZbFqCYajl1UrOkTiPrBHnAx7Nt2ghuUiZu9aEM0gw
+
+Archive-Asset-Name: native/assets/images/ic_led_green_blue_red.png
+Archive-Asset-SHA-512-Digest: V1--9a6badhCQsXau1F_sDBcoIIofGXZhUBC7BA1c_gSpl-CDthuY0ogo8Yyz_c0HFetMr_Ijwq5-SVSD5zp9Q
+
+Archive-Asset-Name: native/assets/images/ic_led_green_blue_white.png
+Archive-Asset-SHA-512-Digest: r0GoENIx8K0EOeHYjy_dyOufWXC-KoP53NYQTbT4Z1syUfS_ZGx_UVWyQfjMbxh7Jiymbc87gy78Q8oO-slYVA
+
+Archive-Asset-Name: native/assets/images/ic_led_green_blue_yellow.png
+Archive-Asset-SHA-512-Digest: 2R7MYQyes5s603TV3XHG15vO-LIAZ3OdzDGTumeEf2Jo1HLn3bdB50_uQ11Cnl6CjILsOTXLoiUxVZfog828RA
+
+Archive-Asset-Name: native/assets/images/ic_led_green_green.png
+Archive-Asset-SHA-512-Digest: P-8dHQGurIiGOJp1V9I6b7DmaauiYxcez_8wAr7VzfFNQA2znIgysESA8A1gkCdRT6SA6QPOdbrXx1h1E5pJdg
+
+Archive-Asset-Name: native/assets/images/ic_led_green_green_blue.png
+Archive-Asset-SHA-512-Digest: gwqbFfJ4oZzAHHDTmLuiw3ZYmLyYg95sp5hAASpF_rraIjHKdZOLiaDPHUXWC6sjyiYM1eH6TfWvG3cc4hQcIg
+
+Archive-Asset-Name: native/assets/images/ic_led_green_green_cyn.png
+Archive-Asset-SHA-512-Digest: zj1sCOAhXWZjBaZuq3B0fL6juLOwTYwD03QD6PdScnHutc1sfo6sx7dN74ciU22yibQvpYD4EWx426GWXmKW-w
+
+Archive-Asset-Name: native/assets/images/ic_led_green_green_mag.png
+Archive-Asset-SHA-512-Digest: yxXJQnSkGD12J4SrU8EucMyrrv_9WqDyCnQAmX2MCf9NZkcIl99TVGgDaJrTNgV480p4wLa-3dsaaRKf0n-FdA
+
+Archive-Asset-Name: native/assets/images/ic_led_green_green_red.png
+Archive-Asset-SHA-512-Digest: zLPdB28UEyXnARMEksyF0jhxyUpJ733z0yiN5zmIkLLzB6FH9jAxSP99FLM-dIMXkP_MayyE1Kg_zNDokjcq1A
+
+Archive-Asset-Name: native/assets/images/ic_led_green_green_white.png
+Archive-Asset-SHA-512-Digest: qfnn_YWBKkoEdy7bgJIq6N3hTsc8Xl9sP5izFmxba4QEzGr5CkoRpSOIvxdPiiNp6jp7dFtL1U8ixQCIWG_HAw
+
+Archive-Asset-Name: native/assets/images/ic_led_green_green_yellow.png
+Archive-Asset-SHA-512-Digest: M5Yp1qbDR1j6ZbM57vP1j700pYEggM1eT-sxrA72YnNkDnp_ZEitonqwGmXsuVF6l-6wsIITGFP4nrOXbAL6bA
+
+Archive-Asset-Name: native/assets/images/ic_led_green_mag.png
+Archive-Asset-SHA-512-Digest: ZfWNkISK1phMQl6d4uAKU7OjVgX2XBReOwJQgTsIYzgq56MhiAMG_Bh4JzsKEjmshJP21ZEs8LdmXawbrlbGmg
+
+Archive-Asset-Name: native/assets/images/ic_led_green_red.png
+Archive-Asset-SHA-512-Digest: r7x3P4aUuQ9ao_5kwFhzqlgo2949t8FvekEFyKoa4XEhLReP56_8AcPNccqri4Q5MJxl0BqL0lS8Calm0VFzNw
+
+Archive-Asset-Name: native/assets/images/ic_led_green_white.png
+Archive-Asset-SHA-512-Digest: -X377PB2QXxaPcHr5yjpuEnSJca8twOxgApQEtYrTghgALOdNv_fDG5tZuNGJIQG1yWJnafVaFW6Mcckut5hUA
+
+Archive-Asset-Name: native/assets/images/ic_led_green_yellow.png
+Archive-Asset-SHA-512-Digest: jtmMT0nmIRJJ2LpfAIsVm348oJvgIc_x5WBxGaLPlbYVQsw1vWnc13Lz72Pq9wq8DZmW_HzuvYhh5qFx-9rfyw
+
+Archive-Asset-Name: native/assets/images/ic_led_magenta.png
+Archive-Asset-SHA-512-Digest: MfHy_BAvcr_74vvDOlNFstPqTvL70nAK77PEXbOV4BF1pGIWAkFb4_4Tj0m8qnMC5hMEdLg-fxT6ijCaqhZk2Q
+
+Archive-Asset-Name: native/assets/images/ic_led_mag_blue.png
+Archive-Asset-SHA-512-Digest: _xP878pnXSPlXb3v1tqARFQ_aogh2fDS01MRWEUWn7zUCIajGFWuJIjZEOmwjQWPgenb18wDN_IKxR3nK0bBng
+
+Archive-Asset-Name: native/assets/images/ic_led_mag_mag.png
+Archive-Asset-SHA-512-Digest: Djs4vmfVClcWDtDwTQ19bx5piW3ZoE6wAqPe96fvpW2ppuqZYjymueEQ-b42D904sL7AAoKKph6bvi6VCIwYig
+
+Archive-Asset-Name: native/assets/images/ic_led_mag_yellow.png
+Archive-Asset-SHA-512-Digest: nRDu6RG558uNtmY3DfK9_SZlBqSO-Fk1L_ne8UtGE3qq7OUJLpqmLaB0S4uSXYOX2QxBhkkBqYJasgxkl6RHqg
+
+Archive-Asset-Name: native/assets/images/ic_led_none.png
+Archive-Asset-SHA-512-Digest: 8fHqI4eKGLL1165tMf1wr1BBpiQmF1haFLmh1Zlf4GL6vGY-04xBJ2JyyMYs6k4su2CKMngslMTrPmEEhPj3lA
+
+Archive-Asset-Name: native/assets/images/ic_led_rainbow.png
+Archive-Asset-SHA-512-Digest: ihyxFwjUbeIxjxY6Q50g2NVvZ9YPiXE-vvHpsjreNOgc0y1wlwzNorLh9lNbGRG8BvukXvNmObWLqD_sjpxZww
+
+Archive-Asset-Name: native/assets/images/ic_led_red.png
+Archive-Asset-SHA-512-Digest: F10BbZ3D5hqMfik0ASUya_7jRsSYW7Qj9sZ-9S4g187oNqQ_x9xB5ET2xNWpgZs3TNH6svfp_9UrfJE7hcZUYw
+
+Archive-Asset-Name: native/assets/images/ic_led_red_blue.png
+Archive-Asset-SHA-512-Digest: S-FfC_fuGb_kKlOLkLZxLGFwrMXRnMyw_tQRr0cs9b4somiIVtuJL_N-Ic-aSMzAmBc2DzpohezfG528ga9yiQ
+
+Archive-Asset-Name: native/assets/images/ic_led_red_blue_blue.png
+Archive-Asset-SHA-512-Digest: LOdl60kPFJmB2Wl7YTXyZZ2x6T_SPSHiQAQnWaayDrwSj0dZfH058CfhLlSIpbSalcl3amSeIY2B2phV_qd2yg
+
+Archive-Asset-Name: native/assets/images/ic_led_red_blue_cyn.png
+Archive-Asset-SHA-512-Digest: 5TzA7yao3JZ2uSOip66mbkU7kZm85Dg6feOXBf8oS6MFQ_59jqTsm4nyxVu7cC1G2-HxaOzgmZvSGsnGW57bww
+
+Archive-Asset-Name: native/assets/images/ic_led_red_blue_green.png
+Archive-Asset-SHA-512-Digest: KHGJkcFOyK8WUnc2qAETUem_ozZUuqDK0UPIIdgQNd-FdmmpiCyZDsKSk9c8jSfLtcDA-FIHG8Q1k3n96zGrbg
+
+Archive-Asset-Name: native/assets/images/ic_led_red_blue_mag.png
+Archive-Asset-SHA-512-Digest: e32o6egXWS23PkbEoAsdbuSsUKy7mVV1sscIUlCqCSDPw8SF2bKsNJBL1HieBNN0LOYt5GmDfXdBE0nNOGZBdg
+
+Archive-Asset-Name: native/assets/images/ic_led_red_blue_red.png
+Archive-Asset-SHA-512-Digest: 3vRwtULpzIyTj_ISuELaZ9Kn71qqYj8f5RWncemJTJIPYHRwtHRVnwOGrYvjxK3Iy7aIrmsi0ohORnqc8_vIBQ
+
+Archive-Asset-Name: native/assets/images/ic_led_red_blue_white.png
+Archive-Asset-SHA-512-Digest: KBLVKSuaN16Q1s34w_w_-_e3FT4DyypmrggsOzT2vS9u-bUgpjOyXc9EbSllAMSn1XXSRhaXdddGZvlZ0F6d0w
+
+Archive-Asset-Name: native/assets/images/ic_led_red_blue_yellow.png
+Archive-Asset-SHA-512-Digest: nCqbE51zpS9yeW2xF0JnsZSI5Z1chUBTjXFx66WJbiuzCX_cZGjpcg0jtnQd8VW2uossZ6Yg-FEKus3s47zPfQ
+
+Archive-Asset-Name: native/assets/images/ic_led_red_red.png
+Archive-Asset-SHA-512-Digest: KDWttsbpLdYkWevKoJ0gyeLT3E6lCzmTmHaezRn2t0SltjeE6Nw4m4IBkcNesSTFW7tdiZp9KoCLcnIsfxCSLQ
+
+Archive-Asset-Name: native/assets/images/ic_led_red_white.png
+Archive-Asset-SHA-512-Digest: vrjuApVrSds6mLcsCGnfaWiRUTxxprXU4NFnc2yPYIjfbtnuPYzgFuC7KlTNf71uTJK7OBX1a4eZKEs8ZuKuXA
+
+Archive-Asset-Name: native/assets/images/ic_led_red_yellow.png
+Archive-Asset-SHA-512-Digest: 8w37XWZJQ5TxW3mCQAdSud_YBc8m4n0SgMp2PFZjHjfVgANk48EQzvX1jTw12ffQnSI370wWuyawCbGJNqVmzw
+
+Archive-Asset-Name: native/assets/images/ic_led_white.png
+Archive-Asset-SHA-512-Digest: 9ByQbgG79R3TuEYBv4hKGgXuIN8GZ_KpRqSOl6qwlS_x9I79QF4MkPptyIIjLBQ7atPb9eYw5PmVYEzSRrOFnw
+
+Archive-Asset-Name: native/assets/images/ic_led_white_white.png
+Archive-Asset-SHA-512-Digest: 3hsnf114UPz2RD-uCjwu2UIU9B4w_K9ph2b6dWDEUzwHPGlDE2LU8Zx7pPdjiOJMarX4-cks3cWvVoMPpUgE_A
+
+Archive-Asset-Name: native/assets/images/ic_led_yellow.png
+Archive-Asset-SHA-512-Digest: R_OFY8DQZ8Xqtler8o75Powsuvx3VaT0RkstOhbFMD7zWbqwH1lNJqB9I8_tvje1Sdx1_qLiC3IBmIwobQOE4Q
+
+Archive-Asset-Name: native/assets/images/ic_led_yellow_yellow.png
+Archive-Asset-SHA-512-Digest: ZdhCgreHi09RtTV-cKf0TMKLdPgOyylTQGaDlLNPJOuP07VWTBQzDcOSCNAqd_Mq1Y2S8TY1oacktmWsSdc-sA
+
+Archive-Asset-Name: native/assets/images/ic_linkedin.png
+Archive-Asset-SHA-512-Digest: DwLGf2h9VMjuOF0iFr9TKQdRFpMBvJMdYTKqJ5TskaOTdpNy5b-oS-0g8xj8V0PyO_iWBvPm5EO-cYxn2lp3ZA
+
+Archive-Asset-Name: native/assets/images/ic_link_contact.png
+Archive-Asset-SHA-512-Digest: E9Ob0tuHyQtKQ2hjTDVxcpnXvLwex1K0RQUGoOmLhvncwhFL9DCMCdO4RDJyyaZeGF7g4TxrR1e2dkxSY5f_mw
+
+Archive-Asset-Name: native/assets/images/ic_lookup.png
+Archive-Asset-SHA-512-Digest: 8PWORegEIQzopPI4StP_tvAmIY4sgztwcF3eW6Np3fUicO96iT6hTYbGmZVjbVjtRSJuxlrCPUx1IEQCyaDtRA
+
+Archive-Asset-Name: native/assets/images/ic_map.png
+Archive-Asset-SHA-512-Digest: A1bocjc-JtS_zToW51SKErLnf0I7WMVsPDq-kmXOi4XvkzGzxbsZUKl1EEM9UOqZIbl71StKAkHEA8YDK-CQHg
+
+Archive-Asset-Name: native/assets/images/ic_media.png
+Archive-Asset-SHA-512-Digest: opUnJcRy1HJK2nveZjU9fmFX8JRHa6WDp-PybUgVI8v5_lpEzBvp9Rs1MWjGI3RThTOvUj90by92idm1h7bMsw
+
+Archive-Asset-Name: native/assets/images/ic_memory.png
+Archive-Asset-SHA-512-Digest: ammCEWYqXEIa3heWwj13xevzKgs_lnhFYZs7gZiVaUUVb4tcIZn4q7fp5-f_U2HCe8rRhfn1IWqJ5Ygf6ztluw
+
+Archive-Asset-Name: native/assets/images/ic_memory2.png
+Archive-Asset-SHA-512-Digest: WGEKmWRQY9vfWhVoIzOFNISoS2NKUNOf_iMQG-hzndT1zcFBHpNfaJeUvJT9n1sUgfy406hcocpKf4sLwcvSkg
+
+Archive-Asset-Name: native/assets/images/ic_messagefilter.png
+Archive-Asset-SHA-512-Digest: _jn5gUy0DIXZY_URszffGVZQwb4Ghn3ig_GSOWLyG_j24fcSvp1JwooU9SDpIgQRHKYt992V3tek5B9uwjVsdg
+
+Archive-Asset-Name: native/assets/images/ic_microsd.png
+Archive-Asset-SHA-512-Digest: noAGo0Z2QYsnwzSEzuWmjb0ka7faeybuV-XjAMtXcLLLN-GH63GxismMWpJaigBR_WdLDFcY7lw9sLf8piuo2w
+
+Archive-Asset-Name: native/assets/images/ic_mode_alloff.png
+Archive-Asset-SHA-512-Digest: TH_L4cFQV2scjaIWNE8X2k0R_FN1g0RUFozOSwGMHx2BzQrG0YacMK4tAH7wAWJlHT9cfg1VhP_ABrZYCPLtUg
+
+Archive-Asset-Name: native/assets/images/ic_mode_normal.png
+Archive-Asset-SHA-512-Digest: JwRw9944Vo60AQKETaWCmVPfyskny9Zfc2RdF5-ffXMn3lcmmcqBymGpjneZElwsJCFg223R4kxAtQ3aZDdt9Q
+
+Archive-Asset-Name: native/assets/images/ic_mode_nothing.png
+Archive-Asset-SHA-512-Digest: MtYg1tQmfjlmKL7WW6Q2Y8SlxMBecy-RazkSJBzkewegH7ZhssJvuqVl1_C202LhpIjE7WTAdvfKPTN_UVUlUA
+
+Archive-Asset-Name: native/assets/images/ic_mode_phone.png
+Archive-Asset-SHA-512-Digest: j39cUg7ftHqahckZi67DlHabOwP1wEbL5CPWEhI12NPcTNY4va4R4Hxk7jJ3a5tiCENx7O9FJtb7NXQMPSD5Tw
+
+Archive-Asset-Name: native/assets/images/ic_mode_silent.png
+Archive-Asset-SHA-512-Digest: 1rYz3H61xvZ21WZJOBOz7x363p3kDU4PJW381nOU-tamjIsFEPn2_p3GmExLACCja8J-CM4AxS008CqK1iyAcw
+
+Archive-Asset-Name: native/assets/images/ic_mode_vibrate.png
+Archive-Asset-SHA-512-Digest: beb3_iU8v6z7IVg8QKcj0gsxpbKe2QxmGS570mgl4t7I-r7CEBcxdaCcQljwwEvnUZ8Un3iPIqc03HKclhFZ6g
+
+Archive-Asset-Name: native/assets/images/ic_moreapps.png
+Archive-Asset-SHA-512-Digest: 0BLK18b9Puf3owCBhCIW5KgPs429wTecPuc0DJwOryQe9AYolKIOGUKKtCMg67_eBBfPyrgLXq2AjtLtoSRHog
+
+Archive-Asset-Name: native/assets/images/ic_music.png
+Archive-Asset-SHA-512-Digest: OokEc6II4_PhQ4iFUmgEj7lJT5ikOzVLKVzxEn_dchj0D96RpL77FIxKh7VEkedONpaTL5N09lNHaPXhPQQQLA
+
+Archive-Asset-Name: native/assets/images/ic_new_account.png
+Archive-Asset-SHA-512-Digest: JUBF_l-TS1_5FvShkGyxDHj20gGg9eA9qDz5-TI1-2pIdvlUSXaxa22zMpPSgTZWB0BwZ65u6WE--Cwd2PRwvg
+
+Archive-Asset-Name: native/assets/images/ic_nomedia.png
+Archive-Asset-SHA-512-Digest: FwMSXivMl_1zzq_6YUrfaVnP82RNa2ntD7JdgnWptU82REpGBEnHgIWJ5eyLP5fKKEWKrLs5foQJBtHwb__3nQ
+
+Archive-Asset-Name: native/assets/images/ic_notification.png
+Archive-Asset-SHA-512-Digest: LRrq2WEmU7bvyxERtgfTIloEGyumvzpw3g4s8rQCNE9hP-SEqqj-Up4Yn-YKKhabroVi8sz7hK4RUKOlk1d3XQ
+
+Archive-Asset-Name: native/assets/images/ic_notification2.png
+Archive-Asset-SHA-512-Digest: u3sZoEDTeIVJ7D9N4I6DTyoZvKZ9aWIzUeoEshgfwCOAD4IUMEF6ua89SQVTDMBEI_2KIQI4twEF0p_iFMJpeA
+
+Archive-Asset-Name: native/assets/images/ic_no_log.png
+Archive-Asset-SHA-512-Digest: 4s58x8pDQovbRTjRY7SGNv7tsxOcV-3Y-2xDvcNPGLgTZf6bgGu6RGN1g-2PbREISxO9sJSSSyhfZwMG277bzw
+
+Archive-Asset-Name: native/assets/images/ic_open.png
+Archive-Asset-SHA-512-Digest: EHgdzBQ7KSkXbPV2w6fF86XReiKiL4cEAf5t9Xi4DOF749wqUV6WVQbaDdpgEHb9UfncQ3zj7zWHx2R9L-N8mw
+
+Archive-Asset-Name: native/assets/images/ic_other.png
+Archive-Asset-SHA-512-Digest: uGz6IRoFL5HSgR_Rvx1WLgGFYpyX2aAUnm4OQ04Kywf5EMvstK6ztvaHsVXG0cYI0ki6pMAdpDWQWav4XZaSlw
+
+Archive-Asset-Name: native/assets/images/ic_pdf.png
+Archive-Asset-SHA-512-Digest: xJ1bRnmav3flN0KoCSUJ1o7h3USKlkIFuvKgyf3Ks4xqufvwXBSX94v6iBKna63ISEIBR-7tHx7185fKtfTnIw
+
+Archive-Asset-Name: native/assets/images/ic_pebble.png
+Archive-Asset-SHA-512-Digest: ThAF-_tTY_uI9a-uOoE-5ArShovuaKvdQnullwSujSfcnS1InVCnLq_GFo-pgVTtRdqlqnkFgz2KC8HDNs0TKQ
+
+Archive-Asset-Name: native/assets/images/ic_phone.png
+Archive-Asset-SHA-512-Digest: z58KaIwsBeKoPLT3Kova1zEzHiZGcJ9GGzEqOl8moQiaZpZGqWHJSdDc-c5l7kjGNvoYZrMDuTZgo6LEvdhFRA
+
+Archive-Asset-Name: native/assets/images/ic_phonetimer81x81.png
+Archive-Asset-SHA-512-Digest: xCrJZg3Sc7FK5WWhwBptr4uVp6ptR-3RJEWnfX6rAGOYXSjKc7lS7OGHyV3ec8jURGOdBdieL0UJO8f0j9oa5g
+
+Archive-Asset-Name: native/assets/images/ic_phone_connect - Copy.png
+Archive-Asset-SHA-512-Digest: w8aXKceZcmUW58ASjqISAcDG2IJi20R8jKXuFX2yg9bA4itOFr8ph6ixwm0dE7KKiKf71T8tdy9PVyf-M3lBbA
+
+Archive-Asset-Name: native/assets/images/ic_phone_connect.png
+Archive-Asset-SHA-512-Digest: rDDup7Ux4ftlbJXk36TRZ3etxjsZ6Z0_HuHtjBSwX7kEc4L8sFXIJOxNEvsG-XwnFZzOzyQTUSWNP2ddP9Yg3w
+
+Archive-Asset-Name: native/assets/images/ic_phone_missed.png
+Archive-Asset-SHA-512-Digest: RGpxoj9UCougYLgTD-EoxNRcGiCHJNjqbnAE7ZHTkv7_6ydgiyaITXMuWECXsmItZP8-h3eInQFeMrTrWboVNg
+
+Archive-Asset-Name: native/assets/images/ic_photoid.png
+Archive-Asset-SHA-512-Digest: fYm4PJgTKmZ-4NTb8ht1vgh6MssO5oc_ofUu-VQYEBuRwBz1X9GgQt4r0mctLJhek5r4N4y11-Dg5xeDRh6F0A
+
+Archive-Asset-Name: native/assets/images/ic_play.png
+Archive-Asset-SHA-512-Digest: VNawHTjhYsGoyFc6CmecyHtqmoARrkqzuX-aCoTcXbGoG-_60tb8zBCyAUzNbfuiSbvu7C-wyqz014rK-KORXA
+
+Archive-Asset-Name: native/assets/images/ic_popmsg.png
+Archive-Asset-SHA-512-Digest: NCx0IJfxURY11l-iX5j3ZX6QfzuPEUOWA8udzgqsW3M1oGEVBF0B_Lg-8dAz6JoclVRb3Pc08ToK0t8dkupoJA
+
+Archive-Asset-Name: native/assets/images/ic_powerbot.png
+Archive-Asset-SHA-512-Digest: lvdEtmOodo_jW31kRxB7yVw5nLbH49dx_JGu9ib6NWHoNFdYlVaaMJotQdrcSS5SsaL9Xj6d73_N3va6fT6ASw
+
+Archive-Asset-Name: native/assets/images/ic_ppt.png
+Archive-Asset-SHA-512-Digest: 8Nhxu_2pketz73WLdgdItNoy_SuyxhECgGI35XSFrEwOr45_8-6lpcB9fOeFsVnm5pWITM-PRVoUORKvBkxBYg
+
+Archive-Asset-Name: native/assets/images/ic_profile.png
+Archive-Asset-SHA-512-Digest: 1-w-CEviMR0wCiH_RXHP9MDfo9aSLCzfayL70J781_3Gdbhs_OyhIaV2Cut5WsotZfmw_1qovbt4t9-QvabJ-w
+
+Archive-Asset-Name: native/assets/images/ic_quick_settings.png
+Archive-Asset-SHA-512-Digest: 2Q6ntApnGfYst7sncfISYBRoWW0TWhjgSFN6FtlmuVLkq40sujm1SALvxzMotjhkXHcgow1RC1yvKBJV6JQWZw
+
+Archive-Asset-Name: native/assets/images/ic_resize.png
+Archive-Asset-SHA-512-Digest: Nnn4k0E6lxhCbH7D1gGBjsqA-Se7el5DATOCWddq9Fg3gywEmOehqNSLEqAMX9pHNUQIej6I2xIe93HXDTpxGw
+
+Archive-Asset-Name: native/assets/images/ic_restore_files.png
+Archive-Asset-SHA-512-Digest: 7sKvNuVELCt9VwkDrHuKhmHXvwSetCd7eOrS1q2EODnb5VqHgbPEzr8MZeqFVsr1BYoe30HCLAd0f6RndPitRw
+
+Archive-Asset-Name: native/assets/images/ic_review.png
+Archive-Asset-SHA-512-Digest: LtDcaIAG9F3xUulAIpxHkC-n_zRllzk8ryyOE7_TKt6W-kQLbSyCPchWXZFicKNVlKSJXDudpuF8BMjDoOT2hw
+
+Archive-Asset-Name: native/assets/images/ic_runfilters.png
+Archive-Asset-SHA-512-Digest: DfX4htr-I4UP9s3gvcTHBSRIjlV_Z2UM-_xkpNelCOFKb397PNkhNsOZYH5U3CJ6Tk9RbjW6wjj-54_YxEqnvQ
+
+Archive-Asset-Name: native/assets/images/ic_save.png
+Archive-Asset-SHA-512-Digest: jK6l5kzaM1_OE9svy7uCXz6n1DQh6-e3EacxG4kAICX8radXbPWFmkVl18F_q-uvFhWzFhdMVmBOrAoRigcOeQ
+
+Archive-Asset-Name: native/assets/images/ic_save_log.png
+Archive-Asset-SHA-512-Digest: QlvMgXt0wk1N4S30Zzydsw88JlLmsrUE4jHXcNmlDA0mug68dSgu014a-MM14WJQB5cID-rU-0e3tsCfgYT41A
+
+Archive-Asset-Name: native/assets/images/ic_scaled_expand.png
+Archive-Asset-SHA-512-Digest: gRff5pzHA5cq4QIwQQ2jOYabsCcxgBSKNaRsWb_oX3rWsZ8D4DHUbobHeRObTzzynIYHDR7_faV8DEpUjssgkQ
+
+Archive-Asset-Name: native/assets/images/ic_scaled_keepratio.png
+Archive-Asset-SHA-512-Digest: ZATKK4W0tP3bWtnunRgPrmE08O-TS3D-liKVzooa0g11bBQMmxOUvVTTLOVNIXukrJJ-nTH2y8aMJm0nEqoBWA
+
+Archive-Asset-Name: native/assets/images/ic_scaled_size.png
+Archive-Asset-SHA-512-Digest: 0QkaOGjBfaBqAIa9YW3o8UhNYTNvy7qcmJ4JlP23I2bTODP7LXeLxqpDqXBjsjfEKhR3uMm4lIcwMgp8bTDogQ
+
+Archive-Asset-Name: native/assets/images/ic_scan.png
+Archive-Asset-SHA-512-Digest: 5KuPUsD8yLf_ErkbMtX0LPVbQ1TxtraJSxDk56sjQ6veGTlqSIl8qxRACwgtIrhfdu1e35Vm39IkBRj_SA2O_w
+
+Archive-Asset-Name: native/assets/images/ic_screens.png
+Archive-Asset-SHA-512-Digest: IhxBl-tk2QHYk8tJ0_Rj-D-pREpG7DE-E62LYEdSGK64d163SoWIuOkPFuXBFYJFR3Ou3iYJ2TyLkM3KYhYkJQ
+
+Archive-Asset-Name: native/assets/images/ic_sd2.png
+Archive-Asset-SHA-512-Digest: LN2v9qmG6S_FAK48R8wpE-tKIjBK2gwhSdKeMeHFa0Fmcv1dVQcIxK5o0speIw15UGMQQSmYn1W2LImEOImD_Q
+
+Archive-Asset-Name: native/assets/images/ic_search_map.png
+Archive-Asset-SHA-512-Digest: g9OXEw_ztMTI6FHkq9SPTC5cdjNVGGRhB0t9MdvfsJ2-hKmmDvPTBU1THnVgdcDtsmtY_IlM6A0gVR1TFsUD8A
+
+Archive-Asset-Name: native/assets/images/ic_settings.png
+Archive-Asset-SHA-512-Digest: KNZ_DZVfFR2cL6jVHch2OZ9ktME5JEQeGvlvsDa7hzywqsNLJiHRDbkJCXXizmVr2ou2MwKiGG82DlYJs9FtCA
+
+Archive-Asset-Name: native/assets/images/ic_settings2.png
+Archive-Asset-SHA-512-Digest: fMArEpwSDVQz1wFRqTBtUr9GFdKArQ-Ot31Dw2F-79bbASBQ84_s1YKpXiEGDcna1YdiLYYOjvAc0HduEK0NMw
+
+Archive-Asset-Name: native/assets/images/ic_shortcuts.png
+Archive-Asset-SHA-512-Digest: skatklzdC4x8_OjRCme9VV0D_OYtlkx4leY21vXuadG4DUxwGBxIbbAD0oFQtJ-q9JmaBL0te5-w2TZ3ONrXSw
+
+Archive-Asset-Name: native/assets/images/ic_shred.png
+Archive-Asset-SHA-512-Digest: -ddMeMebev9POil5muVYRPu46UPobK3GWj7_MoDwVocP88_g8g2wDR3tC1jn3-Md01L4LXGk-eJEhXpYna4mHQ
+
+Archive-Asset-Name: native/assets/images/ic_sms.png
+Archive-Asset-SHA-512-Digest: 8x5vJ0Xd-Z1y_2M8vtLTFmxn-TCymCk4dlOR7PonhkwnqUirJtlifiWDPhy-VAepJjqN0AhLeQCxX6PzkyjiBA
+
+Archive-Asset-Name: native/assets/images/ic_spam.png
+Archive-Asset-SHA-512-Digest: bT7EI8v-U0BFPALhBXxJqJ5Gix1phhbVpqp0DXPYQjPYMBfblIyBAbn-IU2GcRDD6k_QWoPuvjCFwqFbvs-dSw
+
+Archive-Asset-Name: native/assets/images/ic_speech.png
+Archive-Asset-SHA-512-Digest: Kosy26gOG3NURH75KfwSIVK6wj7vTmJsp5tE7KF33Rl3v4daDbie8Ej6xbq3NeKw9D0esS_ZbE2L6RXqNwvIHw
+
+Archive-Asset-Name: native/assets/images/ic_speech_off.png
+Archive-Asset-SHA-512-Digest: EyOh84gocO9bem9hkpAYdTgc3A2j2VyggZ-3xr0jU77N1Tt8xtSS4gsHlwy9Fvt1JydgSiYZsfRqAgDctDN20A
+
+Archive-Asset-Name: native/assets/images/ic_speech_on.png
+Archive-Asset-SHA-512-Digest: WK9xmAPcNec8X_qJxhcMvNIO_okKL4idgTrjGmOQZ-wdpuijl7FbhANThe1rEJd0YMNUhoQnbwoc0tvB_gclJw
+
+Archive-Asset-Name: native/assets/images/ic_sync.png
+Archive-Asset-SHA-512-Digest: 3KnihrIf_GWqbrjoDxRZnV07S0Ed8tZfDsDuoZ1EOgf3GKN2Y38ykknj9x74uJeX0OQhXU3OnP9m9_RPt8ZiVA
+
+Archive-Asset-Name: native/assets/images/ic_system_sound - Copy.png
+Archive-Asset-SHA-512-Digest: jZSDmqAznJQtBrYJURRhbeR4yqf5X7Ns2Gz8REe1bSmyxKtty6D0VlyDzpVghaA-2xqj2JmmvaJlj1h-F9N0Jw
+
+Archive-Asset-Name: native/assets/images/ic_system_sound.png
+Archive-Asset-SHA-512-Digest: cKKHbGAuQckXQOf06ZRkELebrV-O4CW-cxk_1hmbczTc0Bn4hJZ_mg0Oi4ANtvbEVb0XpM0k8JgtDWE3RuF-vw
+
+Archive-Asset-Name: native/assets/images/ic_text.png
+Archive-Asset-SHA-512-Digest: Mecwv0wsBJVDSjImmWqHJkxevpRiPow7zS8rIwl1jP6hw5qAuStACS8Je75gHe2821vXuyGylsmn3vsPCuz-7A
+
+Archive-Asset-Name: native/assets/images/ic_text_bw.png
+Archive-Asset-SHA-512-Digest: Go29cnpY0NXwBOEdyIoaNV8HzLGEp6t9pV5flik6eI1SzLqQCwc-LR1yHik5ZAvV-CsmRyzCvFuwaRqed4h8DQ
+
+Archive-Asset-Name: native/assets/images/ic_theme.png
+Archive-Asset-SHA-512-Digest: 4a7avnU4S7IpvPvJsiL0KgaHiMUisU5GczoYBj4Z2O13klFtfdKUshs__679rPN0jSesmaD0m9mb-Rz9cQxqIQ
+
+Archive-Asset-Name: native/assets/images/ic_thewave.png
+Archive-Asset-SHA-512-Digest: h3hbTB-QIBEoe6NAUYR78F_PFzwQwYbUZ_vkyMMeTnficHNMOvqLDT4EwlL4gy-Vw2XoiLlIIsUGARpLU4tEfQ
+
+Archive-Asset-Name: native/assets/images/ic_timer.png
+Archive-Asset-SHA-512-Digest: d1vo17CSov4QY4dy39O7bSIAiAyMr7uXmkjkCD5y4osusJoiIoM-s2Tn1gq21lqYqkkQLxWlzpPePcwSi_jAdQ
+
+Archive-Asset-Name: native/assets/images/ic_toolbox.png
+Archive-Asset-SHA-512-Digest: RkrNHFdQi3GRq8SHseCSilegOiZMqDNHKa4dkBC6KWrAeuyiz05tWOoHPMLhFecyjPxxmHZaGWtH7vzos6LWcA
+
+Archive-Asset-Name: native/assets/images/ic_twitter.png
+Archive-Asset-SHA-512-Digest: LYbYY9WkZ_AMjQoo2-O2jK1XT-CA3oigwM14RUclO-wdpVyEQphLewvcIHrbcB08mglHGQlX4_4fhQWfiJxoNw
+
+Archive-Asset-Name: native/assets/images/ic_txt.png
+Archive-Asset-SHA-512-Digest: 7m1ndAnuIDYObLo74U6SjStHYz521xFQf546xZ_F2BelIdbHu5_JQBBtTPgEicGFRX5kud_CbUe1Zd5zDroy7w
+
+Archive-Asset-Name: native/assets/images/ic_usage.png
+Archive-Asset-SHA-512-Digest: Udm8jQWsyk6luP67SRtcmzBc7MzWs_T0gbCQL78dxetl1yl_aWYYGnktngCVyQFeRbENmoSo7bFq0hSGPvBpQw
+
+Archive-Asset-Name: native/assets/images/ic_video.png
+Archive-Asset-SHA-512-Digest: 6UaJLvplN_kiC8FmAF_3SrNBgnLzu-XQvYt5bBxi2Y0YjYfXNyv3RhLjP6KLMS8DfXZ5yUrajsPhMs6ZzrBnvA
+
+Archive-Asset-Name: native/assets/images/ic_viewlog.png
+Archive-Asset-SHA-512-Digest: e9XhM8RjF8tdZ3kcEJe8fyHJDC-EoPE3sN8wfLc2h-hY4YsMspLX6Iz3Ds9JqqaLLEfWVyiP5xplDU0bUukaOA
+
+Archive-Asset-Name: native/assets/images/ic_view_grid.png
+Archive-Asset-SHA-512-Digest: bMFsn8SRp5qdSFIRPt_AxRDaCoNqYbBvyRzDk653_0HIgf2HijasKgcvMPwq3MGUKr0AhiNH9qRpRDZOY5FycA
+
+Archive-Asset-Name: native/assets/images/ic_view_grid_bw.png
+Archive-Asset-SHA-512-Digest: _9v2I8x1g-Hbco-XRpjqvGpbY6j0CXnjcyYQp4fl8wloxeeAMXRhzRByH4-rnV2u5jvpjE-NI-FcPLA-qjVS9Q
+
+Archive-Asset-Name: native/assets/images/ic_view_list.png
+Archive-Asset-SHA-512-Digest: NFGd9U-mb3m_XLMA5t2nYWaux_FbOtwPfR8tuYF2ztbY82v-zp6PWff5MnTWta2dzRH-AFpsDvBariWVUtWcFQ
+
+Archive-Asset-Name: native/assets/images/ic_view_list_bw.png
+Archive-Asset-SHA-512-Digest: Gq_OSMvuLdohO0lPrprBPfp3moRGOO-zIJQ9hJm043XlkA_-GSg899Wq-6SJSYIZWjqQuQW5XwmJqdhYp4bang
+
+Archive-Asset-Name: native/assets/images/ic_wallpaper.png
+Archive-Asset-SHA-512-Digest: FwrWdDX_JhWqzOO_Rbx3cxbXvsh93wJF3qVjyNoVX0ji4Gau_OmL76PvjC4DKevT5txemaieRyAFlL7rIAfM3w
+
+Archive-Asset-Name: native/assets/images/ic_weather.png
+Archive-Asset-SHA-512-Digest: RkizPGq7axHRSjTfN2CzInkRWNy8DDX-BTquAPCLc8J-Z1YJRslRVCAzC4Q-Pu0h5OlaGcJ_J0ErrKvTDNzQeQ
+
+Archive-Asset-Name: native/assets/images/ic_weekly.png
+Archive-Asset-SHA-512-Digest: 3lGuQxt8b58FkMBQuSL3foAuihHa1T4p_oMaWpzQaGlLkuvkYO_K0TaQEwGuxc9Y9-QLu6_kAtL92qv1qHU1MQ
+
+Archive-Asset-Name: native/assets/images/ic_whatsapp.png
+Archive-Asset-SHA-512-Digest: zdIFeuQ7zIlH3-2W0STwh5DNk6UwzwvpTkBJTQN7KIVizMMZlxWvcBzS1I75EcFTFiv6B310cxAjWc04rBbVtw
+
+Archive-Asset-Name: native/assets/images/ic_whitelist.png
+Archive-Asset-SHA-512-Digest: pHDX-fKCj8Nj7vun16WIJf3ggqwPprdGNatAz8SKzWp4U2g465CSdGUIb3IHTAk4dWYZrb4XYVHU04x-vNIGqA
+
+Archive-Asset-Name: native/assets/images/ic_wifi.png
+Archive-Asset-SHA-512-Digest: XOsj8oVT9KFzEqyC70ZqaKF32eLWj1oaNifPBWQLryZ9p7wGhzQwChjzsXaRQhv5awDi7pAk8hJc8R0VZAe8vQ
+
+Archive-Asset-Name: native/assets/images/ic_word.png
+Archive-Asset-SHA-512-Digest: 4vrjlHehs2-DGYf3mlh6U4fQ9qP4bONcG9Rx_xVhN0n9OhfPlB-OjTSDcfc2SaiIlzAD3d22_Z1lPgdib61eSg
+
+Archive-Asset-Name: native/assets/images/ic_xml.png
+Archive-Asset-SHA-512-Digest: bTHvgrm2El3ZQCj8lIGiU8NBOrqrZT9CFAlKCDujhtyQDUCNRYTn-bX90KypVrfzpNiqpVim3uJZR5dA8TE_uA
+
+Archive-Asset-Name: native/assets/images/ic_zoom_in.png
+Archive-Asset-SHA-512-Digest: CdT_2KLtxwKaQ15OquKMm3XVR8zmAC-B6FE9_ipQVjlcerj7sDF6S0AvUI_eU1fSymZmwGfABtZGMm2xwd5n7g
+
+Archive-Asset-Name: native/assets/images/ic_zoom_out.png
+Archive-Asset-SHA-512-Digest: YwQr2U0lZwyiNAbOob-pSmMHsAU2WFF82JASnpKeAXNo9OGXprbeJ2CSfjUv-SuuFkjiilAek-vlv7xZzKgxhw
+
+Archive-Asset-Name: native/assets/images/img_alloff.png
+Archive-Asset-SHA-512-Digest: xie1YNhQt9a7wXdA-kS65takKkCDYn1XYSTIOVhvKXjT0DIQ3XRRW87XwuT5GwUByqfaJYjsYC9MnHxFoZjR2Q
+
+Archive-Asset-Name: native/assets/images/img_normal.png
+Archive-Asset-SHA-512-Digest: AgjvAb5jIiWLi4BztY1zR2RkeX5B-ZiHf9PJQLkP1bEJ5y2jlRLieLDwgsD4pJ6PI0vy9pN_DtsaPznJRX8ivA
+
+Archive-Asset-Name: native/assets/images/img_phonecall.png
+Archive-Asset-SHA-512-Digest: DSCJtwIs8wDupxTNb4RgCuOq4NUiadbIt1_nPIw24gCUrkrYIplUpiNI_bE6FXdLJvOBKLZkOmyHeg6EWv2_sw
+
+Archive-Asset-Name: native/assets/images/img_red_rect.png
+Archive-Asset-SHA-512-Digest: OCN-Ng7fKn30ppMN3ajEq6glKaQUJpwz-cXI-4q_fcBuMkmAycgE6EttM2lZZ3MAhXc1gUpydXuAd6oQ1hj26A
+
+Archive-Asset-Name: native/assets/images/img_silent.png
+Archive-Asset-SHA-512-Digest: ezLgU0850JUx4GtqV8aTRB6XKWpdaC3YdY6BNCHPkxCbkibjcEunt9OXt2O5P-f9TaGXdPLH9b3Fg-TrEUTAUg
+
+Archive-Asset-Name: native/assets/images/img_vibrate.png
+Archive-Asset-SHA-512-Digest: qp3qkcIYp8feje4s6IDEYbVTvdE_UqakyC2RiWA4mmK7xed7xBpZlIkpthUNPTcKcd8Cc7cOwV5BdJiK_TMcDA
+
+Archive-Asset-Name: native/assets/images/invisible_icon.png
+Archive-Asset-SHA-512-Digest: yBoDRWfjN17c4nTaRudwfnLM-9GAl2z6j1ImIwmBXUpMvo9VkkluP9D9raOAaaKvUnSHhqJNOUu2u84OmOoASw
+
+Archive-Asset-Name: native/assets/images/search.png
+Archive-Asset-SHA-512-Digest: c96z8_0OWCeygP2Y8lysVsTobZetx3Jo31wkrkaOfxO6rrrsu6Fd4zs4n8VJrE3kNLsg-oFctH6u6l5kr7k3Jw
+
+Archive-Asset-Name: native/assets/images/sheet_background.jpg
+Archive-Asset-SHA-512-Digest: lxNxESukd4HWsIIuEO1UCjUczN0hEIoOnDFO_aYYxzSdqWHcCRhtkSmHklN4_AcIPZM0HFqcVkggUvQAFY7X0w
+
+Archive-Asset-Name: native/assets/images/sound0.png
+Archive-Asset-SHA-512-Digest: 8BC7RIK_96ijXD5iUKyHZlIizucluxokDJPNOwvoovXrgNCIW0HFB-2W9duDanyZSILPMfUDci-GIduJHVvKbQ
+
+Archive-Asset-Name: native/assets/images/sound3.png
+Archive-Asset-SHA-512-Digest: EMTrJY2UrPE4MhVACPd7EEsM4pJZrxlzr2_i6xbUS4d-CxtjG-a4u2qGIpczckYMrgkGaVtxM8z8bpxkD0u3XQ
+
+Archive-Asset-Name: native/assets/images/tiles/ios7/ic_battery.png
+Archive-Asset-SHA-512-Digest: 9tOtjaGZAZIxw6Lw8rQzms_LrZilVnCXphoe1248MOm-_zkPjepI1hjx2vtZXggeYaK6enFRg9F5pDVwtHsRgg
+
+Archive-Asset-Name: native/assets/images/tiles/ios7/ic_blank.png
+Archive-Asset-SHA-512-Digest: 4leChRIvtSnXTlrP3sXGqyZhiZPI64x0Ex2NsRayo0-4F9CJZicyyC6RMEW_vpcdGRv02vRQRqcfLfvxSl30LQ
+
+Archive-Asset-Name: native/assets/images/tiles/ios7/ic_blockcalls.png
+Archive-Asset-SHA-512-Digest: AngF0nnZegdYphEJDDQjjdf5tOUpXBD0TOlSQVdJYmerqcnYLgqg3de9SuXcwGB8pKbuOjvcI9BBQGRuha3CaQ
+
+Archive-Asset-Name: native/assets/images/tiles/ios7/ic_cellsignal.png
+Archive-Asset-SHA-512-Digest: tgB9s8Y1B_kpaglyR8g67Y1sCQ6vq845lgRhuYriB8rWfq2Rnhy9VuCshm3nY-aGhWEVzFcjBhxa2ZQTSp3HmA
+
+Archive-Asset-Name: native/assets/images/tiles/ios7/ic_clock.png
+Archive-Asset-SHA-512-Digest: bLkSIczkThzjTdyZ-ze4EPZ5GcvHZJRKTjE7C6oUw270zVfnIQhmXKJBZCBCvrgABUAvJehcniUDtZix0cp_xQ
+
+Archive-Asset-Name: native/assets/images/tiles/ios7/ic_command.png
+Archive-Asset-SHA-512-Digest: 7edZAc5eu86HfQ2rGflfsqHPn_XIC4TNFtWUBunhqgJ0ZOzdT1BWguRI1RRlpQefhrr2LxPQbFpyryx9C4DBmA
+
+Archive-Asset-Name: native/assets/images/tiles/ios7/ic_debug.png
+Archive-Asset-SHA-512-Digest: emFYo2P4e5UIncxo3Pkd1zZAND41eDKzT119cahMd6zYYvsdzubP_SOYYzg5NQUxOsddN5wuzgM-tf6Hj6Ivgw
+
+Archive-Asset-Name: native/assets/images/tiles/ios7/ic_emailspam.png
+Archive-Asset-SHA-512-Digest: EEfir3R6KyTZKp1v7G0po6TjDFmM1PFMCN6W2NDX_TCEb8EWNnJoeyZeJ7eWa1o93C41b4L2J6qSzMAKyZzjmg
+
+Archive-Asset-Name: native/assets/images/tiles/ios7/ic_encryption.png
+Archive-Asset-SHA-512-Digest: cMrsgqIU0NqFi46aTGmoQlw3u9WDSnH2XIagicVruY5IQKZQT0s0kj290B6233PDOMx-UzxDkzTStlg5HSJr3A
+
+Archive-Asset-Name: native/assets/images/tiles/ios7/ic_filelock.png
+Archive-Asset-SHA-512-Digest: myNeHMJ8YFp65lBrtdmrxsQtd6vUxDyoY7p2qTWhFhsMGUJ_unF0DrQBe7buDoUWuWjaO45dFy2_HmOV9HlyNQ
+
+Archive-Asset-Name: native/assets/images/tiles/ios7/ic_geolocation.png
+Archive-Asset-SHA-512-Digest: NIdDVWpefkFybgxWKH88_cyX12k_M5Kx3prX7NyDLd1r0KUVgAntqQ8mGs1HvMqwo1qiWxpqntJGIaCEn8V35Q
+
+Archive-Asset-Name: native/assets/images/tiles/ios7/ic_holster.png
+Archive-Asset-SHA-512-Digest: D_XvgGpMQQgp1-bNmnp8gZy9xi14CsWMiUjQNGEZSFomXcSaECs8AC2lGV_7JhUyqPOgJE9c1ThcEDRd1NJrNA
+
+Archive-Asset-Name: native/assets/images/tiles/ios7/ic_led.png
+Archive-Asset-SHA-512-Digest: oV5nTUDPq7LiDc1a0XKNcMTiHNBb6_jvweV7--s9noRkT8Ha8IlbqvAZRRG8P41zmmrKGWTrvHTPBEUgjckk4g
+
+Archive-Asset-Name: native/assets/images/tiles/ios7/ic_phoneconnects.png
+Archive-Asset-SHA-512-Digest: WOwtChTvfRg0fWDHRpn215ngmYdFl5k-Xdu6-U4hwpwvhm8qMMCs-HLudqzcvevSlsXjDVVBPD3_kToBJv6HuA
+
+Archive-Asset-Name: native/assets/images/tiles/ios7/ic_phonetimer.png
+Archive-Asset-SHA-512-Digest: QfeSEN9OYuSVvp8pBtwUBCva9uV6DfN5czWhDiAdMn3TTlj9d1oRulyz7SSHN7kbUUFrADgQPvlXOKGaWEAUuA
+
+Archive-Asset-Name: native/assets/images/tiles/ios7/ic_popupmessage.png
+Archive-Asset-SHA-512-Digest: TmpoR-Gz0vm29AxryB7ojYux7dPZ9-1mrLw2VBA5h_LEPjNIAKos3w2vs6icQYYhhF6y2iUTHeXBBYD76w1MAA
+
+Archive-Asset-Name: native/assets/images/tiles/ios7/ic_scheduler.png
+Archive-Asset-SHA-512-Digest: SForwSZkkwzRCqZxcedRat4e9uFIgbsRPmz0FWSN26hMHi9wN-lHNUfmwGId6J_xIgsLlc8Hxf_cwdyhqpu5OQ
+
+Archive-Asset-Name: native/assets/images/tiles/ios7/ic_settings.png
+Archive-Asset-SHA-512-Digest: RrCOX771b5WPwdoRKkQ4nsnhbs8jB5pY07K-Uq4cKaA59aVTwIFZtmap94Rgm5duSVhACwR7aItGhPfTmLGCQw
+
+Archive-Asset-Name: native/assets/images/tiles/ios7/ic_sound.png
+Archive-Asset-SHA-512-Digest: gu6UJkgBpLrDTvk5GIvW27yHrPrwTEtuS-djW3Z_JmWvFNfj_PnQA667TlkwXbQx3VFkAdZpq8wFgganDqZmOQ
+
+Archive-Asset-Name: native/assets/images/tiles/ios7/ic_soundevent.png
+Archive-Asset-SHA-512-Digest: 9QuSYf7r99o-cSnW7HUHyI-JJ86qHBW2ZTExMeLAxhVEAivjQZudZJJipOb40lOk8LzZP8_h_B8l7dzEPbRPEw
+
+Archive-Asset-Name: native/assets/images/tiles/ios7/ic_speech.png
+Archive-Asset-SHA-512-Digest: 6tAmvnReLeW4ab9cawNGL7WwrS4VGEz4ORYNE5NT4rKmVY2N3KocDzRVkIwwJgx-vEG0LFqtpGap8fzeJr9D3A
+
+Archive-Asset-Name: native/assets/images/tiles/ios7/ic_sysinfo.png
+Archive-Asset-SHA-512-Digest: 94mCcUil7JO2rbUUVZ06ticTk8AXKF2bhAlpG1NTEn247Maba8ycR9RGt0qCccPoYD0XoMQ1fUhiKGkikQEfrA
+
+Archive-Asset-Name: native/assets/images/tiles/ios7/ic_usage.png
+Archive-Asset-SHA-512-Digest: jCvf_DCt5e0Ft3Tz4PePmf0mw5XBJKpGj0-j__Y_zWLN30xXN2-0PZEKUA1qX0LiPRdcZVpa3-v6pkIeO7mZFQ
+
+Archive-Asset-Name: native/assets/images/tiles/ios7/ic_wallpaper.png
+Archive-Asset-SHA-512-Digest: 5nLO-ojjoMj1GOtMO_HPLV93pXQL9WpWlWLCKckH4SQLchmNnHm0zd_SYFeUXMaZmzBa069eirD54uOzLO0tMA
+
+Archive-Asset-Name: native/assets/images/tiles/passport/ic_battery.png
+Archive-Asset-SHA-512-Digest: p3qaWENZhvtqs9N3Lfx0Op2dWnYT_bNo7I8fkXpihUz0izcXKJe85HSJNVE75OjhM4pN2rypZU67q4LeNXwr4w
+
+Archive-Asset-Name: native/assets/images/tiles/passport/ic_blank.png
+Archive-Asset-SHA-512-Digest: 4leChRIvtSnXTlrP3sXGqyZhiZPI64x0Ex2NsRayo0-4F9CJZicyyC6RMEW_vpcdGRv02vRQRqcfLfvxSl30LQ
+
+Archive-Asset-Name: native/assets/images/tiles/passport/ic_blockcalls.png
+Archive-Asset-SHA-512-Digest: LM2XiIImWNiXHfnzr9ayc8XZQRHbzL6CVgc9xm52-KOvpC0KNN75_lmchqj3U-wH-6WHSR1u0xppXKf5HchqVQ
+
+Archive-Asset-Name: native/assets/images/tiles/passport/ic_cellsignal.png
+Archive-Asset-SHA-512-Digest: DtbbkMOREYAkbnJc-uU9pStfWmZU2DmT7E1iTneJb451CoDt_Q_DWqDsfWY6tzruY-RhJVrdUL0RrmsLCrz8Gw
+
+Archive-Asset-Name: native/assets/images/tiles/passport/ic_clock.png
+Archive-Asset-SHA-512-Digest: PKGI3IwIbrw8xZp17dnbIpVYaikFmVV43lZmb7JF29Qpo0sCeLFBe8ZFEAyoCbaTLjMl-zhUuKRv8gNx0EWG2g
+
+Archive-Asset-Name: native/assets/images/tiles/passport/ic_command.png
+Archive-Asset-SHA-512-Digest: zSEikHybNj6OuYcHPc5sU29psI8rS3WECwjEBBKlsDGzNbQZYsNlfGHmiaJoYMR4lzSlETNQgb1APuSe4EQqPg
+
+Archive-Asset-Name: native/assets/images/tiles/passport/ic_debug.png
+Archive-Asset-SHA-512-Digest: LhP5-SmDPXcD5pDh95d6Xb-32-NzEiyMUdpc-z-GCDuNimGrdz6uvlqFIuh9xvzXbIYNwEp4LY-z6LVRYFxe5Q
+
+Archive-Asset-Name: native/assets/images/tiles/passport/ic_emailspam.png
+Archive-Asset-SHA-512-Digest: aBZbOGCZWOVT30GqUzFzzC0w1Gd7_E2ev3lf24pBE9JsTO-QaUpWOUdEBxQX_gP4TnnYRdjW8WIR6VKxJbVyAw
+
+Archive-Asset-Name: native/assets/images/tiles/passport/ic_encryption.png
+Archive-Asset-SHA-512-Digest: EsmXInxktky70c69F59LhZqWQhFS6qioL0yGd65i-vMiSlEUg4AvBlkPLk20A0lThrKXvMeoALl00tY-9O7lFQ
+
+Archive-Asset-Name: native/assets/images/tiles/passport/ic_filelock.png
+Archive-Asset-SHA-512-Digest: zK5DIDOXacvFMJuK0HMVIv807s5LYkXRKfgWQGslAdBsADeahG5VgJ1brSdxIFHhkTc0VrAtbd8yY6Xk7W-N6g
+
+Archive-Asset-Name: native/assets/images/tiles/passport/ic_geolocation.png
+Archive-Asset-SHA-512-Digest: oj0O6abkYkOV07g3dmZI0kBchb-dK_PtEnDqMik7pQ-9vrJcE4ZkyEJlC7Hhrwhnygbnitm-lrantlg-BHQ20w
+
+Archive-Asset-Name: native/assets/images/tiles/passport/ic_holster.png
+Archive-Asset-SHA-512-Digest: 7KoXz-iFQkyNmWp64Yx_eW8nGGgi0LQ6Vjrkjuy66X2kCT9oOSAWqwGYaTkbPw7VtK8KGSFP4MyXcY5y2HfV9g
+
+Archive-Asset-Name: native/assets/images/tiles/passport/ic_led.png
+Archive-Asset-SHA-512-Digest: Oci0X_m-vxQf8myNK_8TnIYtkJygGVyo9Jy_O9yjlsYozOVxKWRsLoOVm_iFZNKDSCyNnQfsfXE4jjhNJjnuLg
+
+Archive-Asset-Name: native/assets/images/tiles/passport/ic_phoneconnects.png
+Archive-Asset-SHA-512-Digest: nAQ_MLZRO4O5O65zbEUGqmr31AHFBDjbn8N9MJMii_rL2W35ehI54PBiHz5QufeMrCS3KzBiPLp2fnDdEWsZqg
+
+Archive-Asset-Name: native/assets/images/tiles/passport/ic_phonetimer.png
+Archive-Asset-SHA-512-Digest: QuHEA-GkOOMaMcvb6ykES_6NQRdmKnxSUfcLmQHrCGR76ubYulv70ia8Pyg1HyQM7wUeEoNY1DyEc7REA_hQOQ
+
+Archive-Asset-Name: native/assets/images/tiles/passport/ic_popupmessage.png
+Archive-Asset-SHA-512-Digest: owaOfyfjifBQ_afxOuAof91u7IxB5h3lpqfIVgpCsiMzPjplzjmlPJAdbYNneezS-zOkGPd9dnSLCvUucaxckw
+
+Archive-Asset-Name: native/assets/images/tiles/passport/ic_scheduler.png
+Archive-Asset-SHA-512-Digest: sw_w680bQZaW_rfOw4BJUZbFbo3u0hOsUPTThFozZ8cpiSewHkqI1gwCUg6iQOwElyDj8wqUBxJ1DW-gXmtj1w
+
+Archive-Asset-Name: native/assets/images/tiles/passport/ic_settings.png
+Archive-Asset-SHA-512-Digest: b36gwZJf9YQtWLlHTAUTyePw8KcKwGn9kY6YltWHQTBQYe-VQ1mD2g7NYhmqWyZhtqhcwHhOEWgdzqnkzuhQsw
+
+Archive-Asset-Name: native/assets/images/tiles/passport/ic_sound.png
+Archive-Asset-SHA-512-Digest: f4rrsw7YpREJfMHArGt7idj63oP68IiiYM2jI1UbYgidgIQehLaAzFPIQCP44hnQei2Eez0X6VEnIwVj1dTkpg
+
+Archive-Asset-Name: native/assets/images/tiles/passport/ic_soundevent.png
+Archive-Asset-SHA-512-Digest: Wn7Sy1X3-n8ryLeah3jQc9_72q-5RLcwRCKDRAixQvFlrG6nLtJyz5Yxq_-eR581PhBl7uT4c9EAm0_i3URK0A
+
+Archive-Asset-Name: native/assets/images/tiles/passport/ic_speech.png
+Archive-Asset-SHA-512-Digest: u11kkYxb7dOtKun-inJ8bVFPgWow2ksDd2szeMOeepMlYsNMpB7Wri6FlVf27t1WF1ohFI9PL5xS7GgSoKepiQ
+
+Archive-Asset-Name: native/assets/images/tiles/passport/ic_sysinfo.png
+Archive-Asset-SHA-512-Digest: 43SGIB3prZU4IpyfhIfnZJgbSC5jrE9PQsuCAToW-pbfiSq4-5UVsTGB8KBkr_sh-WmWX_oolAGvzh-J5ut94Q
+
+Archive-Asset-Name: native/assets/images/tiles/passport/ic_usage.png
+Archive-Asset-SHA-512-Digest: zrEBqcf1o6Iox3vTH5cZwERzO2Buzyf_Uj6uDE0_dhBujj9dEk4t2U8dPdYypUaQPhJF2IbCwh-z10wZXZR2-Q
+
+Archive-Asset-Name: native/assets/images/tiles/passport/ic_wallpaper.png
+Archive-Asset-SHA-512-Digest: X9VTwTlrsGOlM3SvZ_8eoO2k_rVCJIbrnstoubfzFG57ztX0_TF0GoAc_NBob9BXDiSpXsqHeVlbBzf6Aa2RIw
+
+Archive-Asset-Name: native/assets/images/tiles/polygon/ic_battery.png
+Archive-Asset-SHA-512-Digest: gCWY4A3LoQ9JHVGgCIJGynChUMxgRNRyG03AV_UYdHjp2Sc36aMzAx4IaIWz6mvCDNy74neWXj5xvFlEEkZvdg
+
+Archive-Asset-Name: native/assets/images/tiles/polygon/ic_blank.png
+Archive-Asset-SHA-512-Digest: 4leChRIvtSnXTlrP3sXGqyZhiZPI64x0Ex2NsRayo0-4F9CJZicyyC6RMEW_vpcdGRv02vRQRqcfLfvxSl30LQ
+
+Archive-Asset-Name: native/assets/images/tiles/polygon/ic_blockcalls.png
+Archive-Asset-SHA-512-Digest: JCFlOMZM2wS3j0TNvyHQ4GUo4yCwqTTJhq3azE1YBLJDn7kaRP6RUV4YYDSlHhO97QVp6G3bZyQ6AoCuebRjbg
+
+Archive-Asset-Name: native/assets/images/tiles/polygon/ic_cellsignal.png
+Archive-Asset-SHA-512-Digest: cq9c_tPkaj9A5FYqB5bUJYDUUmYOBfxrgyCoEDperq0qc3QxJYqQBV3h7ys8clrNSZ9GG5NqTITNZcvgaIUcQw
+
+Archive-Asset-Name: native/assets/images/tiles/polygon/ic_clock.png
+Archive-Asset-SHA-512-Digest: g91C91NbEuiVFDgVSQoS7hRETIO2unJMxXAg7jsasTzcNQXO915obxSeV-yQy5ETuRpXne1G4_N-3R5AMMyKnQ
+
+Archive-Asset-Name: native/assets/images/tiles/polygon/ic_command.png
+Archive-Asset-SHA-512-Digest: y8ImoWzA9EiND1i2R4JIntEqyTOoYqAXE3T98anvI_0i11IH7ThLOoh1uDwR9WnLWDh2eA-meCOw77PwlGMRVA
+
+Archive-Asset-Name: native/assets/images/tiles/polygon/ic_debug.png
+Archive-Asset-SHA-512-Digest: Aa9MXUzRQrVZwKSqpzofM2sRw0NGcSvlCbZxnSQR8SWlIM-BQtxPCJx3Sc1ydIvNwnqFiq3YiZ6XffQqGF5xyQ
+
+Archive-Asset-Name: native/assets/images/tiles/polygon/ic_emailspam.png
+Archive-Asset-SHA-512-Digest: _IYI7OXvfrjnkjvVbOmv8UwRkbhNC0znnaxbZMCW5iHv8HaFx_SGJzKokWsnUj1vINKKUB2cHIq_DuiZ2IrJuA
+
+Archive-Asset-Name: native/assets/images/tiles/polygon/ic_encryption.png
+Archive-Asset-SHA-512-Digest: BcdCefCffg5u-4PjpvGZMQCgFYB4gIkHMLYh5Cg45hJbBFrzMIyhA36pxN1kbw11Dxp3hKrIk3zH4VuwuoLJNw
+
+Archive-Asset-Name: native/assets/images/tiles/polygon/ic_filelock.png
+Archive-Asset-SHA-512-Digest: u9kZNIdPs23x-M64Ky9veuo3Hcu1-mRxG_NXyFJ4ZajrNDh2UIOR6FTUp73lsXdAnO4dih2NDJb5i2Wp582lQA
+
+Archive-Asset-Name: native/assets/images/tiles/polygon/ic_geolocation.png
+Archive-Asset-SHA-512-Digest: tMe67_ENzKHQXs94P6opyQoH50JS3qy1KyREzGcemr1CqQa0pPTQN8CRXGv2E63j_0qOl17UiZxrdcBjNW0uYg
+
+Archive-Asset-Name: native/assets/images/tiles/polygon/ic_holster.png
+Archive-Asset-SHA-512-Digest: w9I2mWnDrpUKiJVYDC_BXIAqfdEOdztIH_yAZmvL5yh67uX2KKiHPHymPnGH7rkRUwCDU3FyJkLIUFQ-4BEcpg
+
+Archive-Asset-Name: native/assets/images/tiles/polygon/ic_led.png
+Archive-Asset-SHA-512-Digest: h9chv7XKwD7S6N9NCKt-jOI__F2MkFNnza6ZVl0SJjz7kj4RK_D3zzLPRE9k1QSXgoulERadb31hM03LNTa3og
+
+Archive-Asset-Name: native/assets/images/tiles/polygon/ic_phoneconnects.png
+Archive-Asset-SHA-512-Digest: -Q63yRMPOwp1ZrWZEZUzJXiBvCWhdLvO3VJPVCHG38yMnXnQgWSgFholfprUKpYnJkHovysr1BH6EVjCem8pkA
+
+Archive-Asset-Name: native/assets/images/tiles/polygon/ic_phonetimer.png
+Archive-Asset-SHA-512-Digest: FRC_bzXLR-_FGB8EUeBf6iCg949eVMFW0MnYNB-DxDjP0xuQoeJKuGhuvsmEfP6z9GGvTLkRI1bLaIYjp7G4Rw
+
+Archive-Asset-Name: native/assets/images/tiles/polygon/ic_popupmessage.png
+Archive-Asset-SHA-512-Digest: 5MJFpe6bB1NnlGE0AV7rM0uIjJIYD9QHbbFZ88-L4zMr7Cae2z1eWRWdy3u66oUsgQ1Fzf78D9b7DtQC3tXM2g
+
+Archive-Asset-Name: native/assets/images/tiles/polygon/ic_scheduler.png
+Archive-Asset-SHA-512-Digest: ylIV9kMGvtgPb4PX1TB91hQh3wEry1hig0A-kcfXC4N8o3-nVs5rB7aCbvgITZWUoVhhttviwKJBzmy0pZGChQ
+
+Archive-Asset-Name: native/assets/images/tiles/polygon/ic_settings.png
+Archive-Asset-SHA-512-Digest: rzd7TMy8AovvjDS0b9gAngcGKT2KITzXv7w-9cptjgb91fkcNqSHluvw_XR8l4kWspqGELuO0MxYLz8RfyaT9g
+
+Archive-Asset-Name: native/assets/images/tiles/polygon/ic_sound.png
+Archive-Asset-SHA-512-Digest: 7njFHRDea6eNgBy2uSjdPi9FmtVy6a7mhBMQO61wcMjxRPKEtPiGPX2I-Ybm9Pti6FmM1H8uKP-eUr3tkY1eOg
+
+Archive-Asset-Name: native/assets/images/tiles/polygon/ic_soundevent.png
+Archive-Asset-SHA-512-Digest: 0qdL0SHArN9lvOH-JEYPAIDsEvug0ay1KN7Pwsn8x7zp98NDG6Eb62QwxSCr9MBnYH7u9GZ7dB8wbB8pIayJXA
+
+Archive-Asset-Name: native/assets/images/tiles/polygon/ic_speech.png
+Archive-Asset-SHA-512-Digest: ekyuXkCt_aXY_I3kIOTUhdrHnvi4bzQpYQreR116wZuu3mkhLUPpynraA_HRz4KhgDcOYemTxkRLeO-yOgIpIQ
+
+Archive-Asset-Name: native/assets/images/tiles/polygon/ic_sysinfo.png
+Archive-Asset-SHA-512-Digest: vqYgcLHco1sKYrvg8Aok6Mqiep-xXs3wdHD6qxW8UrqxaDzo4UZdiq6HvsHwbdTYnwHDTDON670NboRg569dRQ
+
+Archive-Asset-Name: native/assets/images/tiles/polygon/ic_usage.png
+Archive-Asset-SHA-512-Digest: GxaWFm4Savm5sAaJWJVHcVgbCuEeWKzODx89BQqca4tm7zQLQoiW9L3yMSFgmRysnXY_WsWe2msF-1-eDiPV6g
+
+Archive-Asset-Name: native/assets/images/tiles/polygon/ic_wallpaper.png
+Archive-Asset-SHA-512-Digest: jJV-rIwlGlZafu_Zp7W6-f2EtMHH4Xl77Fu-SyFs4KgC-CJd3PJsWIjxCGca_OXoDFxHF10qgO0U02lAiESkEg
+
+Archive-Asset-Name: native/assets/images/tiles/round/ic_battery.png
+Archive-Asset-SHA-512-Digest: 6DYxX3JQQMDl6rFZLEP8A87BBBT3k0C9W7l9ZGt15mVNfCX9Y75IdtmlV8oQ2w41Lig-Ig88z6y3dvq0rt_eJQ
+
+Archive-Asset-Name: native/assets/images/tiles/round/ic_blank.png
+Archive-Asset-SHA-512-Digest: 4leChRIvtSnXTlrP3sXGqyZhiZPI64x0Ex2NsRayo0-4F9CJZicyyC6RMEW_vpcdGRv02vRQRqcfLfvxSl30LQ
+
+Archive-Asset-Name: native/assets/images/tiles/round/ic_blockcalls.png
+Archive-Asset-SHA-512-Digest: ivG4wb-ns2TwWO4Ku_1IV85jkV8kJl2x-b7wD5Sg6TlZwVdva7QNJETutj75ki12iVxvP5htDg7rqAZMURacVg
+
+Archive-Asset-Name: native/assets/images/tiles/round/ic_cellsignal.png
+Archive-Asset-SHA-512-Digest: Cc5avUQ9VDF5i50ZKeSDuKoX2N4tChku_67pZKgWQ7xkPP51JMk8JMXdJbU0FrMP-zqwTT4u0iZTYpy_cwWcBQ
+
+Archive-Asset-Name: native/assets/images/tiles/round/ic_clock.png
+Archive-Asset-SHA-512-Digest: 1cUgQBUGZoxWsUeKxgUV-FlaLtvgqiMJWuJ269dfCHweXwL6PVytIj9wLMNcTMjGsQZM5x4Bjm1N0_KPcfpxlw
+
+Archive-Asset-Name: native/assets/images/tiles/round/ic_command.png
+Archive-Asset-SHA-512-Digest: _2JQ48KYRvUZuTk4ebhSSNlJMUtKRhXoaeChsiLcbcjyi3TBCFP-r1xUz2UYxT_ysa6OHeHBI6OU0qyo1XB4Jg
+
+Archive-Asset-Name: native/assets/images/tiles/round/ic_debug.png
+Archive-Asset-SHA-512-Digest: 5dhtxj7yDj3fN6EEsl8ayHusVavYMMGWyLOy4grdQ6XYHTwjERxjDD3UQFJNeeUmQsWfuYNLU4Wqfpycp--7PA
+
+Archive-Asset-Name: native/assets/images/tiles/round/ic_emailspam.png
+Archive-Asset-SHA-512-Digest: R5dSDPjIMOgGWehB8eg3wQLtVnPgnsPhC_EPtizkuMP9unUp8il6-rYTfVTNqqwdm-hWgo3Nxr_B6ZiqWcNE8Q
+
+Archive-Asset-Name: native/assets/images/tiles/round/ic_encryption.png
+Archive-Asset-SHA-512-Digest: an5e_PjU2l7f1ZcSS0fmgTb2dc9oPQ0hxfaWlEVfvTTmRm3pQ7WqS2zQk0TpfRGYTD6ZZIJJdS4KmKrGh515bw
+
+Archive-Asset-Name: native/assets/images/tiles/round/ic_filelock.png
+Archive-Asset-SHA-512-Digest: alt3LnDr7COZGjfbAUUTRk9OebOxeJmsMNyuKaYcHM7BYgp_5_3MVlHgVv8pTtf6BGC7ho3iFzfkD6zXSksUtQ
+
+Archive-Asset-Name: native/assets/images/tiles/round/ic_geolocation.png
+Archive-Asset-SHA-512-Digest: NsPUmtkEweuWms7_1ML71ayiDUehoF-3-ROm6iRNv9jJh7vXcK7Jo8PilJVbWfpLH9e5-4nwrpeMIrfQJent_A
+
+Archive-Asset-Name: native/assets/images/tiles/round/ic_holster.png
+Archive-Asset-SHA-512-Digest: iRcgqQy6v11VttWlL2Cn9pBbAmI3XdbE-GPPJPh7tosdopVXZrYTfQlx8Rg_ytNnMy-1zLg7-75nQYds6fyZwA
+
+Archive-Asset-Name: native/assets/images/tiles/round/ic_led.png
+Archive-Asset-SHA-512-Digest: 0eG1Oao1MVqku9QV3QnBKeJLEvln4VzbvutxvJRIhiS3lf1UlnGKHEm7mycgj206Y4lYUh5uHemCnGEsEWqWVw
+
+Archive-Asset-Name: native/assets/images/tiles/round/ic_phoneconnects.png
+Archive-Asset-SHA-512-Digest: eNuHa3SeIyYFvIN04r565-X4m0Bc5yH26fifk_opgnTu5Q-qnSI-yTl2OSONv4UGlSF2v394MfX94VOzU-AvoA
+
+Archive-Asset-Name: native/assets/images/tiles/round/ic_phonetimer.png
+Archive-Asset-SHA-512-Digest: 4Y72TJaxoXNq30MhLKlWdq7XhJKpjmT8_KvNwHIsIXNMTkikiPsyswDPQMFVdN7vNHy-ONlT4YW9WWdpT5N7iA
+
+Archive-Asset-Name: native/assets/images/tiles/round/ic_popupmessage.png
+Archive-Asset-SHA-512-Digest: j3cwqeDuDUvXr6FBZvNa2KZ9OKoqhoLqldRlMSYMZBjl0Tr9KdUAYb2-7Xl1yuBosqsZjp5qtvZ0etp0_scdVA
+
+Archive-Asset-Name: native/assets/images/tiles/round/ic_scheduler.png
+Archive-Asset-SHA-512-Digest: GMd2h0ISMxPESH5yqeW4WtRIHtea4wujXtbESdTkLxxJegmVnyjszftmgrrjUFIyypWp4RUMeoEAyTxpMWL2Mw
+
+Archive-Asset-Name: native/assets/images/tiles/round/ic_settings.png
+Archive-Asset-SHA-512-Digest: LGH5_i7IiEYsIa0RVHFLMRC7ZDbcZzxNfoNCvWckBsrRyECfW3ESHo3AM4xEe6goiJxTqsGFlCOuCBygh_TIdw
+
+Archive-Asset-Name: native/assets/images/tiles/round/ic_sound.png
+Archive-Asset-SHA-512-Digest: 9fbwiWeUJJyc3PNOOxZl302dcqcyArvq98_tvztoYB3ER7_pNHcCZ9wVcgTyEKlN401IUY_19SL_xj_fCMzZXQ
+
+Archive-Asset-Name: native/assets/images/tiles/round/ic_soundevent.png
+Archive-Asset-SHA-512-Digest: dzvQQreDKijlptrJYwFjlNldm1l4Hi_ET6_lT6qM8afh5shE9lr1Hu0fyFzs_BindIIuLn4qmeUDkZD9xhCaHg
+
+Archive-Asset-Name: native/assets/images/tiles/round/ic_speech.png
+Archive-Asset-SHA-512-Digest: jFVx647AsvuFb7Jj6ag54lcENiF3d8lgn8bogPsKgP-nNDIDGe5lAb2nDeLf4JGlFUcCezq7CtvrnGm6eV5RmA
+
+Archive-Asset-Name: native/assets/images/tiles/round/ic_sysinfo.png
+Archive-Asset-SHA-512-Digest: wT5J2eNxP4NvgOsOIvhYk5g_qVSnZpEuME0ldjIad_7MayaQ2WM5r2e5Fv9G-qOd-QjuVPdrI1IlCgT7YUNXLA
+
+Archive-Asset-Name: native/assets/images/tiles/round/ic_usage.png
+Archive-Asset-SHA-512-Digest: qBgkNfXe70bxjay0Y4FiiEDGsbKnbrR1niWFtgDG936nUlAgBXEL3JmH8j7r4KsK4yP0P2TzUMUAw67tqA63-A
+
+Archive-Asset-Name: native/assets/images/tiles/round/ic_wallpaper.png
+Archive-Asset-SHA-512-Digest: nq-93Ii5MP9LELp3Ab3Kb5k2kukuna1s0AG7v_4Igzt29PLMeb8fGXdIVWtjiawUP6yYpE2iLs5HHRHl0S-Clw
+
+Archive-Asset-Name: native/assets/images/tiles/shadow/ic_battery.png
+Archive-Asset-SHA-512-Digest: 58MABpARR07h_1l_LNMrebF3HXQAhp2IVJK89-kjsw-pr5o7q9BYjVVMiNtpzsiNd5J-xCAGbufTOzmwAemUqw
+
+Archive-Asset-Name: native/assets/images/tiles/shadow/ic_blank.png
+Archive-Asset-SHA-512-Digest: 4leChRIvtSnXTlrP3sXGqyZhiZPI64x0Ex2NsRayo0-4F9CJZicyyC6RMEW_vpcdGRv02vRQRqcfLfvxSl30LQ
+
+Archive-Asset-Name: native/assets/images/tiles/shadow/ic_blockcalls.png
+Archive-Asset-SHA-512-Digest: pqFTDXXlJxtWQm2n9HpYRok01YBNS1OT7NCBatwgOhDuSC0uMgEv_f0DacNM9xLdHLLlRodSDtxXXYNAgNMZfQ
+
+Archive-Asset-Name: native/assets/images/tiles/shadow/ic_cellsignal.png
+Archive-Asset-SHA-512-Digest: weQ55k21gnmWIHRuqHKzOUFAUOKzRTXo7uoCD24FfuUusGHAW5mCjpPJFTsS_HPH4yyVXQlEml77GTApYEb6Tw
+
+Archive-Asset-Name: native/assets/images/tiles/shadow/ic_clock.png
+Archive-Asset-SHA-512-Digest: B5oRSoZrDpz_5_LMzIKwqd9DeHCU-iEsMZdsDuUYu1mxyMfTVRRtrVt0P51J8-fxTEOm3dQZGfgYDF4l2N-OCw
+
+Archive-Asset-Name: native/assets/images/tiles/shadow/ic_command.png
+Archive-Asset-SHA-512-Digest: ZP3UaGFzY1vCinN_dpdBlINjOy5XP1X-Hwc7rzYhtgqL_W3kftUo8m6cCLvatDVr5QlhEAZKdq1MaH_78lOzPg
+
+Archive-Asset-Name: native/assets/images/tiles/shadow/ic_debug.png
+Archive-Asset-SHA-512-Digest: qWuNAJDIlTKrfEG_JYy3AFKUs1mfktMfk3HdIhFCk0AQOCMi03pStYxUz0T3Qmh5uouyKKxzyWFUE1t8yx1bRA
+
+Archive-Asset-Name: native/assets/images/tiles/shadow/ic_emailspam.png
+Archive-Asset-SHA-512-Digest: 2man0DrZmQMXkf0oC14oXA5cp0VQde4tWiAwwbKWmGu74yMv0nRjJKkxJHDAhVInM00UKlzr1Qwo3NqCM32xfQ
+
+Archive-Asset-Name: native/assets/images/tiles/shadow/ic_encryption.png
+Archive-Asset-SHA-512-Digest: 0GxMs9hyWHaILwXf3iAbLJZNhHHy-omKQOd1Q9Xrx1T7s9QQ5ZL_ELTOCGz1bFyYm2XxkKnH2qmVZMYvn6PfMQ
+
+Archive-Asset-Name: native/assets/images/tiles/shadow/ic_filelock.png
+Archive-Asset-SHA-512-Digest: PhyJmipqmF8PnVaW-D0NumJkXisxGttWjbQX9Lgk5sJZruQn7BJMcreP0pz--0vdVJfZN8iCq2xuiHGAr8f6nA
+
+Archive-Asset-Name: native/assets/images/tiles/shadow/ic_geolocation.png
+Archive-Asset-SHA-512-Digest: zxNxN8IGNa2u6dlyBBoAKoFDURuk4HOpRCs-7RG0IY0yHTMVkEevSzVQeP28bo6r_GV-4Ae7CpRfscvIdxNwhA
+
+Archive-Asset-Name: native/assets/images/tiles/shadow/ic_holster.png
+Archive-Asset-SHA-512-Digest: ew-aR3i-iQ5bPhsqeXEIMXK3jcQBDYaCAdXd_L88Sggt0_VeiRhM2TjjyK7DPTbb9wMd3fXa487FgwIxMi3xSA
+
+Archive-Asset-Name: native/assets/images/tiles/shadow/ic_led.png
+Archive-Asset-SHA-512-Digest: JgvKazsDO9KfvL7fnMizKet8HMowuvprKfN78TeNG7tw8scltrgqI2pdUGBEiptjnEOAdYBEhCkWGttvlFEJKA
+
+Archive-Asset-Name: native/assets/images/tiles/shadow/ic_phoneconnects.png
+Archive-Asset-SHA-512-Digest: sAMZ-JSCuFyKH_VuhX8w67w4jYEKTVmM9TmUVwJC40U8i786HNn05sw0_P4o993yn7UPAzIz6ocZvF4SQbj0wA
+
+Archive-Asset-Name: native/assets/images/tiles/shadow/ic_phonetimer.png
+Archive-Asset-SHA-512-Digest: IZtN7iq6Hp_S4nXORME7n30WUCGHe9Cfhheedg4tNqw1JHo28ypORswowA2k7GMXKbbeYlyYUwoLlwKElh6stw
+
+Archive-Asset-Name: native/assets/images/tiles/shadow/ic_popupmessage.png
+Archive-Asset-SHA-512-Digest: 8nHRUoxQTWQA0EVUheFsHvUvRliguk5W4hNS9-h-OQ0HPR3_ygZCO7zaYnRIHtafr68Ha6fysJ-UdxTmvpb0yA
+
+Archive-Asset-Name: native/assets/images/tiles/shadow/ic_scheduler.png
+Archive-Asset-SHA-512-Digest: Zayw5hltZn1GOPOgqJ6WDO-vD5cZ27esD8nw4KZEgjcMZX8A85rr3X-F5EjyzFSV1lv80nQPutSCzjxFP4WKRw
+
+Archive-Asset-Name: native/assets/images/tiles/shadow/ic_settings.png
+Archive-Asset-SHA-512-Digest: jZ5Rrk6R0XhXC5zY2GBV-QGKOD4LYZNWCIzZXgzocUEyVIAc-JHpBc9ooESOnltIznKJXsgQ_H9P4nDpWlYdjw
+
+Archive-Asset-Name: native/assets/images/tiles/shadow/ic_sound.png
+Archive-Asset-SHA-512-Digest: moXze6OBNoBODS7Dyj0A_qdEzaeixI08wYCxuJvDTFYz1zYjqGAl-bGa36NtJyEVfCu4KE6eKrOZgrdChlct2w
+
+Archive-Asset-Name: native/assets/images/tiles/shadow/ic_soundevent.png
+Archive-Asset-SHA-512-Digest: zXf0c0gRBZy6rT6P5V5BOTWf1MYgTZtmi49sdQD7QcNpZ-KPsuSuug7wyy88PmcAAOtfawNXIiK6Io4uhF5dKg
+
+Archive-Asset-Name: native/assets/images/tiles/shadow/ic_speech.png
+Archive-Asset-SHA-512-Digest: F-VAbrbP1h5KD1v3MyHCByLVw9PhTtC5j2l0_oWP8S4ze6UPgikpu2LneiqB-AUV5PMnFfuTS-jIKhSNgb5OOg
+
+Archive-Asset-Name: native/assets/images/tiles/shadow/ic_sysinfo.png
+Archive-Asset-SHA-512-Digest: RGjycqolmyGZXTDZzIL-Lk4VpjtOztiLwUUCiEQl9dzpOt23iqdS34SzdDnnADiT970jGmuWN3-2evSb8f6LSw
+
+Archive-Asset-Name: native/assets/images/tiles/shadow/ic_usage.png
+Archive-Asset-SHA-512-Digest: xv5Xdm3Sjc7zGKb48HrHDfLzIl3yslhUM4bEfILmklpR_v7XQejTMSoaDsqMhdMeMXZ_lr9GElH7Ke2z-51u4w
+
+Archive-Asset-Name: native/assets/images/tiles/shadow/ic_wallpaper.png
+Archive-Asset-SHA-512-Digest: FutSgrqgNy4USRRcMBRVbS3Twzg7eaa6XqHyNw3fku2hr6QUZaja4ALWi1dxtc8waed74FUD-DdeMew03wT2gg
+
+Archive-Asset-Name: native/assets/images/tiles.zip
+Archive-Asset-SHA-512-Digest: y3BJOLO9vwV6WFsZbdRPE1Lda8tdWq8bYkqfa_2Xbe2ZyIlsP0F1-L2iVzJI_gfl9YkU3L_2bqGkjAuZemhk1A
+
+Archive-Asset-Name: native/assets/images/wallpapers/wallpaper1440x1440.png
+Archive-Asset-SHA-512-Digest: cRltQBIP9hIrZei6exTHQRxlheevv0o0OIYdDAhFt9XN6c2UhY7lN1LKWrCJLOSVAQC64QJFgxilHsigUowbgQ
+
+Archive-Asset-Name: native/assets/images/Web-HTML-icon.png
+Archive-Asset-SHA-512-Digest: 0Bs_sLX0mUtQbJ6nJJDKsSP3EJMmqPTaR2MhJCNr5f-LAlcyDS_5RXlhwub9rhbwvX3W4MZ9XrS-mwdZiAgirA
+
+Archive-Asset-Name: native/assets/images/white_photo.png
+Archive-Asset-SHA-512-Digest: zc0ns4B1BIF__J4nyB2Oo0TQ0PID0BRktikoRNaj6iZVNcSaAVNuunQKJGh72af024m97z4x6Xplx5c-1nagiA
+
+Archive-Asset-Name: native/assets/images/wipe_background.png
+Archive-Asset-SHA-512-Digest: ztyX_aLux_VY_XpijN58k_l3fAyPW-QxIG3VqDT3VeXl5CKVOUj7xNlLnwqMtc36BeIw-ZAr8yYj1yTtUnowiw
+
+Archive-Asset-Name: native/assets/images/yahoo_icons/0.png
+Archive-Asset-SHA-512-Digest: 4-S5G4LL1SG6L3a-6tB7pXUn3YQVotrC_ZKWZQu3Afm7b4jPn5iP1s39dWqzScLbc8rFUNn_epEUJz2v9P_NrA
+
+Archive-Asset-Name: native/assets/images/yahoo_icons/1.png
+Archive-Asset-SHA-512-Digest: 4-S5G4LL1SG6L3a-6tB7pXUn3YQVotrC_ZKWZQu3Afm7b4jPn5iP1s39dWqzScLbc8rFUNn_epEUJz2v9P_NrA
+
+Archive-Asset-Name: native/assets/images/yahoo_icons/10.png
+Archive-Asset-SHA-512-Digest: 3jPhzmsuHtVRFvrIugTmu0YDP4HVCUfdtf23AZqA4gZYLwi9IpQVoW4oAuf00d3rltkn4-z8F8YL7w9GcJDPZQ
+
+Archive-Asset-Name: native/assets/images/yahoo_icons/11.png
+Archive-Asset-SHA-512-Digest: LHYhuPKslCaeLALp2Wf1VVmoOqqIAOPwXnm5sAhqpWFjC9AmWrurY65fMmRb1DjirqVYT03pnDuVCGAEI81gMw
+
+Archive-Asset-Name: native/assets/images/yahoo_icons/12.png
+Archive-Asset-SHA-512-Digest: uKLg3zLWPKo-TEjlHrFkSBW4D0it6O5kw2N-MXS8mtj8kIkIVfpzEiuKQ7Z4KsWWU_lX3x8sDVEMC7BALrKk1g
+
+Archive-Asset-Name: native/assets/images/yahoo_icons/13.png
+Archive-Asset-SHA-512-Digest: G6socGtmp_GYC_c5vAbBi2dfp2iK7N6SmsIqgulTvjuqL0xnSIx7LAiIbvA94DTQbmFI42SFg5IGIvZtJvO4eQ
+
+Archive-Asset-Name: native/assets/images/yahoo_icons/14.png
+Archive-Asset-SHA-512-Digest: IHNmLPMAVRm-dn62MBPVUB2PELDMYrovqmEO12Pb0LVQGsYXcbKLVnhIcmeDhk6dryjD7MCAgjDUUY0OS6ilpA
+
+Archive-Asset-Name: native/assets/images/yahoo_icons/15.png
+Archive-Asset-SHA-512-Digest: 1gttxyN1-KnjfxxPDf1V_PjQjCMB7B3W5MMWT_OKEfaTtdKQwM40sW1suiJC6e345S92AMX2-Wx8ZOWAzC127w
+
+Archive-Asset-Name: native/assets/images/yahoo_icons/16.png
+Archive-Asset-SHA-512-Digest: TAByuw9AhV-G0E8Q4PiVVD1Ja0C7mwBYutrqjlv20UkDM19xkQHKmOlTBw-BWyZXYBoPGzrskuUEAptJAWcOhw
+
+Archive-Asset-Name: native/assets/images/yahoo_icons/17.png
+Archive-Asset-SHA-512-Digest: 4-S5G4LL1SG6L3a-6tB7pXUn3YQVotrC_ZKWZQu3Afm7b4jPn5iP1s39dWqzScLbc8rFUNn_epEUJz2v9P_NrA
+
+Archive-Asset-Name: native/assets/images/yahoo_icons/18.png
+Archive-Asset-SHA-512-Digest: Gct-YmYAVjcK1H28a_IDhpSifO3m9lvHDdtzfuOlywVJau9JMlRKcACknsTgWKhMscrYEeCOd-DXrUARjjokag
+
+Archive-Asset-Name: native/assets/images/yahoo_icons/19.png
+Archive-Asset-SHA-512-Digest: EQwYIooZDGBoF8dSv25RJYEG8DRBSI42s4-3WZCIgqSuzuNYekpf6uNqtmcOiP1bLP1rbhgC_wD69TDSKMqK5w
+
+Archive-Asset-Name: native/assets/images/yahoo_icons/2.png
+Archive-Asset-SHA-512-Digest: 4-S5G4LL1SG6L3a-6tB7pXUn3YQVotrC_ZKWZQu3Afm7b4jPn5iP1s39dWqzScLbc8rFUNn_epEUJz2v9P_NrA
+
+Archive-Asset-Name: native/assets/images/yahoo_icons/20.png
+Archive-Asset-SHA-512-Digest: l0eznPZO--PmMGWNCLrvqI9S8tYGwF_lDzQryLFbNR_YWnVD5jLxVixpN_zgXeLwxMpzPG8bct2cDsNQh8xJ-Q
+
+Archive-Asset-Name: native/assets/images/yahoo_icons/21.png
+Archive-Asset-SHA-512-Digest: 9WwssLsAst_T8VxbL1KDOrUU7UYXCMwDQ_Izt0TiKj-lyFLRrh5azeAbKJWEpT-cPvF80r5YBeqYxM0hBcFJxQ
+
+Archive-Asset-Name: native/assets/images/yahoo_icons/22.png
+Archive-Asset-SHA-512-Digest: Rpb1FxGpEg7Y5nXWUfuujqO3RRvqxKyVVGRSCnDoDt2auBP4H7IlvN0kZ3VTOk3f1f8pX0a5nrsV8W9kBt4z7w
+
+Archive-Asset-Name: native/assets/images/yahoo_icons/23.png
+Archive-Asset-SHA-512-Digest: 9MtAcvc5R-MmxxYdqaC1yi2TyxIjA30mzFW8yc2gJMQobgRWJc6umu_vIkToHI5FsPdzDKf9m2BHI_AGbbaFbw
+
+Archive-Asset-Name: native/assets/images/yahoo_icons/24.png
+Archive-Asset-SHA-512-Digest: 9MtAcvc5R-MmxxYdqaC1yi2TyxIjA30mzFW8yc2gJMQobgRWJc6umu_vIkToHI5FsPdzDKf9m2BHI_AGbbaFbw
+
+Archive-Asset-Name: native/assets/images/yahoo_icons/25.png
+Archive-Asset-SHA-512-Digest: FAXOs7NTSc1Egmp0pPKPMjrZLcEs6VKBK91HE5MrXWQV-AhPdGAqLkkEso2MdwXO52aNuxfJbH41PfcWVDhsjQ
+
+Archive-Asset-Name: native/assets/images/yahoo_icons/26.png
+Archive-Asset-SHA-512-Digest: Gw9GLZMUJqEZJuWPLvOInOLolv0jZQ51bAFz5NVJNOCIS9biq8q4dQc6d-mIIlikeauotzKymq2i6rQHHVLNWg
+
+Archive-Asset-Name: native/assets/images/yahoo_icons/27.png
+Archive-Asset-SHA-512-Digest: 0E5HqLS1dPYXehzM3UMvj_Ol27E2ggp75otas1uTt_sDfklT9aohuz-Ce8n3ahL3vDm1C2Ubw_ESxIPV4IyUKA
+
+Archive-Asset-Name: native/assets/images/yahoo_icons/28.png
+Archive-Asset-SHA-512-Digest: dxdRtMEoEzoclFRUjzpwt4b8AXytBjlbLt0r2b9AQe4JD0ZNAWDzUN62IaXVRI88Naat2oinav6UhobfO8sOyA
+
+Archive-Asset-Name: native/assets/images/yahoo_icons/29.png
+Archive-Asset-SHA-512-Digest: 9nxd1QsPaxSJlHvUm_jm3-GkDzs8sZcOpsk36BtUFcZ9Gj8WrLtxXK_NRXkNv4tw4nKyPmrNVKX4Zu5GCQErXA
+
+Archive-Asset-Name: native/assets/images/yahoo_icons/3.png
+Archive-Asset-SHA-512-Digest: 4-S5G4LL1SG6L3a-6tB7pXUn3YQVotrC_ZKWZQu3Afm7b4jPn5iP1s39dWqzScLbc8rFUNn_epEUJz2v9P_NrA
+
+Archive-Asset-Name: native/assets/images/yahoo_icons/30.png
+Archive-Asset-SHA-512-Digest: nKGW_OhnMeZ-l14OSqcIQXvH-kSZ6ffsgQBaTEEXS33f8egDRNCnT868_os-HsltdVJpbigKBP7YVLHYK5Jxzg
+
+Archive-Asset-Name: native/assets/images/yahoo_icons/31.png
+Archive-Asset-SHA-512-Digest: 9gOcldii4eSlbvUtrRPH1ld-t3Y-UEkBM2MwWG1mIZwZzMZzKlFXd1b_uyFX86pmjfJ7Hwa5zaUwukGLfA9c-w
+
+Archive-Asset-Name: native/assets/images/yahoo_icons/32.png
+Archive-Asset-SHA-512-Digest: aawr5OuXqoBPqG_XP-O42PpgJ7amoOL7CjX0LhABgim2bMa9VOXgqFJOfazPu3jaX5XhnCStVFrGn_7QZ7s88w
+
+Archive-Asset-Name: native/assets/images/yahoo_icons/33.png
+Archive-Asset-SHA-512-Digest: U4DrzQxa1lrAqCS6QymSHifKTLfiEmBRbt3VszWe1RZsJg7XIePd6aEVV4FWhiPx5RBf90VtBhOl27oMKhs0qA
+
+Archive-Asset-Name: native/assets/images/yahoo_icons/34.png
+Archive-Asset-SHA-512-Digest: TXS5RdvgtWvKUwgZ3yFH2fukFAKtsB5706U3K1GE-27s1ZQdDrk629z5w625g_txSUZrLkcVhfnLj4Jr0ARwqg
+
+Archive-Asset-Name: native/assets/images/yahoo_icons/35.png
+Archive-Asset-SHA-512-Digest: 4-S5G4LL1SG6L3a-6tB7pXUn3YQVotrC_ZKWZQu3Afm7b4jPn5iP1s39dWqzScLbc8rFUNn_epEUJz2v9P_NrA
+
+Archive-Asset-Name: native/assets/images/yahoo_icons/36.png
+Archive-Asset-SHA-512-Digest: MDMD2uZTn2Y9Dt_o-ALUDc5sQL0cTFPscvXCG5Nv0TO2bBrAX-n-d1A55LOtuUJ2n4WPBC3zF_a6ZdJ3lpMEdA
+
+Archive-Asset-Name: native/assets/images/yahoo_icons/37.png
+Archive-Asset-SHA-512-Digest: LFSKrxEYaJHZr0UBZ0bilanPjWVEBbY0qnI-5XvKcq3miVZuUBKx8H4PPVDiuIvJeWHG5VPmxJBA69LNmbYSTQ
+
+Archive-Asset-Name: native/assets/images/yahoo_icons/38.png
+Archive-Asset-SHA-512-Digest: LFSKrxEYaJHZr0UBZ0bilanPjWVEBbY0qnI-5XvKcq3miVZuUBKx8H4PPVDiuIvJeWHG5VPmxJBA69LNmbYSTQ
+
+Archive-Asset-Name: native/assets/images/yahoo_icons/39.png
+Archive-Asset-SHA-512-Digest: aMsa3yJeiRTm3tUrpvefWTa7YocqYgESYbGXsqlGEedJdjzjpGz1J3prIKlsayM7d2UEIuX8_IDwMgYT5cBrqw
+
+Archive-Asset-Name: native/assets/images/yahoo_icons/4.png
+Archive-Asset-SHA-512-Digest: 4-S5G4LL1SG6L3a-6tB7pXUn3YQVotrC_ZKWZQu3Afm7b4jPn5iP1s39dWqzScLbc8rFUNn_epEUJz2v9P_NrA
+
+Archive-Asset-Name: native/assets/images/yahoo_icons/40.png
+Archive-Asset-SHA-512-Digest: uKLg3zLWPKo-TEjlHrFkSBW4D0it6O5kw2N-MXS8mtj8kIkIVfpzEiuKQ7Z4KsWWU_lX3x8sDVEMC7BALrKk1g
+
+Archive-Asset-Name: native/assets/images/yahoo_icons/41.png
+Archive-Asset-SHA-512-Digest: XJ-GFfDLvusIzgB7hml0dsCfwBgNXvCncP95bIukA0Q-UYOUxgGcEn1TrS4-S3vYPnhuGRl1y6dG6xibK8xdEw
+
+Archive-Asset-Name: native/assets/images/yahoo_icons/42.png
+Archive-Asset-SHA-512-Digest: TAByuw9AhV-G0E8Q4PiVVD1Ja0C7mwBYutrqjlv20UkDM19xkQHKmOlTBw-BWyZXYBoPGzrskuUEAptJAWcOhw
+
+Archive-Asset-Name: native/assets/images/yahoo_icons/43.png
+Archive-Asset-SHA-512-Digest: 1gttxyN1-KnjfxxPDf1V_PjQjCMB7B3W5MMWT_OKEfaTtdKQwM40sW1suiJC6e345S92AMX2-Wx8ZOWAzC127w
+
+Archive-Asset-Name: native/assets/images/yahoo_icons/44.png
+Archive-Asset-SHA-512-Digest: Sbul_jOE52l8fQ_J34bIKH3y7TgRRAOWs08rCDv3UgOmp6CLWobcDxvJ_dkDUrOriXNGQInVC2CP1UX3kuZ9qg
+
+Archive-Asset-Name: native/assets/images/yahoo_icons/45.png
+Archive-Asset-SHA-512-Digest: 5Yk49JE0KOqjv-IM-hOtWD7zfm0dBgIzJ1duYoEC12V1onivbFhQq5s1sOQ5k0lMufNG-iu0VbHFrh--n7Yhbw
+
+Archive-Asset-Name: native/assets/images/yahoo_icons/46.png
+Archive-Asset-SHA-512-Digest: p1frsT6MdGojBi38a47mGg1cid1aUNKabJFdRor4QyIGbXhf2BZZuUVk1oWXpRzunJu2mkMlJnBBgmlhyuVfIA
+
+Archive-Asset-Name: native/assets/images/yahoo_icons/47.png
+Archive-Asset-SHA-512-Digest: VlbIDr6ZcLSc5Pz2C3M_IGrkjFD81TarrFebKHCgXYRuFaCBe27_j5NpXEkZLW44Qfjfvq2pQ_nebB5MKL4zZA
+
+Archive-Asset-Name: native/assets/images/yahoo_icons/5.png
+Archive-Asset-SHA-512-Digest: MRFtBHYEecuQlusYMZ3qJbvqt0Qus3TK6bXQmQGiz_hBDwxq0LhUxVvUzK73f4miOCY1k6WSSPszf3HEA6YnZg
+
+Archive-Asset-Name: native/assets/images/yahoo_icons/6.png
+Archive-Asset-SHA-512-Digest: nH7l-3DTOIP1JqUOJCh9Soiye-qj_LxuJ5SIQ7eRrNeQsVti6RmP_MRA9tQtAXzakbVyDmtekLmsrrlOb7spiA
+
+Archive-Asset-Name: native/assets/images/yahoo_icons/7.png
+Archive-Asset-SHA-512-Digest: 9vPzbqDTJn5Tp3IqQGp36Yq2VT4dEAs03Zo1gHd7xGGF9_Svi8PCd4kAwc3WjB9mV6z1lXHaSMwOsyLGmQ4xGw
+
+Archive-Asset-Name: native/assets/images/yahoo_icons/8.png
+Archive-Asset-SHA-512-Digest: FYM9TLrUYdBDDqM0Vb6Y5FS6U29RNyv36t6nvJ8RFQB2ZnqkKsrlmRFCc-HJGwbB46WSOdGkC3iNtn42yt9sCA
+
+Archive-Asset-Name: native/assets/images/yahoo_icons/9.png
+Archive-Asset-SHA-512-Digest: n5gdB5byzwv8g6ib7-Us99rC6UgBnp73gGtVCTpOOZhbvdG_dAZglz2iijdNOwzfWD2yXWPlVFg_h9rY4pp_dw
+
+Archive-Asset-Name: native/assets/images/yahoo_icons/na.png
+Archive-Asset-SHA-512-Digest: Sbul_jOE52l8fQ_J34bIKH3y7TgRRAOWs08rCDv3UgOmp6CLWobcDxvJ_dkDUrOriXNGQInVC2CP1UX3kuZ9qg
+
+Archive-Asset-Name: native/assets/LEDProfile.qml
+Archive-Asset-SHA-512-Digest: -utC-81YXAREd_rPJ16V2r58l601CDzfsrpuA3Jd9Uv51uA7MVSChCfFFy1hjk-oqpu1fhpjNJLbTAMxjp6oWg
+
+Archive-Asset-Name: native/assets/main.qml
+Archive-Asset-SHA-512-Digest: 0CEceHLzr40WXaTl80WMSXM_9me362JrYD10AfzpFq433dLr-bQRrC2DW8aIdO1Vuv90_QxFBdtsTTuskpyF9Q
+
+Archive-Asset-Name: native/assets/ManageAlarmProfiles.qml
+Archive-Asset-SHA-512-Digest: kXMXlPq3GPZ9wftHQ4t_WueqS0jt2BDb8i1xExqcE9kJmSLGFeqqM-pGeOS0imDHc5oqNrDHGr7owbqCxz64sQ
+
+Archive-Asset-Name: native/assets/ManageCellID.qml
+Archive-Asset-SHA-512-Digest: dkRLw3TUKsIFm_thCG6PgY193vN7RuqrQtBIzNXN3kKD9s5IXI7QX0rlSGvyRIgunZ0SYcIKEQzQxVNtK8fhsg
+
+Archive-Asset-Name: native/assets/ManageLED.qml
+Archive-Asset-SHA-512-Digest: 6RsQfMXiPeT_-lFh2AIEqUQQQNyqnreUzkryHSBdUdlE4AWYTbI3RdHdr-zvaJfJjLhTkPaDhzPQ4zr0b2Sv4A
+
+Archive-Asset-Name: native/assets/ManageLEDTab.qml
+Archive-Asset-SHA-512-Digest: gYaI4Q97PxcqdLMjVEyVzGuz-Nm6wV5Igyexp3KV9zM-QpGcwE3ljj3isiquHiVNuVycyCkYpE6ql9HCLqQwTw
+
+Archive-Asset-Name: native/assets/ManageMessageBlocker.qml
+Archive-Asset-SHA-512-Digest: xvdtj850ybUFNZsCoOvqGGX6fF_eR1QmJMmXXEc98sY9UbS49eszXmoIQxQXPRBXtuLLBfYii5LCxmBlsVvJRw
+
+Archive-Asset-Name: native/assets/ManageSoundProfiles.qml
+Archive-Asset-SHA-512-Digest: n-rgWipQwtCEC6D0M-dHEPXLNEbQ1gGetNKpSSrvcqa6-xcGzaW_6cgDw306RyLBGyCv03vDhha0PlrJUCSqHA
+
+Archive-Asset-Name: native/assets/ManageWallpaper.qml
+Archive-Asset-SHA-512-Digest: J6u-_ZUZJZYtAxW8gVuB7Hh8yuxUYufizgbMmYDRRT5_C961DJ3LSwuzB4TBtuBbsgPy1cEtKldrnO_T25cTbg
+
+Archive-Asset-Name: native/assets/models/color_table.xml
+Archive-Asset-SHA-512-Digest: W3TxaP4y5FJ9jAfqVF7FyDtM2_y9Ok-Kf_riZHNKgdSlIN4i7GegJYh_x5J-Gpttwggbyo2G4uqrYUZIo3oRKw
+
+Archive-Asset-Name: native/assets/models/contacts.xml
+Archive-Asset-SHA-512-Digest: xLGtEKgPoKGfBSY_CeiKixcF0lBn7csrVB0VlzRKGH_oAtATgk0V67PANUK3iMNj3CRJaIKhkyTN00Orf3pzpw
+
+Archive-Asset-Name: native/assets/models/icons_ios7.xml
+Archive-Asset-SHA-512-Digest: LKVMyuSt967o66yjJYHXBR2rNlFrYzNq3kEDEAaxJyoI1A9R_rR6TvaDwqWvbBKHrjj0p0aUZXQ3aTaA6amkZw
+
+Archive-Asset-Name: native/assets/models/icons_normal.xml
+Archive-Asset-SHA-512-Digest: PNveSAGhR9DagaYdjIELNi1sKAivvrd4j4Vot4RQzdJdzjf4Un3wHlnuqy9Ar-sxr-dpZprn8jQDcaQoMwgoIA
+
+Archive-Asset-Name: native/assets/models/icons_polygon.xml
+Archive-Asset-SHA-512-Digest: U4avR9J4dKi-SokZP8NOsdnhL5xPSEi-6_67hwUVoj4Z4Ajvypsn9DuHNrurW_JVCj_9NC5X0DC-SNxPlFkD5Q
+
+Archive-Asset-Name: native/assets/models/icons_round.xml
+Archive-Asset-SHA-512-Digest: kurVsoieuJrqB8AQNtm8TUk-Q5mctsS9We_SVnn8SE9wyDTXb3Ju-ocwlkCGtPTQ9mF8Eny6wHlhhXpIP5SS3Q
+
+Archive-Asset-Name: native/assets/models/icons_shadow.xml
+Archive-Asset-SHA-512-Digest: 4rPeb1_NLRInYXKOaN-ddkYXRYhF5lx7aveSjg3IRj6FWTjNWn9w2VOz-IufvZVIpfRxdMrfpNIEvn9Q3F4YFg
+
+Archive-Asset-Name: native/assets/models/icons_square.xml
+Archive-Asset-SHA-512-Digest: 1ZDMI4aySJtUY-sCkJPzoNDcwryxxWnkzwOZgziI2Xz4Ep-lo4V26Zcs2WgNPVTt4ElIFERzC-Cio3orruhkTA
+
+Archive-Asset-Name: native/assets/models/usage.xml
+Archive-Asset-SHA-512-Digest: uVXEZCw89lBS_chVcEJnHu7QIXQzgsdb8ntyEnt3CjCdamPAwMHuZYJkJlujVqhGXd-WaR86AGh4IIMw8OrlHg
+
+Archive-Asset-Name: native/assets/NewAlarm.qml
+Archive-Asset-SHA-512-Digest: yqreoD1zFVdNzpyJ4pDveNtB_Fm1rfBG4h6TNzVN9sOvuhJLAjD09U7qsiOUq5NSiY0YqFiBKzBwds1DZN81Mg
+
+Archive-Asset-Name: native/assets/NewMessageFilter.qml
+Archive-Asset-SHA-512-Digest: sPaCmKHPCVhSlnCqTWz2WKfbDXntXcX1rTtGELGXq5U822AQKRGKcdoL7zvzMc5ruKM-DhwZK4dBUioVKNjuUQ
+
+Archive-Asset-Name: native/assets/NewSchedule.qml
+Archive-Asset-SHA-512-Digest: BDuxjwy1T22Gblm7limvwAblzmkfVwjlrUCnDMce2MMvI0tM-24SjS71PHta_6koxgqhUw3ouqn0dNAnPzmCnw
+
+Archive-Asset-Name: native/assets/NewWallpaper.qml
+Archive-Asset-SHA-512-Digest: IEY3gPAgBlKzKT8yakFF97YZ_zlE0bvQDSdGcKu0DL4oVpSnoHMJh2PIm_rU8Dd3U-DjyAzltHbG_66M5PKrFg
+
+Archive-Asset-Name: native/assets/PasswordDialog.qml
+Archive-Asset-SHA-512-Digest: 28JD4FiBsXjgCWJ4JChNksosB0cdFlUgPeQ7wCHm4s_9HgWEidJyDAj0D2YSxirlBUw94UJiDmiRSNEFd_0C3Q
+
+Archive-Asset-Name: native/assets/PopupMessage.qml
+Archive-Asset-SHA-512-Digest: MGmK9DKONiTNmZNfjpNVk9eszojoHo81seOQj0b7GKn9v4VOmlygUyLH-KPEr-dvN7eN727-bso14GZVbPbh9Q
+
+Archive-Asset-Name: native/assets/Prefs.qml
+Archive-Asset-SHA-512-Digest: 4uJkZoENZ19a0qedlR2HhQLE9dYJSocx7pJ-ki8tUYnT2jTOXQIYQf6w0uS0ioaFuUfpU4RMPCGTDlFPkm3NxA
+
+Archive-Asset-Name: native/assets/Previewer.qml
+Archive-Asset-SHA-512-Digest: BZH6gdr6dHjHKAxyw8tI3orLJoGoAOjsmqaxvhosVyysKwwGZqWjVXYk7iRaN9lFib-1P9xDl4HFQ-BQkvktDw
+
+Archive-Asset-Name: native/assets/QuickSettings.qml
+Archive-Asset-SHA-512-Digest: OApYY_rb_B7iQFjcZA12uvWDWfvKWec3UM25qew-E53yVj08lcY5R2ViQJu_hQgHn2V1zyqMrK1v7S4sg1jLEg
+
+Archive-Asset-Name: native/assets/RemoteCommand.qml
+Archive-Asset-SHA-512-Digest: 0W-bXK3zGq3PIWTrmvrAakIEdQ69GVJ7R_jaQXzaLp-6JNZIFuI2XJfgGE7rQfe8eMkpMS3kuwRBT-eukIa_iA
+
+Archive-Asset-Name: native/assets/Scheduler.qml
+Archive-Asset-SHA-512-Digest: 0cwDGD-Q3M4u4Wbjc1n3Lxh9VqtXRMM7BfhhD9b0A5K3EbWf5yL0bmZib0I7nFVU0M4erUz-9z2fkqAK7wm6MA
+
+Archive-Asset-Name: native/assets/Settings.qml
+Archive-Asset-SHA-512-Digest: OtezqbzwU_j8f2EMA6uphV9Q1nuIm9ev0DlBTkrKIuuyl2_eHQyaPjByAZJrbw6YWLsfDvNAGJr5fiSFstPACQ
+
+Archive-Asset-Name: native/assets/SoundProfile.qml
+Archive-Asset-SHA-512-Digest: ZwdcgUnfjSEBFGgrfrhR_2q4Fvxp1-_OsINS1Z6V6QIY4FxPRxOM5q1NsoPOzi6fRjrW5L6Idi2JTNquBQ3xqw
+
+Archive-Asset-Name: native/assets/SpeechSetting.qml
+Archive-Asset-SHA-512-Digest: Cjsl-zgdxKgtHTPLqbVDQ2GYcesVpsLeJ_FQ__rYoOYj5hb-_17KOVeD_eh4cAoMTKanPNnpqpO2g_nXP8lhVw
+
+Archive-Asset-Name: native/assets/SystemInfo.qml
+Archive-Asset-SHA-512-Digest: 3UsWF3orcvQTkpA9a5sJeZoi4EC_nA_mIwixo6bQiSIPl-AT6YCTzuE0MiDCm5k3ZOSIk52cw5KQ2ySuo9T0NQ
+
+Archive-Asset-Name: native/assets/Talktime.qml
+Archive-Asset-SHA-512-Digest: w4fyEKkHpchh9V_2OyunHw4DvORNDBO5FlfTRBVU0k6orJ74H7_LAA0LaNjH6OXcZzLJ22XvAToVuPYH3uZwLg
+
+Archive-Asset-Name: native/assets/Usage.qml
+Archive-Asset-SHA-512-Digest: Yz-jNhRmjQsdGL69T-lHlH7FmbkNTLWgvUDvY0ctOPsQ4pAU0hyHtcbi75dl8imSPCpEyhFL-EQ2ZrcIVcd6jg
+
+Archive-Asset-Name: native/assets/UsageDetail.qml
+Archive-Asset-SHA-512-Digest: 0oeY5Hb_7328YUu1PZdmQJhCdEslXo86TMoKS3gQS1oTzepC6uhPmM6THVN5hMd_KNRXW4SlFJovPolulBfDGg
+
+Archive-Asset-Name: native/assets/UsageSummary.qml
+Archive-Asset-SHA-512-Digest: gBWqE3W_E5sFcM2-nVDxrl43pzZBDpvUIJYsgrgTKxJK0U7yGC-QrYq9W8uPmhcSQaTiETz49vAdhPLpDWRTjQ
+
+Archive-Asset-Name: native/assets/ViewBlockedLog.qml
+Archive-Asset-SHA-512-Digest: mNwc3k5VoVuQjhrW2hZCkOjI3AULzFUAJ83iFbfJmWZWjV90hCr2aX2ZaAwb5g79QN3PqGTJTJtyUobz713UGw
+
+Archive-Asset-Name: native/assets/ViewCall.qml
+Archive-Asset-SHA-512-Digest: 9eBd7M0sGAyKV7-Ux1k3_LYFexKXK-vdLZpwUWxHQcws5bN4i6KO2927egucPmODEgSBo5qkIbN0kOVm8sdZrQ
+
+Archive-Asset-Name: native/assets/ViewEncryptedFiles.qml
+Archive-Asset-SHA-512-Digest: 0-MK-QymKas2g6_nOVHK3eS_-zHc2_gy5nANap12qlglS8jFmtRrzixgq2RWNNkwZYyRGd4837L5qRdMFOh4Fg
+
+Archive-Asset-Name: native/assets/ViewPhoneCall.qml
+Archive-Asset-SHA-512-Digest: A7ezn39ofRW6Xn6znPpvYaEl59HBNzbIkNrBO0dFOPmfDbBXsZZK0jGZRvhpkusJF-ZZ-g2J2k52qaPFde2v9A
+
+Archive-Asset-Name: native/assets/wallpaper.qml
+Archive-Asset-SHA-512-Digest: nvV_-xtxVXr1-MX-BPjUiw2LWdcVhz3DPJIqG5PZmMJKCjQqeS6dgctWM9rjx_sSxyVvUAgKH5IVFX3nyaWlgg
+
+Archive-Asset-Name: native/assets/WhiteList.qml
+Archive-Asset-SHA-512-Digest: rFCHm6Oro8q2L-J8nQMqcW2COFhmYyV9uOxZe9vSMPMTNVmR5cMKG0M77uEFfPV2o_uMu_e2G_fEjaISJgLqLw
+
+Archive-Asset-Name: native/qm/Power_Tools.qm
+Archive-Asset-SHA-512-Digest: aBkYx29pEdykO6l-fw_ZD6lKOlumN6kHrczxeyE-7XPYek_BTguaR6skNskxJAfO6LNnX1cjpjk0-fWXhX7scA
+
+Archive-Asset-Name: native/qm/Power_Tools_cs_CZ.qm
+Archive-Asset-SHA-512-Digest: IFWlYX_b64eGUAzK3RYzG1envrzmdOERlXda2ecoYX8URI19gCerMpz-enyhZV95eO2F-DiYHVBia3UJNF4xFA
+
+Archive-Asset-Name: native/qm/Power_Tools_de_DE.qm
+Archive-Asset-SHA-512-Digest: AHR5nlO47eBCpucYh1ZMXbEA7pc9LNappP-9rBFspkiJIxHhQ56tw2PAlpHni9wTJia89PnksLiiErMvLQnBMA
+
+Archive-Asset-Name: native/qm/Power_Tools_fr_FR.qm
+Archive-Asset-SHA-512-Digest: qeep6-0SjArMuLk_6oV0sgJoqBilEMAKuH2rHDHBt3F2NjNiIwpJEkpMW_ewb9iVjPiiYB6dCm10FNTuy2jUpQ
+
+Archive-Asset-Name: native/qm/Power_Tools_vi_VN.qm
+Archive-Asset-SHA-512-Digest: SkX4zlNbEhb0hY8kAEI8HrvVMLYOp4N2MmEQHKG3rJ9jyTqVtWgnfMeWji2z4oWJA3yI_YN6OVYgv-zrarwy8A
+
+Archive-Asset-Name: native/qm/Power_Tools_zh_CN.qm
+Archive-Asset-SHA-512-Digest: zHQaLPTHYTuZV8FPoSGCtZhZbHuF1nQ4akPdA6r5kt1zr-ezUw8LZWb0ze4CaX5Y5mxAfRbOkMrQrw7d_el2Ew
+
+Archive-Asset-Name: native/qm/Power_Tools_zh_TW.qm
+Archive-Asset-SHA-512-Digest: zHQaLPTHYTuZV8FPoSGCtZhZbHuF1nQ4akPdA6r5kt1zr-ezUw8LZWb0ze4CaX5Y5mxAfRbOkMrQrw7d_el2Ew
+
+Archive-Asset-Name: native/icon81x81.png
+Archive-Asset-SHA-512-Digest: DU38ycOvBLhXz_DUjCLPOMqe4SU2sAcqnEYSelMnhhgVfd1snVdACvyaWVLxaCZr4cQbVOHTsceU2S1FEQLhfA
+
+Archive-Asset-Name: native/mp3/Alarm_Buzz.mp3
+Archive-Asset-SHA-512-Digest: VtV_m4-65YqfLDsAcxmMqfYLOlTsK_57GjFfgqvLgV_YRFlBALfL1ULAB0Q_pIUQBa-dsl-CO2UmANd6teNB_Q
+
+Archive-Asset-Name: native/mp3/Alarm_BuzzLow.mp3
+Archive-Asset-SHA-512-Digest: KeZg9XkxqT6QtIBbR2LVhpX5hFqxW0Qkxhqrzc-z-7OIlA_GLb2qmVYTPWYTse-97oMKVq5TqyWb8oATN6mTRA
+
+Archive-Asset-Name: native/mp3/Alarm_Chimes.mp3
+Archive-Asset-SHA-512-Digest: L7va9UixlsZosr9zbUiccJV7Vcs__Xg9hYWhzBKfdFZs1FS1owH0MAlt_nayM4fnQkffAYVj0anWZnge1xWORg
+
+Archive-Asset-Name: native/mp3/Alarm_Morning.mp3
+Archive-Asset-SHA-512-Digest: 87_3MQuHVXGlZEQnVHAk7U8p0xE9UxJnNgETyB-Z0gK49J-qva7deN1ZAz7THdTeSaDgggpQu7jOyPGvuXp1Jw
+
+Archive-Asset-Name: native/mp3/Alarm_NA.mp3
+Archive-Asset-SHA-512-Digest: yO264vxbfVOaYBG9-GgACHSpNsJ7enP9B39eNJwxPp2FEw-lwY_VC1cEogRkhbDx-pVsdsCZlI5mRwTx8F1-Hg
+
+Archive-Asset-Name: native/mp3/Alarm_Raining.mp3
+Archive-Asset-SHA-512-Digest: 4BYgfSVYNO01DiYG7HU-KqrD9FXoOfocknZUT-uZunfeXkPqFgGxIdiZVHD8pAX6jnju7l1dO7FVn2Q42axIHA
+
+Archive-Asset-Name: native/mp3/Alarm_Soft_Bells.mp3
+Archive-Asset-SHA-512-Digest: EHxDIu-1B46WhXLM1pNGN6MB41Nt15MuKYR2DMYc0yByChEL3XetjMX8zKNATbzxYhMf2WPLptshXZLjrilnIQ
+
+Archive-Asset-Name: native/mp3/Alarm_Super.mp3
+Archive-Asset-SHA-512-Digest: hastpjpiuWCn_BR_fBAXKRD6tKDFi149iGvCykXh3n38Y3syOvmn8JoluWedJlcGpwKzw1xWLWQgZsOMxKtXww
+
+Archive-Asset-Name: native/mp3/Alarm_Sweet.mp3
+Archive-Asset-SHA-512-Digest: bIw6zfR6405C4yq0OZwuAwDLAj5xzPYCHWGrGyKBFSWkW0GIOkKj6khLeMvG70fcLbdbjthXZVIv0JTl-JZ30Q
+
+Archive-Asset-Name: native/mp3/Alarm_Violin.mp3
+Archive-Asset-SHA-512-Digest: -gWobw8l6-lp9ehbwidtdX3XPhA1mWdu5zBwyMkRDZtgVDrAqIdc3tjNubWLr1vEiCgTmUIanN_668Ys61hRSg
+
+Archive-Asset-Name: native/mp3/Alarm_WakeUp.mp3
+Archive-Asset-SHA-512-Digest: 1K4e5Rz4KVTBmAEF9UYSlcSFtN8dWYtAaIvNsJff5zMekXRRYBxBGNgQ5HLc1ie9co5qa0ySshb_VD-_C8ibyQ
+
+Archive-Asset-Name: native/mp3/MsgTone_bb.mp3
+Archive-Asset-SHA-512-Digest: LYT74WhtGBH6rAJncP_3JFgmIKGyFJCWw1Mc2YchYOddBn366wsgifDYBYXBPbc491bJsMm8IksKDry_EwFuoQ
+
+Archive-Asset-Name: native/mp3/MsgTone_echo.mp3
+Archive-Asset-SHA-512-Digest: 3qTWTFxCTa_Cnwp2Csbr8CdoSQADginfflCOKia7g7O6TxHJx21moiUDyhJIPARoXP3Rk05pN_WVREarnp5mMg
+
+Archive-Asset-Name: native/mp3/MsgTone_horn.mp3
+Archive-Asset-SHA-512-Digest: 4EciFAWgfkpFUjBOFh0_pFe2Wo0gvbW28JzhaI4OHYjvOeat3y4kJB-sf64WPTvMsuA1J8zg6rgeWsxF8tnxNA
+
+Archive-Asset-Name: native/mp3/MsgTone_lock1.mp3
+Archive-Asset-SHA-512-Digest: ubylYhfMDFq9QUb2GcyDcC96o5L2rUUDvdQEurNgxxgEEgG_KXpMP7LroyvDlH8BOqDqeqJ8kTdmNpyJCc-FNQ
+
+Archive-Asset-Name: native/mp3/MsgTone_lock2.mp3
+Archive-Asset-SHA-512-Digest: nyaCFvnRBiGBlbRoWWxvU63KwVEd5uUEX8eXNrrp6LFoBx9Tddt27lXG9xYC8FxLZI6lYRA40fpzSbtV9FaVwQ
+
+Archive-Asset-Name: native/mp3/MsgTone_lock3.mp3
+Archive-Asset-SHA-512-Digest: V2s4tZvq8l05vAgGo89x1LSLZFiAKqaTTTtlNiU6hcWkxnwOFDuj87n4Dfr_HLJyqFoc5-dCcQN3zz7y02q6zQ
+
+Archive-Asset-Name: native/mp3/MsgTone_lock4.mp3
+Archive-Asset-SHA-512-Digest: W-6hy8rDsEEAAOwJ-lTDokmn_5NwIZkFK5abQwuG64rfJXIMKSNIxGY1t-YGGB91vSX2lYNJFZcK8P2NHgrg8A
+
+Archive-Asset-Name: native/mp3/MsgTone_lock5.mp3
+Archive-Asset-SHA-512-Digest: va2F_Yz5gDXDaehuepPl1DPaE0xr6Mbd0mlls14nkwa1VV8PmGdLdfoEvqEcWoQGZFSGN14UNKyN4mZk6cAL7g
+
+Archive-Asset-Name: native/mp3/MsgTone_message.mp3
+Archive-Asset-SHA-512-Digest: k-N5OV_qhifsjUaWkw5rsfv28MfkkRGTSdQsDEMjlADfNoeHNYPgqW7vkJfQ_xi2--Eby6-eRGgQHhjGgL9AKQ
+
+Archive-Asset-Name: native/mp3/MsgTone_ping.mp3
+Archive-Asset-SHA-512-Digest: 0xb2jgr9pfE3W3lnjuidCHwVMgXPNnrbVDLH3j9ykCzefXe999vTkEQbEKWe0ufARNjJ6JAxZrYqKTuVKawS2Q
+
+Archive-Asset-Name: native/mp3/MsgTone_pop.mp3
+Archive-Asset-SHA-512-Digest: JAFzDJaF-uoHEslNM6LztewG-UBBvXx6LtUgUsPk_uIeKVH4KXfBxb5Q0Z67Urht1Jdx0FJn_PbShyk8DRm3tA
+
+Archive-Asset-Name: native/mp3/MsgTone_unlock1.mp3
+Archive-Asset-SHA-512-Digest: BzH4FyB70T1uACA-W1CSSVqKI8u-zPcwJzeuMVTSYpLIPCeniZKXw2kHFC_KvzWTeC3VL-IC3deUBnXnLz-p7g
+
+Archive-Asset-Name: native/mp3/MsgTone_unlock2.mp3
+Archive-Asset-SHA-512-Digest: RSY5gd6FiD3UhcOv6G2NQiD_GLZIkc1zGWlsMd4zDvqngDR3PyXYfSFl_Y-Hin7n46wUn3ezETvhlPMdM_yOgQ
+
+Archive-Asset-Name: native/mp3/MsgTone_unlock3.mp3
+Archive-Asset-SHA-512-Digest: 2lqaLX5njRzW5vdu9zJhoNuQ2fF8mAR3TeuJo0i3biz5km4cQp7NjXYyoVf1RyPiT2ZcSQhgytO36mmSXKdEyg
+
+Archive-Asset-Name: native/mp3/MsgTone_unlock4.mp3
+Archive-Asset-SHA-512-Digest: VTo7JSxBTQ6o6iNDpJQP6T0XXPmxnJFQJ-DbvND_jUjWBjgyfvFgjDTcDbzOKPsjq2LswAV0YZcQnMXCd_V-Wg
+
+Archive-Asset-Name: native/mp3/MsgTone_unlock5.mp3
+Archive-Asset-SHA-512-Digest: 3AtQ2ORsj4z0PwjpGcWUEqaUbDW1aiAjExbN8qdtad4K_j_AEQdvKF7TFhHBKQwbw0gvK7VG90ekO0ZziLNP_A
+
+Archive-Asset-Name: native/mp3/MsgTone_window.mp3
+Archive-Asset-SHA-512-Digest: pxEgDkxerOUkYvApwkhKrUnT2OwnYXxCqIg2RSsNnEvfp2g4WRIp7hhY6hy2nrPd7xHT4Uv15JL_pgN4AqqDBg
+
+Archive-Asset-Name: native/mp3/Phone_Silent.mp3
+Archive-Asset-SHA-512-Digest: 9lxRto4KNV9Qz8yWXFBV-L3H7fTZz9pKFfTQ3c_7szUwMsjKnCrTcw4NwW6Tv7BAFb9ZwhXdfgRD0p0waJ0ezw
+
+Archive-Asset-Name: native/mp3/Tone_batteryfull1.mp3
+Archive-Asset-SHA-512-Digest: sf_FWFhP9hzHG0kfXah6tmhg8P6_LDNz3DG-e6ukZmpf57e6Tvi-hXrY1LPARBc6j3HIb0nfCZCBR4LPU2vdiA
+
+Archive-Asset-Name: native/mp3/Tone_batteryfull2.mp3
+Archive-Asset-SHA-512-Digest: nAnAPjbbI_n14RXeTRfYtO4NdVmiMd9CdLydCMAl0jhVhtF76rsBu6i12hKq4eo37m04mJmf94ocLfRby8nSKA
+
+Archive-Asset-Name: native/mp3/Tone_batteryfull3.mp3
+Archive-Asset-SHA-512-Digest: TL1GdY4JmHrzsHf6_eW9irrs8T-aG20kxbpr31lNAnBcv0xmXsuaaCm0Ko0Xdxsgd-Sh1d9iJh2RPEfp71KtEQ
+
+Archive-Asset-Name: native/mp3/Tone_batteryfull4.mp3
+Archive-Asset-SHA-512-Digest: NIlyg1fTSwlcnM5DHwegBDIM6BNyp6rAW5w6P2ed345Kd7A8oRxdjxRyZkIDEvxlGdTY9gEyXidYQdXh4wpuyA
+
+Archive-Asset-Name: native/mp3/Tone_batteryfull5.mp3
+Archive-Asset-SHA-512-Digest: rUU4H7uKQEDfl9c3y21UzTGE8n875GHNSHAt5fU5muQJOYsA2U0Z7wYSeoTIZYCmAq7m-H1AkL6ksLWzGwhPfQ
+
+Archive-Asset-Name: native/mp3/Tone_battery_warning1.mp3
+Archive-Asset-SHA-512-Digest: AnNDwVHeNBRe7HY16L-34B5tkEmzVZ6gwtwMseV9ubS9xYNAyYzUEY1rK4pLH659vAZ-DCvENYychyVsMnageQ
+
+Archive-Asset-Name: native/mp3/Tone_battery_warning2.mp3
+Archive-Asset-SHA-512-Digest: HUhUWJXz3n4p_I4pxRZGBspWiJxHkH27EpYUQ3CcVZIypkb5kT0Tnt6pPvpioTDGjgfJLUeujnCQ_c05nPav-g
+
+Archive-Asset-Name: native/mp3/Tone_battery_warning3.mp3
+Archive-Asset-SHA-512-Digest: ayFEcO17DtXJQsnxZeKMBrD1c5OyUojQFv9PE2pTx5gDsixEyqBEdGqMeu_URQD6u3pSrAd16ILBTNDPYRiYcA
+
+Archive-Asset-Name: native/mp3/Tone_battery_warning4.mp3
+Archive-Asset-SHA-512-Digest: 89QEFsN9b32nUI-A1zOxpuWCBydwMud2vteBCW4n8rVfBO7FKUoQ71QB8GOHml30RHwTVD3c8oQD6CbQF4USDg
+
+Archive-Asset-Name: native/mp3/Tone_battery_warning5.mp3
+Archive-Asset-SHA-512-Digest: O-ngcYPXFYv1AhhyQp-i8ZBncbH6cqRVfKLBq7cn7XsjXCsnwE2sxT6_S8KFP2xmUomZUlrihD89dgRnqCTbDw
+
+Archive-Asset-Name: native/mp3/Tone_charging1.mp3
+Archive-Asset-SHA-512-Digest: 8P1gSgJwHXP42DD7T8kwO8NeVSRD_8cFAqac7APduhWY6XhBeotscgITgJN64bKOkG-RZeEIzZdiQZw4DvM84g
+
+Archive-Asset-Name: native/mp3/Tone_charging2.mp3
+Archive-Asset-SHA-512-Digest: PyctHNeVpLJSlubAFIvmxB01QGCq54b_zWXL8LomaQOiuXbs1Vw27Qb6DutD5u0ph65155FLnTuumgvLLX76FA
+
+Archive-Asset-Name: native/mp3/Tone_charging3.mp3
+Archive-Asset-SHA-512-Digest: T1Z4gcBzudHu9TdyZ0JvhsTPHlZSh9voediQhHrcUsyfosCYWC0yhZ58_ox3I9pBL_U6r5SV7JE6pyn9fQH_KA
+
+Archive-Asset-Name: native/mp3/Tone_charging4.mp3
+Archive-Asset-SHA-512-Digest: 56pkRjREBRs68Ee5DGRtpDj2ZOzA47i_Dxf3lMo685RCpLL7mZlOMSoAMP816ur205zOJnbFcnyBBqfJ8xsDOQ
+
+Archive-Asset-Name: native/mp3/Tone_charging5.mp3
+Archive-Asset-SHA-512-Digest: ZZuLwgQd_wov8Aal9gn2qgcw-WfGXhSGOSNs--7p5y_Ael23l1rIUZqi1UiBztn6Szcw51PsmAzVAL1HtjxCkg
+
+Archive-Asset-Name: native/mp3/Tone_charging6.mp3
+Archive-Asset-SHA-512-Digest: eMW6IQicnJjosASeGdNUK61SOq9_voIzeTCdn0qd0wvam3zKfjzwTA491aowT1zPWKPkZ8puJUPccZkFZ7yTHg
+
+Archive-Asset-Name: native/mp3/Tone_cobalt.mp3
+Archive-Asset-SHA-512-Digest: 0iqVNjEECALD5fwdxh2YzQVmzCysyapVm_ltcrKh7DR2-KLbWDy1IAeadIYFNOKvChw5rEezvEF4uXVgRqKvqg
+
+Archive-Asset-Name: native/mp3/Tone_creative.mp3
+Archive-Asset-SHA-512-Digest: ABBNrpQ7bL1YocsXRibIyevXZGPVArJ5tVNBsg7hTBweu_B0q2_9EHLl-zkY6VQInn_cthlL3J3YoCVWl6mNBg
+
+Archive-Asset-Name: native/mp3/Tone_DaDaDa.mp3
+Archive-Asset-SHA-512-Digest: iwnMGyIW_XFXiSUuQk-8aSlzHsISdWS6h3jb9fuV7kJiyR39M4Zk8NA6dJAr6QMgYVEGpqI_tWAestrBRXMwVw
+
+Archive-Asset-Name: native/mp3/Tone_discharging1.mp3
+Archive-Asset-SHA-512-Digest: Tqs3inx-FDNolxD8RIm0WB1-LbgIIRIsdCNO2Rn63XHhfEYMZ9PrDUTZqUT_nOzwKZD2jkPZflX86jMTvP9WdQ
+
+Archive-Asset-Name: native/mp3/Tone_discharging2.mp3
+Archive-Asset-SHA-512-Digest: NciMdsdxs6Lhyn3cy6wOoWYJw38ssmxL9uO6_-OBpnPuvnvwrrO0oTCpHm4_B5MTN6JpDAQlmVGXyhW9mfmAig
+
+Archive-Asset-Name: native/mp3/Tone_discharging3.mp3
+Archive-Asset-SHA-512-Digest: aq-o8HEA_2cILz2dIP-XVJmkfvxZkl396loq_tAGi_sQS5CVq_4HGLbHiVRGg0po87oQhlg7kHWdbFy7-WaEPQ
+
+Archive-Asset-Name: native/mp3/Tone_discharging4.mp3
+Archive-Asset-SHA-512-Digest: z6I8lZTgVu8qpKZjZam5crwSpku-7OdJCfHkRHVGwthZXMEeDcat3aVuhNKO1q_G_B8zYkCwTYMjOYzY5WyxYg
+
+Archive-Asset-Name: native/mp3/Tone_discharging5.mp3
+Archive-Asset-SHA-512-Digest: 7zhkfg8sUhpd_609SKvwgdEpYvJd5ZG5ibFsrvGxstLD_RMGXVoxjD5naNBKSK8AcQWce5LEBomiGKn4dGbb1Q
+
+Archive-Asset-Name: native/mp3/Tone_fantastic.mp3
+Archive-Asset-SHA-512-Digest: ZcBy5zi30cnU6NTNIlF92rhBr5z7qV7WTEkeHYT5mrARAKCg24Zf5c7x_6SZnnPfmReGTAvBbDNqECOy19Tf_A
+
+Archive-Asset-Name: native/mp3/Tone_fifaworld.mp3
+Archive-Asset-SHA-512-Digest: c6nLutwLl6At-eruZ_GDdaqp4xXnk_p4m4TdouYF7Z9Kzo0tNzODJzU8_ESgwJKTSWn6NUdX9Fq_RZGSX0_F2Q
+
+Archive-Asset-Name: native/mp3/Tone_galaxys5.mp3
+Archive-Asset-SHA-512-Digest: oe_sKHSQ4exLwcZeGEhsHK1pRCKGPjCbe7ED-Pq-wIjygGZwVzf8bRreaE-Vi-ELZfMYN7YG5zjJncH9xTA7VA
+
+Archive-Asset-Name: native/mp3/Tone_lightsaber.mp3
+Archive-Asset-SHA-512-Digest: uRv0WcBOXjGu64UMlmTGZAR7QC4PH2Hry0S1IS48m4OjB4mVaDoFJwNEGgHcO30dh9zI5AdxQooQG_qUsOiSag
+
+Archive-Asset-Name: native/mp3/Tone_lightspeed.mp3
+Archive-Asset-SHA-512-Digest: -3DFGJwBR6i0or1_c9C696H0adB7rxIK-ESDhqxq2jCpNg32QXMnxD5MtRuFq38qDzk4pR5rFWsqiva7Rx--RA
+
+Archive-Asset-Name: native/mp3/Tone_metalalert.mp3
+Archive-Asset-SHA-512-Digest: jOvuiA4HdWVwyoMa0C1gWhOvIfDDrXAK0Lvf8rVPjuZztgL0K8GRn1zPBXH5hc2zkNlIMmjNJskF_9Wv9nShPg
+
+Archive-Asset-Name: native/mp3/Tone_moonbean.mp3
+Archive-Asset-SHA-512-Digest: 72QFJtruBgVywy5Ni4KbzmRu2YOBRmMUEs0sugwCD-e43WbiaVehXd_5Jwp4BQ2Sae6X6ZP_5PXG7DVJuU3jQQ
+
+Archive-Asset-Name: native/mp3/Tone_nexun.mp3
+Archive-Asset-SHA-512-Digest: CrAnAncqY28LOPBY50c_WMZCEakk0Cph0gPQqmFHN7o_FS0ezlcAt4WBTwqSr-XwseW5DleX5T3eNAoJ4LQTxw
+
+Archive-Asset-Name: native/mp3/Tone_notify.mp3
+Archive-Asset-SHA-512-Digest: ---yBx7hsofk48J6V78pALBVeqigYcOaPgjdjCYkUP86OlQAVHixehbeB-hDSR7tqCAaLaaA5alJ1aAySFMysA
+
+Archive-Asset-Name: native/mp3/Tone_nudge.mp3
+Archive-Asset-SHA-512-Digest: Wapotbq52DgWrQ5I822RnKKWXJven_ePCIugW943gImJZ3j6pJeibvuARSz-uNkV1lv-XtD2Bjk2-rKxNTpO7A
+
+Archive-Asset-Name: native/mp3/Tone_onthehunt.mp3
+Archive-Asset-SHA-512-Digest: -J7xh_XKfWosUnRqSr0FyjDfkVk-8I8AoczJWh0AILa_l1sVWH3jTDv3IYIsMSndHeWoiR8xrJTFYyh4jIvEUg
+
+Archive-Asset-Name: native/mp3/Tone_Perfect.mp3
+Archive-Asset-SHA-512-Digest: HguCZy9oP4Tg_j9bjNCTgMxV4LF_Wfsh_9xXutwoq-vZWyBQ_QJrpsGi-lutdaeC4on2E7dfRAOa5HldfK7TnQ
+
+Archive-Asset-Name: native/mp3/Tone_pixie.mp3
+Archive-Asset-SHA-512-Digest: HOVmqWOG3oqVyiK2aPAjniFV7MJ_34qPNpuFhhb3DUhaiTkAC1tRdeQM_Nw22-kMc-OO_OF8RJGFDyA2Rx6IWA
+
+Archive-Asset-Name: native/mp3/Tone_pizzicato.mp3
+Archive-Asset-SHA-512-Digest: 4bMlLGcy2YQG-9YhLeGc8gCUdp_XlcWIR3zGWkW0wI2wm2cWjxA6dMAaYEkZ53wizp92mlx8NLGv2c646bhz7Q
+
+Archive-Asset-Name: native/mp3/Tone_sirius.mp3
+Archive-Asset-SHA-512-Digest: PFO12iFHYy0zhMMmr5DPrjhQz4G7ryyFJ6eZUWCTl1k1CAknVRb02i-ooZIhn61l_XnaLH9Tyes9pMBykxpCDw
+
+Archive-Asset-Name: native/mp3/Tone_slove.mp3
+Archive-Asset-SHA-512-Digest: HJwgwTAEAsygS4EUk8d2JUxPJsW3T8OQHPZk8x_v2VoBotStMi31fuPrsobKSrZSppCqx4XnpR-lr7keRaogSA
+
+Archive-Asset-Name: native/mp3/Tone_SoftDing.mp3
+Archive-Asset-SHA-512-Digest: TVwai45bwZfahmvo2Tj0y4AS_K_d1fn14v4yy_YpdzdHLGc1YoRkD9zxUJZaqVAKq9DhKBsw9yTtaurxWuXdew
+
+Archive-Asset-Name: native/mp3/Tone_sonar.mp3
+Archive-Asset-SHA-512-Digest: iUE-4SIjzCjWfn5n5LtWS54VtZjjzreEt2JrIPJhLKQnmGLLGRhJPCP-lQWd1IV8sUUnOZtn0WDJyPKOXGr0uA
+
+Archive-Asset-Name: native/mp3/Tone_spirit.mp3
+Archive-Asset-SHA-512-Digest: uG0oWvMfdXjhabFr8aZLfuLGabYpxrDtPg5MsIaZAfTkTyk6zwGVgw89kI0MLEYiq1DwpgFWRfK6MXQogcfsFA
+
+Archive-Asset-Name: native/mp3/Tone_startup1.mp3
+Archive-Asset-SHA-512-Digest: Xx0FMaV8S9gRXAFeGI6V8rvn3TedEAKyruAvOu8rU2fsR4HDr1AXlr6JUkUpHOKLhmXFpH0-_S6EJHy5RG1iFA
+
+Archive-Asset-Name: native/mp3/Tone_startup2.mp3
+Archive-Asset-SHA-512-Digest: JABwNFcjYkbB__3oaQypg7_ZIedoLBtFdl3CAbbvXXMg5HNpaR5MaEEXSC3Rr-tcjG69TAPiy50oI49IOp_iig
+
+Archive-Asset-Name: native/mp3/Tone_startup3.mp3
+Archive-Asset-SHA-512-Digest: dlNHdmMKUAIHclMLlLxgKnkQF41z7eJgF50RB-w3CipthknAC1h1L9__Y2bdUufY52w4vrCFHJdVisT3AKJVCA
+
+Archive-Asset-Name: native/mp3/Tone_startup4.mp3
+Archive-Asset-SHA-512-Digest: bRQHZBZN7htHiMIfl3sBudg71-nUp8bB5tGUeQryXHR2a_uluO-cxu9s4acbEWrSXdpotMaeldE1XGwWhUhUWw
+
+Archive-Asset-Name: native/mp3/Tone_startup5.mp3
+Archive-Asset-SHA-512-Digest: K0tt_vhzgXqzR8ZtPHMelMSfYZE2sYXhuxmOfoQCkYqIdrWVlVt6acDnUkNAdtO-K4N87boBqU4Bdjpzlj4inQ
+
+Archive-Asset-Name: native/mp3/Tone_sweet.mp3
+Archive-Asset-SHA-512-Digest: B4emg3bCmnS-_TIOf2jGqoQNV9YHB5mRWLdMKTsWGNz6_KMnvMdP-QtGzZ3e3G9FHaKybpKUH0j2jy-w6Z5aog
+
+Archive-Asset-Name: native/mp3/Tone_sword.mp3
+Archive-Asset-SHA-512-Digest: RSbqD2l0v0c3CVISsDEEStQ9OnKIhMAz6KAd3ylobNf5WqWe_b3lIG9n5m-seZzn7K8ZTXypBEf6kBDTnvvgMw
+
+Archive-Asset-Name: native/mp3/Tone_tokyodrift.mp3
+Archive-Asset-SHA-512-Digest: 8nliAJL2cqBiR7IDAM0Q3zsibvtnOCSADmn04gr1qR9FR6HO-hmvRgPrfgxomttFyNaVrF4ynnRQvvxcC5p-MA
+
+Archive-Asset-Name: native/mp3/Tone_tweeter.mp3
+Archive-Asset-SHA-512-Digest: tSL1Cxj8J56KLNfez5dtVlEBLFiuLi3QNpcEjN6ORt7NZ5U4TzBaXrozW0uRCwgW_4WEikIhy3Sb9Z4IdAzRuw
+
+Archive-Asset-Name: native/mp3/Tone_Twitter.mp3
+Archive-Asset-SHA-512-Digest: F4aelH016Wf5uJWefV67ynHE7g1FsEmLUGscPEjwwzfpctm4tT1rBZy9GPZytf3RR_2usdV0KORvGGvQbT3ksA
+
+Archive-Asset-Name: native/mp3/Tone_vespa_horn.mp3
+Archive-Asset-SHA-512-Digest: sk0XUb2b9UUsoj5EsM0d0dL9xxgj8DOoeuqeyItfvVJTZQ2JuM4fVCnl-EpJors-tZ_YinT-Il_erJiPVCu4xA
+
+Archive-Asset-Name: native/mp3/Tone_xenon.mp3
+Archive-Asset-SHA-512-Digest: eXgjFHrQfmpfFFyR64eWhVDlMZ0F-4nZWa2KWLqlYqf3YiCaKIhD2w64idn_GhkF7nl7xWlanXPpaaDhtyTLOQ
+
+Archive-Asset-Name: native/Power_Tools.so
+Archive-Asset-SHA-512-Digest: i5cOkynMefFyvyMG-LdzJ8rd-Lkh0vSGyenp8GAcDTxra0JQolo1UeYfLbTC8ujyr8NWoJQzFEgC47LpMhqHAQ
+Archive-Asset-Type: Qnx/Cascades
+
+Archive-Asset-Name: native/Power_ToolsService
+Archive-Asset-SHA-512-Digest: yEnCNEhOG8R2QGnZJm2nRjJvdaR9xmtTaTrAb0LD6f2yZ5QxbXn_GYGQqXGOMAQJU4ZU7n2v8qRi0z1FoV2Maw
+Archive-Asset-Type: Qnx/Elf
+
+Archive-Asset-Name: native/assets/.assets.index
+Archive-Asset-SHA-512-Digest: MTbInmU21s5vdQeH4kzaHUivZZO8GBOkHxcQmNZl75ZJX4k0zjTtIUrJ0-ZbaQNYabbIX47XyVIXbUUYRsLWig
+

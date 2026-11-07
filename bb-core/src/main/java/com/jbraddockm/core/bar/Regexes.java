@@ -1,0 +1,45 @@
+package com.jbraddockm.core.bar;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Properties;
+import java.util.regex.Pattern;
+
+/**
+ * The value patterns of {@code regex.properties}, compiled and keyed by {@code regexId}. The file
+ * is loaded the same way the original library loads it — as a {@link Properties} file — so the
+ * compiled patterns are identical.
+ */
+final class Regexes {
+
+  private final Map<String, Pattern> patterns;
+
+  private Regexes(Map<String, Pattern> patterns) {
+    this.patterns = patterns;
+  }
+
+  static Regexes load() {
+    var properties = new Properties();
+    try (InputStream in = Regexes.class.getResourceAsStream("rulesets/regex.properties")) {
+      if (in == null) {
+        throw new IllegalStateException("regex.properties is missing from the build");
+      }
+      properties.load(in);
+    } catch (IOException failure) {
+      throw new UncheckedIOException(failure);
+    }
+    var patterns = new HashMap<String, Pattern>();
+    for (var name : properties.stringPropertyNames()) {
+      patterns.put(name, Pattern.compile(properties.getProperty(name)));
+    }
+    return new Regexes(patterns);
+  }
+
+  Optional<Pattern> pattern(String regexId) {
+    return Optional.ofNullable(patterns.get(regexId));
+  }
+}

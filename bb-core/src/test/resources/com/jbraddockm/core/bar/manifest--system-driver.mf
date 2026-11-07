@@ -1,0 +1,28 @@
+Archive-Manifest-Version: 1.5
+Archive-Created-By: BlackBerry Data BAR Packager 1.11
+
+Package-Type: system-data
+Package-Author: Research In Motion Limited
+Package-Author-Id: gYAAgNpMbwE-hW4khx0h8BidUeI
+Package-Name: sys.data.exfat
+Package-Id: gYABgIEqdiB1KcMBG_fjQX5oRyk
+Package-Version: 10.3.1.224
+Package-Version-Id: gYACgE09fKamtEbwtNLycqYurl4
+Package-Architecture: armle-v7
+Package-Author-Certificate-Hash: EpKB7Di7mrWl9rhqx1lQBexZDwlSBK_8PBLUBpWmI6fqa0hgI0uhw3HkL86_K0Xvz2NLG01Tzall60XyX0UWIw
+Package-Issue-Date: 2014-08-09T00:59:22Z
+
+System-Data-Type: os_driver
+System-Data-Requires-System: os/10.2.1.1
+System-Data-Persistence: removable
+
+Archive-Asset-Name: assets/data/fs-exfat.so
+Archive-Asset-SHA-512-Digest: zgfik9AVkDGbHJXMH_5E5FM5hYbsOEI4uA3CWCCYbwjMnzsRLNdPAsxLerAqWDlfE4zgyeR1XMkZN7ts9zFx9A
+Archive-Asset-Type: Qnx/Elf
+
+Archive-Asset-Name: assets/links
+Archive-Asset-SHA-512-Digest: lNekrhmwlY2kPEystpYbJG55NyGbR_kRWYvz4JNR4i4k-PozK0sAByaOxtwAZD6BdQSLSeOhqja9tWBD240MtQ
+
+Archive-Asset-Name: assets/perms
+Archive-Asset-SHA-512-Digest: eXZHdQrayg8n4BVhCokaVyrnqX45CwT7DoSkmrJM6QRGHaOSN5S5g2R73ChuAAoUVOHw6UHirdjzcBt8_-LvyA
+

@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- @SpecificationDependent -->
+
+<rules barSpecificationVersion="1.1">
+
+    <barName regexId="barName_1_3" />
+
+    <userDefinedAttributesAllowed>true</userDefinedAttributesAllowed>
+
+    <rulesSets>
+    
+        <!--                      -->
+        <!-- application rule set -->
+        <!--                      -->
+    
+        <rulesSet packageType="application">
+            <sections>
+                <section name="Archive" required="true">
+                    <attributes>
+                        <attribute name="Archive-Manifest-Version" required="true" regexId="version_short" />
+                        <attribute name="Archive-Created-By" regexId="createdBy" cardinality="0..1" continuationAllowed="false" />
+                    </attributes>
+                </section>
+                <section name="Package" required="true">
+                    <attributes>
+                        <attribute name="Package-Type" required="true" regexId="package_type_application" />
+                        <attribute name="Package-Name" required="true" regexId="reverse_dns" maxLength="50" continuationAllowed="false" />
+                        <attribute name="Package-Description" regexId="value_255" cardinality="0..1" canLocalize="true" />
+                        <attribute name="Package-Id" required="if-signed" regexId="id" />
+                        <attribute name="Package-Author" required="true" regexId="value_50" continuationAllowed="false" />
+                        <attribute name="Package-Author-Id" required="if-signed" regexId="id" cardinality="0..1" />
+                        <attribute name="Package-Author-Certificate-Hash" required="if-signed" regexId="base64_255" />
+                        <attribute name="Package-Version" required="true" regexId="version" />
+                        <attribute name="Package-Version-Id" required="if-signed" regexId="id" cardinality="0..1" />
+                        <attribute name="Package-Architecture" regexId="value_255" cardinality="0..1" />
+                        <attribute name="Package-Locale" regexId="locale" maxLength="512" cardinality="0..1" />
+                    </attributes>                
+                </section>
+                <section name="Application" required="true">
+                    <attributes>
+                        <attribute name="Application-Name" required="true" regexId="value_50" continuationAllowed="false" canLocalize="true" />
+                        <attribute name="Application-Description" regexId="value_255" cardinality="0..1" canLocalize="true" />
+                        <attribute name="Application-Id" required="if-signed" regexId="id" cardinality="0..1" />
+                        <attribute name="Application-Version" required="true" regexId="version" />
+                        <attribute name="Application-Version-Id" required="if-signed" regexId="id" cardinality="0..1" />
+                        <attribute name="Application-Category" regexId="value_50" cardinality="0..1" canLocalize="true" />
+                        <attribute name="Application-Development-Mode" regexId="boolean" cardinality="0..1" />
+                        <attribute name="Application-Requires-System" regexId="requires_version" cardinality="0..1" />
+                    </attributes>                
+                </section>
+                <section name="Entry-Point" required="false" cardinality="0..*">
+                    <attributes>
+                        <attribute name="Entry-Point-Name" required="true" mandatoryFirstInSection="true" regexId="value_50" continuationAllowed="false" canLocalize="true" />
+                        <attribute name="Entry-Point-Localization" regexId="value_25" canLocalize="true" />
+                        <attribute name="Entry-Point-Type" required="true" regexId="entry_point_type" maxLength="255" />
+                        <attribute name="Entry-Point" required="true" regexId="value_4096" />
+                        <attribute name="Entry-Point-Icon" regexId="value_255" cardinality="0..1" canLocalize="true" />
+                        <attribute name="Entry-Point-Icon-Focus" regexId="value_255" cardinality="0..1" canLocalize="true" />
+                        <attribute name="Entry-Point-Orientation" regexId="orientation" cardinality="0..1" />
+                        <attribute name="Entry-Point-Splash-Screen" regexId="value_255" cardinality="0..1" canLocalize="true" />
+                        <attribute name="Entry-Point-User-Actions" regexId="entry_point_actions" cardinality="0..1" />
+                        <attribute name="Entry-Point-System-Actions" regexId="entry_point_actions" cardinality="0..1" />
+                    </attributes>                
+                </section>
+                <section name="Archive-Asset" required="false" cardinality="0..*">
+                    <attributes>
+                        <attribute name="Archive-Asset-Name" required="true" regexId="value_255" />
+                        <attribute name="Archive-Asset-x-Digest" required="if-signed" regexId="base64_255" cardinality="0..*" />
+                        <attribute name="Archive-Asset-Type" regexId="mime_type" maxLength="255" />
+                    </attributes>                
+                </section>
+            </sections>
+        </rulesSet>
+        
+        <!--                 -->
+        <!-- system rule set -->
+        <!--                 -->
+        
+        <rulesSet packageType="system">
+            <sections>
+                <section name="Archive" required="true">
+                    <attributes>
+                        <attribute name="Archive-Manifest-Version" required="true" regexId="version_short" />
+                        <attribute name="Archive-Created-By" regexId="createdBy" cardinality="0..1" continuationAllowed="false" />
+                    </attributes>
+                </section>
+                <section name="Package" required="true">
+                    <attributes>
+                        <attribute name="Package-Type" required="true" regexId="package_type_system" />
+                        <attribute name="Package-Name" required="true" regexId="reverse_dns" maxLength="50" continuationAllowed="false" />
+                        <attribute name="Package-Description" regexId="value_255" cardinality="0..1" canLocalize="true" />
+                        <attribute name="Package-Id" required="if-signed" regexId="id" />
+                        <attribute name="Package-Author" required="true" regexId="value_50" continuationAllowed="false" />
+                        <attribute name="Package-Author-Id" required="if-signed" regexId="id" cardinality="0..1" />
+                        <attribute name="Package-Author-Certificate-Hash" required="if-signed" regexId="base64_255" />
+                        <attribute name="Package-Version" required="true" regexId="version" />
+                        <attribute name="Package-Version-Id" required="if-signed" regexId="id" cardinality="0..1" />
+                        <attribute name="Package-Architecture" regexId="value_255" cardinality="0..1" />
+                        <attribute name="Package-Locale" regexId="locale" maxLength="512" cardinality="0..1" />
+                    </attributes>                
+                </section>
+                <section name="System" required="false">
+                    <attributes>
+                        <attribute name="System-Type" required="if-section" regexId="value_50" />
+                        <attribute name="System-Requires-Version" regexId="requires_version" cardinality="0..1" />
+                    </attributes>
+                </section>                
+                <section name="Archive-Asset" required="false" cardinality="0..*">
+                    <attributes>
+                        <attribute name="Archive-Asset-Name" required="true" regexId="value_255" />
+                        <attribute name="Archive-Asset-x-Digest" required="if-signed" regexId="base64_255" cardinality="0..*" />
+                        <attribute name="Archive-Asset-Type" regexId="mime_type" maxLength="255" />
+                    </attributes>                
+                </section>                
+            </sections>
+        </rulesSet>
+        
+    </rulesSets>
+    
+</rules>
