@@ -118,7 +118,10 @@ public final class JcifsFileStore implements FileStore {
     }
     var temp = parentOf(destination).child("." + destination.name() + ".tmp");
     try {
-      file(parentOf(destination), true).mkdirs();
+      var parent = file(parentOf(destination), true);
+      if (!parent.exists()) {
+        parent.mkdirs();
+      }
       var tempFile = file(temp, false);
       long copied;
       try (InputStream in = Files.newInputStream(source);

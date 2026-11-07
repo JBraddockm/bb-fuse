@@ -20,6 +20,12 @@ import com.jbraddockm.link.endpoint.backup.ListCategories;
 import com.jbraddockm.link.endpoint.backup.PackageType;
 import com.jbraddockm.link.endpoint.backup.RestoreRequest;
 import com.jbraddockm.link.endpoint.characteristics.GetDeviceCharacteristics;
+import com.jbraddockm.link.endpoint.files.FileAccess;
+import com.jbraddockm.link.endpoint.files.FileCommand;
+import com.jbraddockm.link.endpoint.files.ListDeviceFiles;
+import com.jbraddockm.link.endpoint.files.PullFile;
+import com.jbraddockm.link.endpoint.files.PushFile;
+import com.jbraddockm.link.endpoint.files.StatDeviceFile;
 import com.jbraddockm.link.endpoint.pairing.CertificateRetrieval;
 import com.jbraddockm.link.endpoint.pairing.CertificateRetrievalRequest;
 import com.jbraddockm.link.endpoint.pairing.GetAuthenticationCertificate;
@@ -58,6 +64,7 @@ import com.jbraddockm.link.endpoint.update.UninstallPackages;
 import com.jbraddockm.link.transport.cgi.ConnectionPath;
 import com.jbraddockm.link.transport.cgi.DeviceCommand;
 import com.jbraddockm.link.transport.session.DeviceSession;
+import com.jbraddockm.link.transport.smb.DeviceShares;
 import java.nio.file.Path;
 import java.time.Clock;
 import java.time.Duration;
@@ -88,6 +95,18 @@ enum LinkMethod {
    * credentials come from the login.
    */
   GET_SMB_CREDENTIALS("getSmbCredentials"),
+
+  /** Lists a directory on the device's file share. */
+  LIST_DEVICE_FILES("listDeviceFiles"),
+
+  /** Reads the metadata of one file or directory on the device's file share. */
+  STAT_DEVICE_FILE("statDeviceFile"),
+
+  /** Copies a host file onto the device's file share. Changes the device. */
+  PUSH_FILE("pushFile"),
+
+  /** Copies a file from the device's file share to the host. */
+  PULL_FILE("pullFile"),
 
   /** Lists the accounts of the device's personal information sync. */
   LIST_PIM_ACCOUNTS("listPimAccounts"),
@@ -394,6 +413,10 @@ enum LinkMethod {
       case SHUTDOWN ->
           argument == null ? Optional.of(new ResetDevice(ResetMode.SHUTDOWN)) : Optional.empty();
       case GET_SMB_CREDENTIALS,
+          LIST_DEVICE_FILES,
+          STAT_DEVICE_FILE,
+          PUSH_FILE,
+          PULL_FILE,
           LIST_DEVICES,
           INSPECT_PACKAGE,
           INSPECT_CERTIFICATE,
@@ -437,6 +460,26 @@ enum LinkMethod {
       case GET_DEVICE_PROPERTIES -> onSession(_ -> new GetDeviceProperties());
       case SET_DEVICE_NAME -> onSession(params -> new SetDeviceName(params.requireString("name")));
       case GET_DEVICE_CHARACTERISTICS -> onSession(_ -> new GetDeviceCharacteristics());
+      case LIST_DEVICE_FILES ->
+          onFiles(
+              params ->
+                  new ListDeviceFiles(DeviceShares.locate(params.requireString("devicePath"))));
+      case STAT_DEVICE_FILE ->
+          onFiles(
+              params ->
+                  new StatDeviceFile(DeviceShares.locate(params.requireString("devicePath"))));
+      case PUSH_FILE ->
+          onFiles(
+              params ->
+                  new PushFile(
+                      params.requirePath("source"),
+                      DeviceShares.locate(params.requireString("devicePath"))));
+      case PULL_FILE ->
+          onFiles(
+              params ->
+                  new PullFile(
+                      DeviceShares.locate(params.requireString("devicePath")),
+                      params.requirePath("destination")));
       case LIST_PIM_ACCOUNTS -> onSession(_ -> new ListPimAccounts());
       case FIND_PIM_ACCOUNT ->
           onSession(params -> new FindPimAccount(params.requireString("workstationId")));
@@ -709,6 +752,23 @@ enum LinkMethod {
           var includeRaw = params.flag("raw");
           return (session, reply) ->
               reply.complete(wireName, session.execute(command, reply), includeRaw);
+        });
+  }
+
+  /**
+   * A file-access method that runs one {@link FileCommand} on the session's share. The parameters
+   * are read, and the device path resolved, before anything is queued, so a bad path is answered at
+   * once.
+   */
+  private <R extends CommandResult> CommandSpec<DeviceSession> onFiles(
+      Function<RequestParams, FileCommand<R>> commandFactory) {
+    return new CommandSpec.SessionScoped<>(
+        wireName,
+        params -> {
+          var command = commandFactory.apply(params);
+          var includeRaw = params.flag("raw");
+          return (session, reply) ->
+              reply.complete(wireName, FileAccess.run(session, command), includeRaw);
         });
   }
 }

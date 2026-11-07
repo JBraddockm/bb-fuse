@@ -5,6 +5,10 @@ getDeviceProperties
 setDeviceName
 getDeviceCharacteristics
 getSmbCredentials
+listDeviceFiles
+statDeviceFile
+pushFile
+pullFile
 listPimAccounts
 findPimAccount
 getPimItems

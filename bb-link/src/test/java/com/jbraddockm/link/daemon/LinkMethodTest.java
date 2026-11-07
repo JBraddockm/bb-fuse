@@ -163,6 +163,10 @@ class LinkMethodTest {
       "SET_DEVICE_NAME, setDeviceName",
       "GET_DEVICE_CHARACTERISTICS, getDeviceCharacteristics",
       "GET_SMB_CREDENTIALS, getSmbCredentials",
+      "LIST_DEVICE_FILES, listDeviceFiles",
+      "STAT_DEVICE_FILE, statDeviceFile",
+      "PUSH_FILE, pushFile",
+      "PULL_FILE, pullFile",
       "LIST_PIM_ACCOUNTS, listPimAccounts",
       "FIND_PIM_ACCOUNT, findPimAccount",
       "GET_PIM_ITEMS, getPimItems",
@@ -198,10 +202,10 @@ class LinkMethodTest {
     }
 
     @Test
-    @DisplayName("are 33, and distinct")
-    void areThirtyThreeAndDistinct() {
+    @DisplayName("are 37, and distinct")
+    void areThirtySevenAndDistinct() {
       assertThat(Arrays.stream(LinkMethod.values()).map(LinkMethod::wireName))
-          .hasSize(33)
+          .hasSize(37)
           .doesNotHaveDuplicates();
     }
 
@@ -377,6 +381,10 @@ class LinkMethodTest {
     @ValueSource(
         strings = {
           "GET_SMB_CREDENTIALS",
+          "LIST_DEVICE_FILES",
+          "STAT_DEVICE_FILE",
+          "PUSH_FILE",
+          "PULL_FILE",
           "LIST_DEVICES",
           "INSPECT_PACKAGE",
           "INSPECT_CERTIFICATE",
@@ -432,6 +440,10 @@ class LinkMethodTest {
           "GET_DEVICE_PROPERTIES",
           "SET_DEVICE_NAME",
           "GET_SMB_CREDENTIALS",
+          "LIST_DEVICE_FILES",
+          "STAT_DEVICE_FILE",
+          "PUSH_FILE",
+          "PULL_FILE",
           "LIST_PIM_ACCOUNTS",
           "FIND_PIM_ACCOUNT",
           "GET_PIM_ITEMS",
