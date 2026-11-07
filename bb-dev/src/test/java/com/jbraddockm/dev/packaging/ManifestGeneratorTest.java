@@ -49,20 +49,25 @@ class ManifestGeneratorTest {
 
       assertThat(manifest.value("Package-Author")).hasValue("Development");
       assertThat(manifest.value("Package-Version")).hasValue("1.0.0.0");
-      assertThat(manifest.value("Package-Architecture")).isEmpty();
+      assertThat(manifest.value("Package-Architecture")).hasValue("armle-v7");
       assertThat(manifest.value("Application-Requires-System")).isEmpty();
       assertThat(manifest.value("Application-Development-Mode")).hasValue("true");
     }
 
     @Test
-    @DisplayName("but never the signing attributes, because development bars are unsigned")
-    void writesNoSigningAttributes() throws Exception {
+    @DisplayName("the development identity the device needs, but never a signature")
+    void writesDevelopmentIdentity() throws Exception {
       var manifest = generate("descriptor--native.xml");
 
-      assertThat(manifest.value("Package-Id")).isEmpty();
-      assertThat(manifest.value("Package-Author-Id")).isEmpty();
+      // The device needs these generated ids to register the package, even in development mode.
+      assertThat(manifest.value("Package-Id")).hasValueSatisfying(id -> assertThat(id).hasSize(27));
+      assertThat(manifest.value("Application-Id")).isEqualTo(manifest.value("Package-Id"));
+      assertThat(manifest.value("Package-Author-Id"))
+          .hasValueSatisfying(id -> assertThat(id).hasSize(27));
+      assertThat(manifest.value("Package-Version-Id"))
+          .hasValueSatisfying(id -> assertThat(id).hasSize(27));
+      // But no actual signature.
       assertThat(manifest.value("Package-Author-Certificate-Hash")).isEmpty();
-      assertThat(manifest.value("Application-Id")).isEmpty();
     }
   }
 

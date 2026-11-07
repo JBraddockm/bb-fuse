@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<qnx>
+  <id>com.example.loc</id>
+  <name>
+    <text xml:lang="en">Hello</text>
+    <text xml:lang="fr">Bonjour</text>
+  </name>
+  <description><text xml:lang="en">A localized app</text></description>
+  <versionNumber>1.0.0</versionNumber>
+  <icon>
+    <image><text xml:lang="en">icon.png</text></image>
+  </icon>
+  <env var="DEBUG_ENABLE"/>
+  <asset path="arm/app" entry="true" type="Qnx/Elf">app</asset>
+</qnx>

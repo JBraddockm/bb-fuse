@@ -66,7 +66,7 @@ class LauncherTest {
   class Routing {
 
     @ParameterizedTest
-    @ValueSource(strings = {"deploy", "package"})
+    @ValueSource(strings = {"deploy"})
     @DisplayName("routes a not-yet-built namespace to its stub")
     void routesStubNamespace(String namespace) {
       assertThat(dispatch(namespace)).isEqualTo(Output.NOT_IMPLEMENTED);
@@ -90,7 +90,7 @@ class LauncherTest {
     @Test
     @DisplayName("accepts --json after the namespace too")
     void jsonAfterNamespace() {
-      assertThat(dispatch("package", "--json")).isEqualTo(Output.NOT_IMPLEMENTED);
+      assertThat(dispatch("deploy", "--json")).isEqualTo(Output.NOT_IMPLEMENTED);
       assertThat(Json.parse(out().strip())).isInstanceOf(Map.class);
     }
 
@@ -101,6 +101,14 @@ class LauncherTest {
       // namespace word was consumed and the remaining options were handed to the tool.
       assertThat(dispatch("connect", "192.168.1.118", "-password", "12345")).isEqualTo(2);
       assertThat(out()).contains("Usage: bb-dev connect");
+    }
+
+    @Test
+    @DisplayName("routes to the package tool, which then validates its own options")
+    void packageRoutesAndValidates() {
+      // No -package and no descriptor, so the package tool itself reports a usage error.
+      assertThat(dispatch("package")).isEqualTo(2);
+      assertThat(out()).contains("Usage: bb-dev package");
     }
   }
 }

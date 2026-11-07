@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<qnx xmlns="http://www.qnx.com/schemas/application/1.0">
+  <id>com.example.invoke</id>
+  <name>Invoker</name>
+  <versionNumber>1.0.0</versionNumber>
+  <buildId>0</buildId>
+  <configuration name="Device-Release">
+    <platformArchitecture>armle-v7</platformArchitecture>
+    <entryPointType>Qnx/Cascades</entryPointType>
+    <asset path="arm/so.le-v7/libInvoker.so.1" entry="true" type="Qnx/Elf">libInvoker.so.1</asset>
+  </configuration>
+  <cascadesTheme>bright</cascadesTheme>
+  <packageLocale>en-US,fr-FR</packageLocale>
+  <permission system="true">run_native</permission>
+  <permission>access_internet</permission>
+  <invoke-target id="com.example.invoke.card">
+    <invoke-target-type>card.composer</invoke-target-type>
+    <invoke-target-name>Invoke Card</invoke-target-name>
+    <filter>
+      <action>bb.action.OPEN</action>
+      <action>bb.action.VIEW</action>
+      <mime-type>text/plain</mime-type>
+      <property var="uris" value="invoke://"/>
+    </filter>
+  </invoke-target>
+</qnx>

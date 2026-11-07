@@ -39,7 +39,9 @@ class BarDescriptorTest {
       assertThat(descriptor.category()).isEqualTo("core.games");
       assertThat(descriptor.environment()).containsExactly(new EnvironmentVariable("1", "DEBUG"));
       assertThat(descriptor.splashScreen()).isEqualTo("splashscreen.jpg:splash_portrait.jpg");
-      assertThat(descriptor.permissions()).containsExactly("access_internet", "use_camera");
+      assertThat(descriptor.permissions())
+          .containsExactly(
+              new Permission("access_internet", false), new Permission("use_camera", false));
       assertThat(descriptor.platformVersion()).isEqualTo("2.0.0.0");
     }
 
@@ -49,24 +51,80 @@ class BarDescriptorTest {
       var descriptor = parse("descriptor--native.xml");
 
       assertThat(descriptor.assets())
-          .containsExactly(new DescriptorAsset("arm/binary", "binary", "Qnx/Elf", true));
+          .containsExactly(
+              new DescriptorAsset(
+                  "arm/binary", "binary", "Qnx/Elf", true, null, List.of(), List.of(), false));
     }
 
     @Test
-    @DisplayName("reads each configuration's architecture, arguments and extra assets")
+    @DisplayName("reads each configuration by name, with its architecture, arguments and assets")
     void readsConfigurations() throws Exception {
       var descriptor = parse("descriptor--native.xml");
 
       assertThat(descriptor.configurations())
           .containsExactly(
               new DescriptorConfiguration(
-                  "id1", "Device-Debug", "armv7-le", List.of("-v"), List.of()),
+                  "Device-Debug", "id1", "armv7-le", null, List.of("-v"), List.of()),
               new DescriptorConfiguration(
-                  "id3",
                   "Device-Release",
+                  "id3",
                   "armv7-le",
+                  null,
                   List.of(),
-                  List.of(new DescriptorAsset("public.key", null, null, false))));
+                  List.of(
+                      new DescriptorAsset(
+                          "public.key", null, null, false, null, List.of(), List.of(), false))));
+    }
+
+    @Test
+    @DisplayName("accepts a configuration with no name, since the name is optional")
+    void readsUnnamedConfiguration() throws Exception {
+      var descriptor = parse("descriptor--config-no-name.xml");
+
+      assertThat(descriptor.configurations())
+          .singleElement()
+          .satisfies(
+              configuration -> {
+                assertThat(configuration.name()).isNull();
+                assertThat(configuration.id()).isEqualTo("id1");
+              });
+    }
+
+    @Test
+    @DisplayName("takes an asset's destination from its text and reads includes and system actions")
+    void readsTextDestinationAndSystemPermission() throws Exception {
+      var descriptor = parse("descriptor--text-dest.xml");
+
+      assertThat(descriptor.assets())
+          .containsExactly(
+              new DescriptorAsset(
+                  "arm/app", "app", "Qnx/Elf", true, null, List.of(), List.of(), false),
+              new DescriptorAsset(
+                  "lib/libx.so.4",
+                  "lib/libx.so.4",
+                  "Qnx/Elf",
+                  false,
+                  null,
+                  List.of(),
+                  List.of(),
+                  false),
+              new DescriptorAsset(
+                  "translations", "qm", null, false, null, List.of("*.qm"), List.of(), false));
+      assertThat(descriptor.permissions())
+          .containsExactly(
+              new Permission("run_native", true), new Permission("access_internet", false));
+    }
+
+    @Test
+    @DisplayName("reads a localized name, description and icon from their first text variant")
+    void readsLocalizedText() throws Exception {
+      var descriptor = parse("descriptor--localized.xml");
+
+      assertThat(descriptor.name()).isEqualTo("Hello");
+      assertThat(descriptor.description()).isEqualTo("A localized app");
+      assertThat(descriptor.icons()).containsExactly("icon.png");
+      assertThat(descriptor.environment())
+          .containsExactly(new EnvironmentVariable("DEBUG_ENABLE", ""));
     }
 
     @Test
@@ -85,7 +143,9 @@ class BarDescriptorTest {
       assertThat(descriptor.permissions()).isEmpty();
       assertThat(descriptor.configurations()).isEmpty();
       assertThat(descriptor.assets())
-          .containsExactly(new DescriptorAsset("arm/minimal", null, null, true));
+          .containsExactly(
+              new DescriptorAsset(
+                  "arm/minimal", null, null, true, null, List.of(), List.of(), false));
     }
   }
 
@@ -97,7 +157,9 @@ class BarDescriptorTest {
     @DisplayName("is the asset marked entry=\"true\"")
     void findsTheEntryAsset() throws Exception {
       assertThat(parse("descriptor--native.xml").entryPoint())
-          .hasValue(new DescriptorAsset("arm/binary", "binary", "Qnx/Elf", true));
+          .hasValue(
+              new DescriptorAsset(
+                  "arm/binary", "binary", "Qnx/Elf", true, null, List.of(), List.of(), false));
     }
   }
 
@@ -122,27 +184,11 @@ class BarDescriptorTest {
     }
 
     @Test
-    @DisplayName("no asset marked as the entry point")
-    void noEntryPoint() {
-      assertThatThrownBy(() -> parse("descriptor--no-entry.xml"))
-          .isInstanceOf(InvalidDescriptorException.class)
-          .hasMessageContaining("no entry point");
-    }
-
-    @Test
-    @DisplayName("an asset with neither a path nor a dest")
-    void assetWithoutPathOrDest() {
+    @DisplayName("an asset with neither a path nor a destination")
+    void assetWithoutPathOrDestination() {
       assertThatThrownBy(() -> parse("descriptor--asset-no-path.xml"))
           .isInstanceOf(InvalidDescriptorException.class)
-          .hasMessage("an asset has neither a path nor a dest");
-    }
-
-    @Test
-    @DisplayName("a configuration with no id")
-    void configurationWithoutId() {
-      assertThatThrownBy(() -> parse("descriptor--config-no-id.xml"))
-          .isInstanceOf(InvalidDescriptorException.class)
-          .hasMessage("its configuration has no id");
+          .hasMessage("an asset has neither a path nor a destination");
     }
 
     @Test

@@ -12,8 +12,10 @@ import java.util.Objects;
  * @param source the file on the host
  * @param type the asset type, for example {@code Qnx/Elf}; may be {@code null}
  * @param entry whether this asset is the application entry point
+ * @param entryPointId the id of the entry point this asset is the binary of; may be {@code null}
  */
-record PackagedAsset(String archivePath, Path source, String type, boolean entry) {
+record PackagedAsset(
+    String archivePath, Path source, String type, boolean entry, String entryPointId) {
 
   /**
    * Validates the components that cannot be absent.

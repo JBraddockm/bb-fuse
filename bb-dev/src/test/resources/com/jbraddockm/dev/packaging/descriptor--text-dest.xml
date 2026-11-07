@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<qnx>
+  <id>com.example.text</id>
+  <name>Text</name>
+  <versionNumber>1.0.0</versionNumber>
+  <asset path="arm/app" entry="true" type="Qnx/Elf">app</asset>
+  <asset path="lib/libx.so.4" type="Qnx/Elf">lib/libx.so.4</asset>
+  <asset path="translations" dest="qm"><include name="*.qm"/></asset>
+  <permission system="true">run_native</permission>
+  <permission>access_internet</permission>
+</qnx>

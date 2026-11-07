@@ -46,7 +46,14 @@ class AssetValidatorTest {
         List.of(),
         assets,
         null,
-        configurations);
+        configurations,
+        null,
+        null,
+        null,
+        List.of(),
+        List.of(),
+        List.of(),
+        List.of());
   }
 
   @Nested
@@ -56,7 +63,10 @@ class AssetValidatorTest {
     @Test
     @DisplayName("an absolute path")
     void absolutePath() throws Exception {
-      var descriptor = withAssets(new DescriptorAsset("/absolute/binary", null, null, true));
+      var descriptor =
+          withAssets(
+              new DescriptorAsset(
+                  "/absolute/binary", null, null, true, null, List.of(), List.of(), false));
       var validation =
           AssetValidator.validate(descriptor, Map.of("/absolute/binary", realFile("binary")));
 
@@ -70,7 +80,10 @@ class AssetValidatorTest {
     @Test
     @DisplayName("a path with a backslash, colon or semicolon")
     void wrongSeparators() throws Exception {
-      var descriptor = withAssets(new DescriptorAsset("dir\\binary", null, null, true));
+      var descriptor =
+          withAssets(
+              new DescriptorAsset(
+                  "dir\\binary", null, null, true, null, List.of(), List.of(), false));
       var validation =
           AssetValidator.validate(descriptor, Map.of("dir\\binary", realFile("binary")));
 
@@ -85,7 +98,9 @@ class AssetValidatorTest {
     @DisplayName("a path longer than 255 characters")
     void tooLong() throws Exception {
       var longPath = "a".repeat(AssetValidator.MAXIMUM_PATH_LENGTH + 1);
-      var descriptor = withAssets(new DescriptorAsset(longPath, null, null, true));
+      var descriptor =
+          withAssets(
+              new DescriptorAsset(longPath, null, null, true, null, List.of(), List.of(), false));
       var validation = AssetValidator.validate(descriptor, Map.of(longPath, realFile("binary")));
 
       assertThat(validation.messages())
@@ -98,7 +113,10 @@ class AssetValidatorTest {
     @Test
     @DisplayName("a path that is not among the packaged files")
     void notPackaged() {
-      var descriptor = withAssets(new DescriptorAsset("missing/binary", null, null, true));
+      var descriptor =
+          withAssets(
+              new DescriptorAsset(
+                  "missing/binary", null, null, true, null, List.of(), List.of(), false));
       var validation = AssetValidator.validate(descriptor, Map.of());
 
       assertThat(validation.messages())
@@ -111,7 +129,9 @@ class AssetValidatorTest {
     @Test
     @DisplayName("a packaged file that does not exist on the host")
     void missingFile() {
-      var descriptor = withAssets(new DescriptorAsset("binary", null, null, true));
+      var descriptor =
+          withAssets(
+              new DescriptorAsset("binary", null, null, true, null, List.of(), List.of(), false));
       var validation =
           AssetValidator.validate(descriptor, Map.of("binary", folder.resolve("absent")));
 
@@ -127,14 +147,26 @@ class AssetValidatorTest {
     void configurationAsset() throws Exception {
       var descriptor =
           descriptor(
-              List.of(new DescriptorAsset("arm/binary", null, null, true)),
+              List.of(
+                  new DescriptorAsset(
+                      "arm/binary", null, null, true, null, List.of(), List.of(), false)),
               List.of(
                   new DescriptorConfiguration(
-                      "id1",
                       "Device-Release",
+                      "id1",
+                      null,
                       null,
                       List.of(),
-                      List.of(new DescriptorAsset("/bad/extra", null, null, false)))));
+                      List.of(
+                          new DescriptorAsset(
+                              "/bad/extra",
+                              null,
+                              null,
+                              false,
+                              null,
+                              List.of(),
+                              List.of(),
+                              false)))));
       var validation =
           AssetValidator.validate(
               descriptor,
@@ -155,7 +187,10 @@ class AssetValidatorTest {
     @Test
     @DisplayName("a relative path that names an existing packaged file")
     void cleanAsset() throws Exception {
-      var descriptor = withAssets(new DescriptorAsset("arm/binary", "binary", "Qnx/Elf", true));
+      var descriptor =
+          withAssets(
+              new DescriptorAsset(
+                  "arm/binary", "binary", "Qnx/Elf", true, null, List.of(), List.of(), false));
       var validation =
           AssetValidator.validate(descriptor, Map.of("arm/binary", realFile("binary")));
 
@@ -168,8 +203,17 @@ class AssetValidatorTest {
     void defaultIcon() {
       var descriptor =
           withAssets(
-              new DescriptorAsset(AssetValidator.DEFAULT_ICON, null, null, false),
-              new DescriptorAsset("arm/binary", null, null, true));
+              new DescriptorAsset(
+                  AssetValidator.DEFAULT_ICON,
+                  null,
+                  null,
+                  false,
+                  null,
+                  List.of(),
+                  List.of(),
+                  false),
+              new DescriptorAsset(
+                  "arm/binary", null, null, true, null, List.of(), List.of(), false));
       var validation = AssetValidator.validate(descriptor, Map.of("arm/binary", folder));
 
       assertThat(validation.messages())

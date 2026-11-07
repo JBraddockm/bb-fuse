@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<qnx xmlns="http://www.qnx.com/schemas/application/1.0">
+  <id>com.example.multi</id>
+  <name>Multi</name>
+  <versionNumber>1.0.0</versionNumber>
+  <buildId>0</buildId>
+  <configuration name="Device-Release">
+    <platformArchitecture>armle-v7</platformArchitecture>
+    <asset entryPointId="main" path="arm/main.so" entry="true" type="Qnx/Cascades">main.so</asset>
+    <asset entryPointId="service" path="arm/service" type="Qnx/Elf">service</asset>
+  </configuration>
+  <entryPoint id="main">
+    <name>Multi Main</name>
+  </entryPoint>
+  <entryPoint id="service">
+    <name>Multi Service</name>
+    <entryPointType>Qnx/Elf</entryPointType>
+    <permission system="true">_sys_run_headless</permission>
+  </entryPoint>
+  <permission>access_internet</permission>
+  <invoke-target id="com.example.multi.card">
+    <invoke-target-type>card.composer</invoke-target-type>
+    <entry-point-id>service</entry-point-id>
+    <filter>
+      <action>bb.action.OPEN</action>
+      <mime-type>*</mime-type>
+    </filter>
+  </invoke-target>
+</qnx>

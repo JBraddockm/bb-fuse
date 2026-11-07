@@ -30,10 +30,22 @@ import java.util.stream.Stream;
  * @param environment the {@code env} entries, in document order
  * @param splashScreen the {@code splashscreen}, a {@code landscape:portrait} pair of paths; may be
  *     {@code null}
- * @param permissions the {@code permission} entries, in document order
+ * @param permissions the {@code permission} entries, user and system, in document order
  * @param assets the top-level {@code asset} entries, in document order
  * @param platformVersion the {@code platformVersion}; may be {@code null}
  * @param configurations the {@code configuration} entries, in document order
+ * @param entryPointType the top-level {@code entryPointType}, which a configuration may override;
+ *     may be {@code null}
+ * @param cascadesTheme the {@code cascadesTheme} ({@code bright} or {@code dark}), which sets
+ *     {@code CASCADES_THEME} for the entry point; may be {@code null}
+ * @param packageLocale the {@code packageLocale}, a comma-separated list of supported locales; may
+ *     be {@code null}
+ * @param arguments the top-level entry-point {@code arg} values, in document order
+ * @param splashScreens the splash-screen image paths, from {@code splashscreen} and {@code
+ *     splashScreens}, in document order
+ * @param invokeTargets the {@code invoke-target} entries, in document order
+ * @param entryPoints the {@code entryPoint} entries, in document order; empty for a single-entry
+ *     application
  */
 public record BarDescriptor(
     String id,
@@ -50,10 +62,17 @@ public record BarDescriptor(
     String category,
     List<EnvironmentVariable> environment,
     String splashScreen,
-    List<String> permissions,
+    List<Permission> permissions,
     List<DescriptorAsset> assets,
     String platformVersion,
-    List<DescriptorConfiguration> configurations) {
+    List<DescriptorConfiguration> configurations,
+    String entryPointType,
+    String cascadesTheme,
+    String packageLocale,
+    List<String> arguments,
+    List<String> splashScreens,
+    List<InvokeTarget> invokeTargets,
+    List<EntryPoint> entryPoints) {
 
   /**
    * Validates the components that cannot be absent and takes immutable copies of the lists.
@@ -69,6 +88,10 @@ public record BarDescriptor(
     permissions = List.copyOf(permissions);
     assets = List.copyOf(assets);
     configurations = List.copyOf(configurations);
+    arguments = List.copyOf(arguments);
+    splashScreens = List.copyOf(splashScreens);
+    invokeTargets = List.copyOf(invokeTargets);
+    entryPoints = List.copyOf(entryPoints);
   }
 
   /**
@@ -94,6 +117,18 @@ public record BarDescriptor(
             assets.stream(),
             configurations.stream().flatMap(configuration -> configuration.assets().stream()))
         .filter(DescriptorAsset::entry)
+        .findFirst();
+  }
+
+  /**
+   * Finds a configuration by its name.
+   *
+   * @param name the configuration name, as the {@code name} attribute gives it
+   * @return the configuration, or empty if none has that name
+   */
+  public Optional<DescriptorConfiguration> configuration(String name) {
+    return configurations.stream()
+        .filter(configuration -> name.equals(configuration.name()))
         .findFirst();
   }
 }

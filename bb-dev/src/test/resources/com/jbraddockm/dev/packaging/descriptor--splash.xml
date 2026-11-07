@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<qnx xmlns="http://www.qnx.com/schemas/application/1.0">
+  <id>com.example.splash</id>
+  <name>Splash</name>
+  <versionNumber>1.0.0</versionNumber>
+  <asset path="arm/app" entry="true" type="Qnx/Elf">app</asset>
+  <splashScreens>
+    <image>splash_land.png</image>
+    <image>splash_port.png</image>
+  </splashScreens>
+</qnx>

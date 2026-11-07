@@ -4,7 +4,7 @@
   <name>My App</name>
   <versionNumber>1.0.0</versionNumber>
   <asset path="arm/binary" entry="true"/>
-  <configuration name="Device-Debug">
+  <configuration id="id1">
     <platformArchitecture>armv7-le</platformArchitecture>
   </configuration>
 </qnx>

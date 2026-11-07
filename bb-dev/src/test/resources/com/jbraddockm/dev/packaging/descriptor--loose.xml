@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<qnx xmlns="http://www.qnx.com/schemas/application/1.0">
+  <id>com.example.loose</id>
+  <name>Loose</name>
+  <versionNumber>1.0.0</versionNumber>
+  <icon>
+    <image>icon.png</image>
+  </icon>
+  <asset path="arm/app" entry="true" type="Qnx/Elf">app</asset>
+  <asset path="icon.png">icon.png</asset>
+  <asset path="pub/lib.so" type="Qnx/Elf" public="true">lib/pub.so</asset>
+  <asset path="data" dest="data">
+    <exclude name="*.tmp"/>
+  </asset>
+  <invoke-target id="com.example.loose.card">
+    <invoke-target-type>card.composer</invoke-target-type>
+    <icon>
+      <image>icon.png</image>
+    </icon>
+    <filter>
+      <action>bb.action.OPEN</action>
+      <mime-type>*</mime-type>
+    </filter>
+  </invoke-target>
+</qnx>
