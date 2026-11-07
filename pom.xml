@@ -12,7 +12,6 @@
         <module>bb-core</module>
         <module>bb-deploy</module>
         <module>bb-link</module>
-        <module>bb-connect</module>
         <module>bb-packager</module>
         <module>bb-dev</module>
         <module>bb-tunnel</module>
@@ -77,11 +76,6 @@
             </dependency>
 
             <!-- BlackBerry / QNX tools -->
-            <dependency>
-                <groupId>local.qconn</groupId>
-                <artifactId>jqconnDoor</artifactId>
-                <version>1.0</version>
-            </dependency>
             <dependency>
                 <groupId>local.qconn</groupId>
                 <artifactId>BarDeploy</artifactId>

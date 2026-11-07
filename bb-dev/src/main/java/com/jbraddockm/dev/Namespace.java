@@ -25,14 +25,6 @@ enum Namespace {
     return Arrays.stream(values()).filter(namespace -> namespace.wireName.equals(name)).findFirst();
   }
 
-  static List<String> wireNames() {
-    return Arrays.stream(values()).map(Namespace::wireName).toList();
-  }
-
-  String wireName() {
-    return wireName;
-  }
-
   int run(List<String> arguments, Output output) {
     return tool.run(arguments, output);
   }

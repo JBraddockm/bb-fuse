@@ -26,7 +26,6 @@ final class SecureTarget {
   static final int AUTH_CHALLENGE_RESPONSE = 9;
   static final int AUTHENTICATE = 10;
   static final int START_SERVICES = 11;
-  static final int CLOSE = 12;
 
   private static final int HEADER = 6;
   private static final int MAX_FRAME = 4096;
@@ -71,7 +70,7 @@ final class SecureTarget {
    * @throws IOException if the connection ends before the header is read
    */
   static Frame read(InputStream in) throws IOException {
-    byte[] header = readExactly(in, HEADER);
+    byte[] header = readHeader(in);
     int code = ((header[4] & 0xFF) << 8) | (header[5] & 0xFF);
     byte[] buffer = new byte[MAX_FRAME];
     int read = in.read(buffer);
@@ -79,16 +78,16 @@ final class SecureTarget {
     return new Frame(code, payload);
   }
 
-  private static byte[] readExactly(InputStream in, int count) throws IOException {
-    byte[] bytes = new byte[count];
+  private static byte[] readHeader(InputStream in) throws IOException {
+    byte[] header = new byte[HEADER];
     int offset = 0;
-    while (offset < count) {
-      int read = in.read(bytes, offset, count - offset);
+    while (offset < HEADER) {
+      int read = in.read(header, offset, HEADER - offset);
       if (read < 0) {
         throw new IOException("the device closed the connection during the handshake");
       }
       offset += read;
     }
-    return bytes;
+    return header;
   }
 }

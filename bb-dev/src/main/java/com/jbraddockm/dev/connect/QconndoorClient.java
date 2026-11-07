@@ -9,6 +9,8 @@ import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Speaks the qconndoor SecureTarget protocol to a device on TCP 4455 to start its SSH daemon: the
@@ -64,7 +66,7 @@ final class QconndoorClient {
       throws IOException, GeneralSecurityException {
     progress.note("Connecting to " + host + ":" + PORT);
     SecureTarget.write(out, SecureTarget.HELLO, EMPTY);
-    SecureTarget.read(in);
+    expect(in, SecureTarget.FEEDBACK);
 
     progress.note("Exchanging encryption keys");
     var keyPair = Crypto.rsaKeyPair();
@@ -86,7 +88,7 @@ final class QconndoorClient {
         out,
         SecureTarget.DECRYPTED_CHALLENGE_RESPONSE,
         Crypto.encryptFrame(sessionKey, decryptedResponse(blob, signature)));
-    SecureTarget.read(in);
+    expect(in, SecureTarget.FEEDBACK);
 
     progress.note("Authenticating");
     SecureTarget.write(out, SecureTarget.AUTH_CHALLENGE_REQUEST, EMPTY);
@@ -98,28 +100,53 @@ final class QconndoorClient {
         out,
         SecureTarget.AUTHENTICATE,
         Crypto.encryptFrame(sessionKey, lengthPrefixed(hashed.getBytes())));
-    SecureTarget.read(in);
+    expect(in, SecureTarget.FEEDBACK);
 
     progress.note("Sending SSH key");
     SecureTarget.write(
         out,
         SecureTarget.SEND_SSH_KEY,
         Crypto.encryptFrame(sessionKey, lengthPrefixed(trimmedKey())));
-    SecureTarget.read(in);
+    expect(in, SecureTarget.FEEDBACK);
 
     SecureTarget.write(out, SecureTarget.START_SERVICES, EMPTY);
-    SecureTarget.read(in);
+    expect(in, SecureTarget.FEEDBACK);
   }
 
-  private void holdSession(InputStream in, OutputStream out) throws IOException {
-    try {
-      while (!Thread.currentThread().isInterrupted()) {
-        Thread.sleep(KEEPALIVE_INTERVAL_MILLIS);
-        SecureTarget.write(out, SecureTarget.KEEPALIVE, EMPTY);
-        SecureTarget.read(in);
+  /**
+   * Holds the session open until the device closes it: a background thread sends a keepalive every
+   * {@link #KEEPALIVE_INTERVAL_MILLIS} while this thread blocks draining each keepalive's feedback.
+   */
+  private void holdSession(InputStream in, OutputStream out) {
+    try (var keepAlives =
+        Executors.newSingleThreadScheduledExecutor(QconndoorClient::keepAliveThread)) {
+      keepAlives.scheduleWithFixedDelay(
+          () -> sendKeepAlive(out),
+          KEEPALIVE_INTERVAL_MILLIS,
+          KEEPALIVE_INTERVAL_MILLIS,
+          TimeUnit.MILLISECONDS);
+      boolean held = true;
+      while (held) {
+        try {
+          SecureTarget.read(in);
+        } catch (IOException _) {
+          held = false; // the device closed the session, which ends the hold
+        }
       }
-    } catch (InterruptedException _) {
-      Thread.currentThread().interrupt();
+    }
+  }
+
+  private static Thread keepAliveThread(Runnable runnable) {
+    var thread = new Thread(runnable, "qconndoor-keepalive");
+    thread.setDaemon(true);
+    return thread;
+  }
+
+  private static void sendKeepAlive(OutputStream out) {
+    try {
+      SecureTarget.write(out, SecureTarget.KEEPALIVE, EMPTY);
+    } catch (IOException _) {
+      // the connection is gone; the read loop will end on its own
     }
   }
 

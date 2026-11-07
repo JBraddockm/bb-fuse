@@ -22,20 +22,27 @@ public final class ConnectTool implements DevTool {
   private static final int USAGE_ERROR = 2;
   private static final int CONNECT_ERROR = 1;
 
+  private static String value(List<String> arguments, int index) {
+    return index < arguments.size() ? arguments.get(index) : "";
+  }
+
   @Override
   public int run(List<String> arguments, Output output) {
     String host = null;
     String password = "";
     String keyPath = null;
-    for (int index = 0; index < arguments.size(); index++) {
-      var argument = arguments.get(index);
-      switch (argument) {
+    int index = 0;
+    // The host is the leading positional argument, as bb-connect took it.
+    if (!arguments.isEmpty() && !arguments.getFirst().startsWith("-")) {
+      host = arguments.getFirst();
+      index = 1;
+    }
+    for (; index < arguments.size(); index++) {
+      switch (arguments.get(index)) {
         case "-password" -> password = value(arguments, ++index);
         case "-sshPublicKey" -> keyPath = value(arguments, ++index);
         default -> {
-          if (host == null && !argument.startsWith("-")) {
-            host = argument;
-          }
+          // Unknown options (such as the old -targetVersion) are ignored for compatibility.
         }
       }
     }
@@ -76,9 +83,5 @@ public final class ConnectTool implements DevTool {
           Json.object(
               "ok", false, "host", resolvedHost, "error", String.valueOf(failure.getMessage())));
     }
-  }
-
-  private static String value(List<String> arguments, int index) {
-    return index < arguments.size() ? arguments.get(index) : "";
   }
 }

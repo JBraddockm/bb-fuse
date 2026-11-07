@@ -21,15 +21,6 @@ public final class Output {
   }
 
   /**
-   * Tells whether JSON output was requested.
-   *
-   * @return {@code true} if the result should be a JSON object
-   */
-  public boolean isJson() {
-    return json;
-  }
-
-  /**
    * Reports that a namespace's tool is not built yet.
    *
    * @param namespace the namespace that was asked for
