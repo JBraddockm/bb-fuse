@@ -35,7 +35,9 @@ class FormFieldTest {
     "WORKSTATION_ID, workstation_id",
     "DATA, data",
     "PATH, path",
-    "UPDATED_TIME, updated_time"
+    "UPDATED_TIME, updated_time",
+    "FID, fid",
+    "AID, aid"
   })
   @DisplayName("each field is written with the name that the device reads")
   void eachFieldHasItsWireName(FormField field, String wireName) {
@@ -44,9 +46,9 @@ class FormFieldTest {
 
   @Test
   @DisplayName("no two fields have the same name, and there are no others than these")
-  void thereAreTwentyThreeDistinctFields() {
+  void thereAreTwentyFiveDistinctFields() {
     assertThat(Arrays.stream(FormField.values()).map(FormField::wireName))
         .doesNotHaveDuplicates()
-        .hasSize(23);
+        .hasSize(25);
   }
 }

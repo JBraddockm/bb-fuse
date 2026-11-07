@@ -174,6 +174,7 @@ class LinkMethodTest {
       "GET_DEVICE_DISK_FREE, getDeviceDiskFree",
       "SET_DEVICE_FILE_TIME, setDeviceFileTime",
       "GET_DEVICE_METADATA, getDeviceMetadata",
+      "GET_DEVICE_THUMBNAIL, getDeviceThumbnail",
       "LIST_PIM_ACCOUNTS, listPimAccounts",
       "FIND_PIM_ACCOUNT, findPimAccount",
       "GET_PIM_ITEMS, getPimItems",
@@ -212,7 +213,7 @@ class LinkMethodTest {
     @DisplayName("are 44, and distinct")
     void areFortyFourAndDistinct() {
       assertThat(Arrays.stream(LinkMethod.values()).map(LinkMethod::wireName))
-          .hasSize(44)
+          .hasSize(45)
           .doesNotHaveDuplicates();
     }
 

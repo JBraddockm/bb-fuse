@@ -16,6 +16,7 @@ copyDeviceFile
 getDeviceDiskFree
 setDeviceFileTime
 getDeviceMetadata
+getDeviceThumbnail
 listPimAccounts
 findPimAccount
 getPimItems

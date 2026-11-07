@@ -77,7 +77,13 @@ public enum FormField implements WireValue {
   PATH("path"),
 
   /** A time that bounds a photo fetch: unchanged since it means "not modified". */
-  UPDATED_TIME("updated_time");
+  UPDATED_TIME("updated_time"),
+
+  /** The file id of a {@code metadata.cgi} thumbnail. Takes precedence over {@link #AID}. */
+  FID("fid"),
+
+  /** The album id of a {@code metadata.cgi} thumbnail, used when {@link #FID} is absent. */
+  AID("aid");
 
   private final String wireName;
 
