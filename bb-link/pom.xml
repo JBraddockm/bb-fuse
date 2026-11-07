@@ -39,6 +39,15 @@
             <version>3.6.1</version>
         </dependency>
 
+        <!-- The in-process SMB1 client for the device file share (transport.smb). The device's Samba
+             speaks SMB1/CIFS only, so the SMB1 path of this library is used; it keeps SMB1 contained
+             to the daemon rather than requiring the host OS to enable its own SMB1 client. -->
+        <dependency>
+            <groupId>org.codelibs</groupId>
+            <artifactId>jcifs</artifactId>
+            <version>3.0.4</version>
+        </dependency>
+
         <!-- Original BlackBerry tooling (versions managed by the parent). BarDeploy drives the device
              scan and login (com.qnx.bbt.deploy.*); BarLibrary backs bb-core's core.bar, which bb-link
              uses directly (it is optional there, so declared here); the Apache HTTP stack is the CGI

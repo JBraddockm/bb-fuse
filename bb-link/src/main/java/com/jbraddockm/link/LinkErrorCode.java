@@ -45,7 +45,13 @@ public enum LinkErrorCode implements ErrorCode {
   NO_BACKUP_DATA,
 
   /** The backup file to restore could not be read: it is not a {@code .bbb}, or it is damaged. */
-  BBB_UNREADABLE;
+  BBB_UNREADABLE,
+
+  /** A file or directory named on the device's share does not exist. */
+  NO_SUCH_PATH,
+
+  /** A path on the device's share is a directory where a file was expected, or the reverse. */
+  NOT_A_DIRECTORY;
 
   @Override
   public String wireName() {
