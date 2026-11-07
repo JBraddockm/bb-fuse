@@ -8,7 +8,6 @@ import com.jbraddockm.link.transport.login.SmbCredentials;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -52,6 +51,33 @@ public final class JcifsFileStore implements FileStore {
     var workgroup = credentials.workgroup() != null ? credentials.workgroup() : "";
     this.authentication =
         new NtlmPasswordAuthentication(workgroup, credentials.user(), credentials.password());
+  }
+
+  private static long copy(InputStream in, OutputStream out, LongConsumer progress)
+      throws IOException {
+    var buffer = new byte[BUFFER_BYTES];
+    var total = 0L;
+    int read;
+    while ((read = in.read(buffer)) != -1) {
+      out.write(buffer, 0, read);
+      total += read;
+      progress.accept(total);
+    }
+    return total;
+  }
+
+  private static SmbEntry toEntry(SmbFile file) throws SmbException {
+    var raw = file.getName();
+    var name = raw.endsWith("/") ? raw.substring(0, raw.length() - 1) : raw;
+    var directory = file.isDirectory();
+    return new SmbEntry(
+        name, directory, directory ? 0 : file.length(), Instant.ofEpochMilli(file.lastModified()));
+  }
+
+  private static SmbLocation parentOf(SmbLocation location) {
+    var path = location.path();
+    var cut = path.lastIndexOf('/');
+    return new SmbLocation(location.share(), cut < 0 ? "" : path.substring(0, cut));
   }
 
   @Override
@@ -140,33 +166,6 @@ public final class JcifsFileStore implements FileStore {
     }
   }
 
-  private static long copy(InputStream in, OutputStream out, LongConsumer progress)
-      throws IOException {
-    var buffer = new byte[BUFFER_BYTES];
-    var total = 0L;
-    int read;
-    while ((read = in.read(buffer)) != -1) {
-      out.write(buffer, 0, read);
-      total += read;
-      progress.accept(total);
-    }
-    return total;
-  }
-
-  private static SmbEntry toEntry(SmbFile file) throws SmbException {
-    var raw = file.getName();
-    var name = raw.endsWith("/") ? raw.substring(0, raw.length() - 1) : raw;
-    var directory = file.isDirectory();
-    return new SmbEntry(
-        name, directory, directory ? 0 : file.length(), Instant.ofEpochMilli(file.lastModified()));
-  }
-
-  private static SmbLocation parentOf(SmbLocation location) {
-    var path = location.path();
-    var cut = path.lastIndexOf('/');
-    return new SmbLocation(location.share(), cut < 0 ? "" : path.substring(0, cut));
-  }
-
   private void deleteQuietly(SmbLocation location) {
     try {
       var file = file(location, false);
@@ -188,13 +187,21 @@ public final class JcifsFileStore implements FileStore {
   }
 
   private SmbFile file(SmbLocation location, boolean directory) {
-    var path =
-        "/"
-            + location.share()
-            + (location.path().isEmpty() ? "" : "/" + location.path())
-            + (directory ? "/" : "");
     return Impossible.call(
-        () -> new SmbFile(new URI("smb", host, path, null, null).toString(), authentication),
-        "the SMB URL is built from a validated share and path");
+        () -> {
+          // Traverse the share root one segment at a time. jcifs encodes child names for the wire,
+          // preserving spaces and reserved characters; encoding the full URL would store "%20"
+          // literally. Trailing slashes mark intermediate segments as directories.
+          var node = new SmbFile("smb://" + host + "/" + location.share() + "/", authentication);
+          if (!location.path().isEmpty()) {
+            var segments = location.path().split("/");
+            for (var index = 0; index < segments.length; index++) {
+              var asDirectory = directory || index < segments.length - 1;
+              node = new SmbFile(node, asDirectory ? segments[index] + "/" : segments[index]);
+            }
+          }
+          return node;
+        },
+        "the SMB file is built from a validated share and path");
   }
 }
