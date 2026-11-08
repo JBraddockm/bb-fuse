@@ -3,14 +3,10 @@ package com.jbraddockm.dev.deploy;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.jbraddockm.core.device.DeviceHttp;
 import com.jbraddockm.dev.testing.Resources;
-import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Deque;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -182,52 +178,5 @@ class AppInstallerEngineTest {
 
   private static String ascii(byte[] bytes) {
     return new String(bytes, StandardCharsets.US_ASCII);
-  }
-
-  /** A device connection that accepts a certificate login and counts how often it logs in. */
-  private static final class FakeDeviceHttp implements DeviceHttp {
-
-    private final String successBody;
-    private int logins;
-
-    FakeDeviceHttp(String successBody) {
-      this.successBody = successBody;
-    }
-
-    @Override
-    public String get(String pathAndQuery) {
-      logins++;
-      return successBody;
-    }
-
-    @Override
-    public boolean hasLoginCookie() {
-      return false;
-    }
-
-    @Override
-    public boolean offersClientCertificate() {
-      return true;
-    }
-  }
-
-  /** A poster that returns canned answers and remembers the last body it was given. */
-  private static final class FakePoster implements Poster {
-
-    private final Deque<String> replies = new ArrayDeque<>();
-    private MultipartBody body;
-
-    void reply(String text) {
-      replies.add(text);
-    }
-
-    @Override
-    public Answer post(MultipartBody body) {
-      this.body = body;
-      return new Answer(
-          200,
-          "text/plain",
-          new ByteArrayInputStream(replies.remove().getBytes(StandardCharsets.UTF_8)));
-    }
   }
 }

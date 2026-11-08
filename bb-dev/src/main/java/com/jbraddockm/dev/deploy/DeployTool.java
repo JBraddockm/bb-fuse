@@ -13,6 +13,7 @@ import com.jbraddockm.dev.qconn.TargetFileService;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
+import javax.net.ssl.KeyManager;
 
 /**
  * The {@code deploy} namespace: installs and manages applications on the device. It parses the
@@ -24,6 +25,23 @@ public final class DeployTool implements DevTool {
 
   private static final int USAGE_ERROR = 2;
   private static final int COMMAND_FAILED = 1;
+
+  private final Engines engines;
+
+  /** Creates a deploy tool that opens a real connection to the device. */
+  public DeployTool() {
+    this(AppInstallerEngine::forDevice);
+  }
+
+  DeployTool(Engines engines) {
+    this.engines = engines;
+  }
+
+  /** Opens an installer engine for a device; the production factory is {@code forDevice}. */
+  interface Engines {
+    AppInstallerEngine forDevice(String host, int port, String password, KeyManager[] identity);
+  }
+
   private static final String HELP =
       """
       bb-dev deploy — install and manage applications on a BlackBerry 10 device
@@ -169,8 +187,7 @@ public final class DeployTool implements DevTool {
 
   private int execute(DeployCommandLine.Invocation invocation, Output output) {
     var target = invocation.target();
-    var engine =
-        AppInstallerEngine.forDevice(target.host(), target.port(), target.password(), null);
+    var engine = engines.forDevice(target.host(), target.port(), target.password(), null);
     try {
       if (invocation.command() instanceof DeployCommand.InstallApp install
           && install.devMode()

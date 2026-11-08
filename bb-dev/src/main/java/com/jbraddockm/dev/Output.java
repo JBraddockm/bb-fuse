@@ -15,7 +15,13 @@ public final class Output {
   private final PrintStream stream;
   private final boolean json;
 
-  Output(PrintStream stream, boolean json) {
+  /**
+   * Creates an output that writes to a stream.
+   *
+   * @param stream where the result is written
+   * @param json whether to write one JSON object instead of plain text
+   */
+  public Output(PrintStream stream, boolean json) {
     this.stream = stream;
     this.json = json;
   }

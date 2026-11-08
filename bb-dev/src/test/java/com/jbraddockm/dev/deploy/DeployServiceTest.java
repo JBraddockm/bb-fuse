@@ -5,9 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.jbraddockm.core.daemon.CommandSpec;
 import com.jbraddockm.core.daemon.Reply;
 import com.jbraddockm.core.daemon.RequestParams;
-import com.jbraddockm.core.device.DeviceHttp;
 import com.jbraddockm.dev.testing.Resources;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
@@ -53,7 +51,7 @@ class DeployServiceTest {
   private static String verifyAnsweredWith(String deviceReply) {
     var engine =
         new AppInstallerEngine(
-            new FakeHttp(Resources.text(DeployServiceTest.class, "login--success.xml")),
+            new FakeDeviceHttp(Resources.text(DeployServiceTest.class, "login--success.xml")),
             new FakePoster(deviceReply),
             _ -> new AppInstallerEngine.Identity("gYABC", "com.example.App"),
             "",
@@ -72,30 +70,5 @@ class DeployServiceTest {
         new DeploySession(engine),
         Reply.standalone(new PrintStream(bytes, true, StandardCharsets.UTF_8), 1));
     return bytes.toString(StandardCharsets.UTF_8);
-  }
-
-  private record FakeHttp(String loginBody) implements DeviceHttp {
-    @Override
-    public String get(String pathAndQuery) {
-      return loginBody;
-    }
-
-    @Override
-    public boolean hasLoginCookie() {
-      return false;
-    }
-
-    @Override
-    public boolean offersClientCertificate() {
-      return true;
-    }
-  }
-
-  private record FakePoster(String reply) implements Poster {
-    @Override
-    public Answer post(MultipartBody body) {
-      return new Answer(
-          200, "text/plain", new ByteArrayInputStream(reply.getBytes(StandardCharsets.UTF_8)));
-    }
   }
 }
