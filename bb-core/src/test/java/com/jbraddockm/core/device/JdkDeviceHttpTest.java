@@ -1,13 +1,10 @@
 package com.jbraddockm.core.device;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.net.Socket;
-import java.security.Principal;
-import java.security.PrivateKey;
-import java.security.cert.X509Certificate;
+import com.jbraddockm.core.error.InvalidArgumentException;
 import javax.net.ssl.KeyManager;
-import javax.net.ssl.X509KeyManager;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -31,37 +28,25 @@ class JdkDeviceHttpTest {
     }
   }
 
-  /** A key manager that offers nothing, enough to build the client. */
-  private static final class NoIdentity implements X509KeyManager {
+  @Test
+  @DisplayName("rejects a null host, and a blank one naming the host argument")
+  void rejectsABadHost() {
+    assertThatThrownBy(() -> new JdkDeviceHttp(null, 443, null))
+        .isInstanceOf(NullPointerException.class);
+    assertThatThrownBy(() -> new JdkDeviceHttp("  ", 443, null))
+        .isInstanceOfSatisfying(
+            InvalidArgumentException.class,
+            invalid -> assertThat(invalid.parameter()).isEqualTo("host"));
+  }
 
-    @Override
-    public String[] getClientAliases(String keyType, Principal[] issuers) {
-      return null;
-    }
-
-    @Override
-    public String chooseClientAlias(String[] keyTypes, Principal[] issuers, Socket socket) {
-      return null;
-    }
-
-    @Override
-    public String[] getServerAliases(String keyType, Principal[] issuers) {
-      return null;
-    }
-
-    @Override
-    public String chooseServerAlias(String keyType, Principal[] issuers, Socket socket) {
-      return null;
-    }
-
-    @Override
-    public X509Certificate[] getCertificateChain(String alias) {
-      return null;
-    }
-
-    @Override
-    public PrivateKey getPrivateKey(String alias) {
-      return null;
-    }
+  @Test
+  @DisplayName("rejects a port outside 1..65535, naming the port argument")
+  void rejectsABadPort() {
+    assertThatThrownBy(() -> new JdkDeviceHttp("device.local", 0, null))
+        .isInstanceOfSatisfying(
+            InvalidArgumentException.class,
+            invalid -> assertThat(invalid.parameter()).isEqualTo("port"));
+    assertThatThrownBy(() -> new JdkDeviceHttp("device.local", 70000, null))
+        .isInstanceOf(InvalidArgumentException.class);
   }
 }

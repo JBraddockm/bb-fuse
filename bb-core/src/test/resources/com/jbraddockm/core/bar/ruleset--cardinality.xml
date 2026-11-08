@@ -1,0 +1,14 @@
+<rules barSpecificationVersion="9.9">
+  <rulesSets>
+    <rulesSet packageType="application">
+      <sections>
+        <section name="Repeated" cardinality="2">
+          <attributes>
+            <attribute name="Wrapped" cardinality="1..*"/>
+          </attributes>
+          <attribute name="Direct" cardinality="3"/>
+        </section>
+      </sections>
+    </rulesSet>
+  </rulesSets>
+</rules>

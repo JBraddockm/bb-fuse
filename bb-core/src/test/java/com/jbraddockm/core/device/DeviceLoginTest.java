@@ -124,6 +124,18 @@ class DeviceLoginTest {
               login ->
                   assertThat(login.reason()).isEqualTo(LoginException.Reason.UNUSABLE_RESPONSE));
     }
+
+    @Test
+    @DisplayName("DEVICE_ERROR when the device reports a system error")
+    void systemError() {
+      var http = new FakeDeviceHttp(fixture("login--sys-error.xml"));
+
+      assertThatThrownBy(() -> DeviceLogin.authenticate(http, "hunter2"))
+          .isInstanceOfSatisfying(
+              LoginException.class,
+              login -> assertThat(login.reason()).isEqualTo(LoginException.Reason.DEVICE_ERROR))
+          .hasMessageContaining("system error");
+    }
   }
 
   /**
