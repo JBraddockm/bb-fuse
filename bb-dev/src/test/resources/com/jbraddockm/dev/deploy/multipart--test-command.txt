@@ -1,0 +1,7 @@
+------bbdevDeployBoundary
+Content-Disposition: form-data; name="command"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 8bit
+
+test
+------bbdevDeployBoundary--
