@@ -1,5 +1,6 @@
 package com.jbraddockm.dev.deploy;
 
+import com.jbraddockm.core.daemon.DaemonServer;
 import com.jbraddockm.core.device.LoginException;
 import com.jbraddockm.core.json.Json;
 import com.jbraddockm.dev.DevTool;
@@ -77,8 +78,22 @@ public final class DeployTool implements DevTool {
     return argument.equals("help") || argument.equals("-h") || argument.equals("--help");
   }
 
+  /** Serves the newline-JSON daemon protocol on standard input and output, until the input ends. */
+  private static int daemon() {
+    try {
+      DaemonServer.run(new DeployService());
+      return 0;
+    } catch (IOException failure) {
+      System.err.println("bb-dev deploy: the daemon failed: " + failure.getMessage());
+      return 1;
+    }
+  }
+
   @Override
   public int run(List<String> arguments, Output output) {
+    if (!arguments.isEmpty() && arguments.getFirst().equals("-daemon")) {
+      return daemon();
+    }
     if (arguments.isEmpty()) {
       return output.emit(
           USAGE_ERROR, HELP, Json.object("ok", false, "error", "a command is required"));
