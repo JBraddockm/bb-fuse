@@ -66,7 +66,18 @@ class DeployCommandLineTest {
               "h");
 
       assertThat(command)
-          .isEqualTo(new DeployCommand.InstallApp(Path.of("app.bar"), true, true, "h", true));
+          .isEqualTo(
+              new DeployCommand.InstallApp(Path.of("app.bar"), true, true, "h", true, false));
+    }
+
+    @Test
+    @DisplayName("sets noSync for a --no-sync install")
+    void installNoSync() throws UsageException {
+      var command = command("install", "app.bar", "-d", "D", "--dev", "--no-sync");
+
+      assertThat(command)
+          .isEqualTo(
+              new DeployCommand.InstallApp(Path.of("app.bar"), false, true, null, false, true));
     }
 
     @Test

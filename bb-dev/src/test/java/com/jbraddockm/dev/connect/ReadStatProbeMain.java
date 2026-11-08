@@ -36,7 +36,7 @@ final class ReadStatProbeMain {
               try {
                 client.startDaemon(connected::countDown);
               } catch (Exception failure) {
-                failure.printStackTrace();
+                IO.println("qconn session failed: " + failure);
               }
             });
     session.setDaemon(true);
@@ -46,7 +46,7 @@ final class ReadStatProbeMain {
       IO.println("services did not come up");
       return;
     }
-    waitForPort(host, 8000);
+    waitForPort(host);
 
     try (var qconn = QconnSocket.connect(host)) {
       var files = TargetFileService.on(qconn);
@@ -79,10 +79,10 @@ final class ReadStatProbeMain {
     }
   }
 
-  private static void waitForPort(String host, int port) throws InterruptedException {
+  private static void waitForPort(String host) throws InterruptedException {
     for (var attempt = 0; attempt < 40; attempt++) {
       try (var socket = new Socket()) {
-        socket.connect(new InetSocketAddress(host, port), 500);
+        socket.connect(new InetSocketAddress(host, QconnSocket.PORT), 500);
         return;
       } catch (Exception retry) {
         Thread.sleep(250);

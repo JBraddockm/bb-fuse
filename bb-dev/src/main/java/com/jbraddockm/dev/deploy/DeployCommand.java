@@ -11,52 +11,34 @@ import java.util.Objects;
  */
 public sealed interface DeployCommand {
 
-  /**
-   * Tells whether running the command twice is harmless. Only such commands are retried
-   * automatically after a dropped connection.
-   *
-   * @return {@code true} for commands that only read
-   */
-  default boolean readOnly() {
-    return false;
-  }
-
   /** Checks that the device is reachable and accepts the login. */
-  record TestConnection() implements DeployCommand {
-    @Override
-    public boolean readOnly() {
-      return true;
-    }
-  }
+  record TestConnection() implements DeployCommand {}
 
   /** Lists the applications installed on the device. */
-  record ListInstalledApps() implements DeployCommand {
-    @Override
-    public boolean readOnly() {
-      return true;
-    }
-  }
+  record ListInstalledApps() implements DeployCommand {}
 
   /** Reads the device's properties. */
-  record ListDeviceInfo() implements DeployCommand {
-    @Override
-    public boolean readOnly() {
-      return true;
-    }
-  }
+  record ListDeviceInfo() implements DeployCommand {}
 
   /**
-   * Installs an application from a bar file, optionally launching it. This is the full-upload
-   * install; the incremental dev-mode sync install is a later feature.
+   * Installs an application from a bar file, optionally launching it. A development-mode install of
+   * a native bar uses the incremental sync (mini-BAR + the changed assets over qconn) unless {@code
+   * noSync} forces the full upload.
    *
    * @param bar the bar file to install
    * @param launch whether to launch the application after installing it
    * @param devMode whether to install in development mode
    * @param debugHost the host of a debugger to attach, or {@code null}
    * @param debugNative whether to hold a native application at start-up for a native debugger
+   * @param noSync whether to force a full upload instead of the dev-mode sync
    */
   record InstallApp(
-      Path bar, boolean launch, boolean devMode, String debugHost, boolean debugNative)
+      Path bar,
+      boolean launch,
+      boolean devMode,
+      String debugHost,
+      boolean debugNative,
+      boolean noSync)
       implements DeployCommand {
 
     /**
@@ -119,11 +101,6 @@ public sealed interface DeployCommand {
     public IsAppRunning {
       app.requireName();
     }
-
-    @Override
-    public boolean readOnly() {
-      return true;
-    }
   }
 
   /**
@@ -158,11 +135,6 @@ public sealed interface DeployCommand {
     public VerifyApp {
       Objects.requireNonNull(app, "app");
     }
-
-    @Override
-    public boolean readOnly() {
-      return true;
-    }
   }
 
   /**
@@ -185,11 +157,6 @@ public sealed interface DeployCommand {
       if (path == null || path.isBlank()) {
         throw new IllegalArgumentException("a sandbox path is required");
       }
-    }
-
-    @Override
-    public boolean readOnly() {
-      return true;
     }
   }
 

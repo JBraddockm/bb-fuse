@@ -131,4 +131,28 @@ class TargetFileServiceTest {
         .isInstanceOf(IOException.class)
         .hasMessageContaining("No such file or directory");
   }
+
+  @Test
+  @DisplayName("mkdir opens with the create flag and directory mode, then closes")
+  void mkdir() throws IOException {
+    over("o:9:41ff:0:\"/d\"\no\n").mkdir("/d");
+
+    assertThat(sent()).isEqualTo("o:\"/d\":100:41ff\r\nc:9\r\n");
+  }
+
+  @Test
+  @DisplayName("mkdirs creates each component in turn")
+  void mkdirs() {
+    over("o:5:41ff:0:\"/a\"\no\no:6:41ff:0:\"/a/b\"\no\n").mkdirs("/a/b");
+
+    assertThat(sent()).contains("o:\"/a\":100:41ff\r\n").contains("o:\"/a/b\":100:41ff\r\n");
+  }
+
+  @Test
+  @DisplayName("mkdirs steps over a component that already exists")
+  void mkdirsExisting() {
+    over("e:File exists\no:6:41ff:0:\"/a/b\"\no\n").mkdirs("/a/b");
+
+    assertThat(sent()).contains("o:\"/a\":100:41ff\r\n").contains("o:\"/a/b\":100:41ff\r\n");
+  }
 }

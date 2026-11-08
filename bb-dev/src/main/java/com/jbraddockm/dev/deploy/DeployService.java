@@ -71,7 +71,8 @@ public final class DeployService implements Service<DeploySession> {
                     params.flag("launch"),
                     params.flag("dev"),
                     params.optionalString("debugHost").orElse(null),
-                    params.flag("debugNative"))),
+                    params.flag("debugNative"),
+                    params.flag("noSync"))),
         command(
             "get",
             params ->

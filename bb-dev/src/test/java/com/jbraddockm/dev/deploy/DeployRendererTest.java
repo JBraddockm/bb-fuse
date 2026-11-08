@@ -22,7 +22,7 @@ class DeployRendererTest {
   void install() {
     var rendered =
         DeployRenderer.render(
-            new DeployCommand.InstallApp(Path.of("x.bar"), false, true, null, false),
+            new DeployCommand.InstallApp(Path.of("x.bar"), false, true, null, false, false),
             golden("device--install.txt"));
 
     assertThat(rendered.text())

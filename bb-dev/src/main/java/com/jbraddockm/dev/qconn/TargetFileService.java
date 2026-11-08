@@ -35,6 +35,9 @@ public final class TargetFileService {
   /** Default permissions for a created file, {@code 0777}. */
   public static final int MODE_DEFAULT = 0x1ff;
 
+  /** The {@code S_IFDIR} mode bit — marks an open-create as a directory. */
+  private static final int S_IFDIR = 0x4000;
+
   private final QconnSocket qconn;
 
   TargetFileService(QconnSocket qconn) {
@@ -53,6 +56,24 @@ public final class TargetFileService {
     return new TargetFileService(qconn);
   }
 
+  /** The value field of a reply — the token after the {@code o}/{@code e} reply code. */
+  private static String field(String reply) {
+    var parts = reply.split(":");
+    if (parts.length < 2) {
+      throw new NumberFormatException("unexpected file reply: " + reply);
+    }
+    return parts[1];
+  }
+
+  private static byte[] slice(byte[] data, int offset, int length) {
+    if (offset == 0 && length == data.length) {
+      return data;
+    }
+    var slice = new byte[length];
+    System.arraycopy(data, offset, slice, 0, length);
+    return slice;
+  }
+
   /**
    * Opens a file and returns its descriptor.
    *
@@ -67,7 +88,7 @@ public final class TargetFileService {
     send(
         "o:\"" + path + "\":" + Integer.toHexString(flags) + ":" + Integer.toHexString(mode), null);
     // o:<fd>:<hex mode>:<?>:"<path>"
-    return Integer.parseInt(field(readReply(), 1));
+    return Integer.parseInt(field(readReply()));
   }
 
   /**
@@ -87,7 +108,7 @@ public final class TargetFileService {
         "w:" + fd + ":" + Long.toHexString(fileOffset) + ":" + Integer.toHexString(length) + ":1",
         slice(data, offset, length));
     // o:<hex bytes written>:<hex new offset>
-    return Integer.parseInt(field(readReply(), 1), 16);
+    return Integer.parseInt(field(readReply()), 16);
   }
 
   /**
@@ -99,6 +120,45 @@ public final class TargetFileService {
   public void close(int fd) throws IOException {
     send("c:" + fd, null);
     readReply();
+  }
+
+  /**
+   * Creates a directory (open-create with the directory type bit, then close). Fails if it already
+   * exists; use {@link #mkdirs} to create a path idempotently.
+   *
+   * @param path the device path
+   * @throws IOException if the device reports an error
+   */
+  public void mkdir(String path) throws IOException {
+    send(
+        "o:\""
+            + path
+            + "\":"
+            + Integer.toHexString(O_CREAT)
+            + ":"
+            + Integer.toHexString(S_IFDIR | MODE_DEFAULT),
+        null);
+    close(Integer.parseInt(field(readReply())));
+  }
+
+  /**
+   * Creates a directory and every missing parent, ignoring components that already exist.
+   *
+   * @param path the device directory path
+   */
+  public void mkdirs(String path) {
+    var built = new StringBuilder();
+    for (var part : path.split("/")) {
+      if (part.isEmpty()) {
+        continue;
+      }
+      built.append('/').append(part);
+      try {
+        mkdir(built.toString());
+      } catch (IOException _) {
+        // the component exists; keep going down the path
+      }
+    }
   }
 
   /**
@@ -137,7 +197,7 @@ public final class TargetFileService {
         null);
     // o:<hex count>:<hex count>:<hex new offset>, then <count> raw bytes
     var reply = readReply();
-    var count = (int) Long.parseLong(field(reply, 1), 16);
+    var count = (int) Long.parseLong(field(reply), 16);
     if (count > 0) {
       readFully(data, off, count);
     }
@@ -209,7 +269,7 @@ public final class TargetFileService {
   /** Opens a path for metadata only ({@code oc:"<path>":0}) and returns the descriptor. */
   private int openForStat(String path) throws IOException {
     send("oc:\"" + path + "\":0", null);
-    return Integer.parseInt(field(readReply(), 1));
+    return Integer.parseInt(field(readReply()));
   }
 
   /** Reads exactly {@code length} bytes from the service stream into {@code data}. */
@@ -246,23 +306,6 @@ public final class TargetFileService {
       throw new IOException("qconn file service error: " + reply.substring(2));
     }
     return reply;
-  }
-
-  private static String field(String reply, int index) {
-    var parts = reply.split(":");
-    if (index >= parts.length) {
-      throw new NumberFormatException("unexpected file reply: " + reply);
-    }
-    return parts[index];
-  }
-
-  private static byte[] slice(byte[] data, int offset, int length) {
-    if (offset == 0 && length == data.length) {
-      return data;
-    }
-    var slice = new byte[length];
-    System.arraycopy(data, offset, slice, 0, length);
-    return slice;
   }
 
   /**
@@ -305,7 +348,6 @@ public final class TargetFileService {
     private static final int S_IFMT = 0xf000;
     private static final int S_IFDIR = 0x4000;
     private static final int S_IFREG = 0x8000;
-    private static final int S_IFLNK = 0xa000;
 
     /**
      * Whether this is a directory.
@@ -323,15 +365,6 @@ public final class TargetFileService {
      */
     public boolean isRegularFile() {
       return (mode & S_IFMT) == S_IFREG;
-    }
-
-    /**
-     * Whether this is a symbolic link.
-     *
-     * @return {@code true} for a symbolic link
-     */
-    public boolean isSymbolicLink() {
-      return (mode & S_IFMT) == S_IFLNK;
     }
 
     /**

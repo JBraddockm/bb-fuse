@@ -102,7 +102,7 @@ class AppInstallerEngineTest {
       var bar = java.nio.file.Files.write(folder.resolve("app.bar"), new byte[] {1});
       poster.reply("result::success");
 
-      run(new DeployCommand.InstallApp(bar, true, true, null, false), new ArrayList<>());
+      run(new DeployCommand.InstallApp(bar, true, true, null, false, false), new ArrayList<>());
 
       var wire = ascii(poster.body.head()) + ascii(poster.body.tail());
       assertThat(wire).contains("Install and Launch").contains("gYABC").contains("com.example.App");

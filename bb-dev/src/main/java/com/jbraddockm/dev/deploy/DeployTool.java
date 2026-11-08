@@ -1,9 +1,13 @@
 package com.jbraddockm.dev.deploy;
 
+import com.jbraddockm.core.bar.BarArchive;
+import com.jbraddockm.core.bar.InvalidBarException;
 import com.jbraddockm.core.device.LoginException;
 import com.jbraddockm.core.json.Json;
 import com.jbraddockm.dev.DevTool;
 import com.jbraddockm.dev.Output;
+import com.jbraddockm.dev.qconn.QconnSocket;
+import com.jbraddockm.dev.qconn.TargetFileService;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
@@ -45,7 +49,8 @@ public final class DeployTool implements DevTool {
 
       install options:
             --launch                launch the application after installing it
-            --dev                   install in development mode
+            --dev                   install in development mode (uses the fast sync when it can)
+            --no-sync               force a full upload instead of the dev-mode sync
             --debug-host <host>     attach a debugger running on this host
             --debug-native          hold a native application at start-up for a debugger
 
@@ -55,6 +60,39 @@ public final class DeployTool implements DevTool {
       <app> is the full application name shown by 'apps', for example
       com.example.App.gYABgExampleId.
       """;
+
+  private static void installMiniBar(AppInstallerEngine engine, byte[] miniBar) throws IOException {
+    var temp = Files.createTempFile("bb-dev-mini", ".bar");
+    try {
+      Files.write(temp, miniBar);
+      engine.run(new DeployCommand.InstallApp(temp, false, true, null, false, true), _ -> {});
+    } catch (LoginException | DeviceReportException reported) {
+      throw new IOException(reported.getMessage(), reported);
+    } finally {
+      Files.deleteIfExists(temp);
+    }
+  }
+
+  private static int emitSync(Output output, SyncResult result) {
+    var text =
+        result.nothingToSync()
+            ? "✓ Already in sync — nothing to upload"
+            : "✓ Synced — pushed "
+                + result.uploadedAssets()
+                + (result.uploadedAssets() == 1 ? " asset" : " assets");
+    return output.emit(
+        0,
+        text,
+        Json.object(
+            "ok",
+            true,
+            "strategy",
+            "sync",
+            "nothingToSync",
+            result.nothingToSync(),
+            "uploadedAssets",
+            result.uploadedAssets()));
+  }
 
   private static int save(DeployCommand.GetFile get, List<String> lines, Output output) {
     var download = FileDownload.parse(lines);
@@ -75,6 +113,35 @@ public final class DeployTool implements DevTool {
 
   private static boolean isHelp(String argument) {
     return argument.equals("help") || argument.equals("-h") || argument.equals("--help");
+  }
+
+  /**
+   * Installs with the dev-mode sync when it applies and qconn is reachable. Returns the exit code
+   * when sync handled the install, or {@code null} to fall through to the full upload — because the
+   * bar cannot sync, or the device's qconn services are not up.
+   */
+  private Integer trySync(
+      DeployCommand.InstallApp install,
+      DeployTarget target,
+      AppInstallerEngine engine,
+      Output output) {
+    try (var bar = BarArchive.open(install.bar())) {
+      if (!SyncService.isSyncCompatible(bar.manifest())) {
+        return null;
+      }
+      try (var qconn = QconnSocket.connect(target.host())) {
+        var result =
+            SyncService.synchronize(
+                bar, TargetFileService.on(qconn), miniBar -> installMiniBar(engine, miniBar));
+        return emitSync(output, result);
+      } catch (IOException qconnUnavailable) {
+        // qconn services are not up (or the push failed) — a full upload still installs the bar.
+        engine.forgetLogin();
+        return null;
+      }
+    } catch (InvalidBarException | IOException unreadable) {
+      return null;
+    }
   }
 
   @Override
@@ -103,6 +170,14 @@ public final class DeployTool implements DevTool {
     var engine =
         AppInstallerEngine.forDevice(target.host(), target.port(), target.password(), null);
     try {
+      if (invocation.command() instanceof DeployCommand.InstallApp install
+          && install.devMode()
+          && !install.noSync()) {
+        var synced = trySync(install, target, engine, output);
+        if (synced != null) {
+          return synced;
+        }
+      }
       var lines = engine.run(invocation.command(), _ -> {});
       if (invocation.command() instanceof DeployCommand.GetFile get && get.saveAs() != null) {
         return save(get, lines, output);

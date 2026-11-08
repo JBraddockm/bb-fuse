@@ -34,6 +34,7 @@ final class DeployCommandLine {
     var launch = false;
     var dev = false;
     var debugNative = false;
+    var noSync = false;
     var positionals = new ArrayList<String>();
 
     for (var i = 0; i < arguments.size(); i++) {
@@ -47,6 +48,7 @@ final class DeployCommandLine {
         case "--launch" -> launch = true;
         case "--dev" -> dev = true;
         case "--debug-native" -> debugNative = true;
+        case "--no-sync" -> noSync = true;
         default -> {
           if (argument.startsWith("-")) {
             throw new UsageException("unknown option: " + argument);
@@ -65,7 +67,7 @@ final class DeployCommandLine {
 
     var verb = positionals.getFirst();
     var rest = positionals.subList(1, positionals.size());
-    var command = command(verb, rest, launch, dev, debugHost, debugNative, out);
+    var command = command(verb, rest, launch, dev, debugHost, debugNative, noSync, out);
     return new Invocation(new DeployTarget(device, port, password), command);
   }
 
@@ -76,6 +78,7 @@ final class DeployCommandLine {
       boolean dev,
       String debugHost,
       boolean debugNative,
+      boolean noSync,
       String out)
       throws UsageException {
     return switch (verb) {
@@ -94,7 +97,7 @@ final class DeployCommandLine {
       case "install" -> {
         expect(verb, args, 1);
         yield new DeployCommand.InstallApp(
-            Path.of(args.getFirst()), launch, dev, debugHost, debugNative);
+            Path.of(args.getFirst()), launch, dev, debugHost, debugNative, noSync);
       }
       case "launch" -> {
         expect(verb, args, 1);
