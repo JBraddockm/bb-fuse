@@ -7,7 +7,9 @@ import java.util.ArrayList;
 /**
  * Drives the deploy engine against a real device for the read-only verbs over the production
  * transport ({@link AppInstallerEngine#forDevice}), writing one capture file per verb. Usage:
- * {@code DeviceSweepMain <host> <port> <password>}.
+ * {@code DeviceSweepMain <host> <port> <password> [<packageName> <packageId>]}. When a package name
+ * and id are given, the app-targeting read-only verbs (verify, isAppRunning, getFile) are captured
+ * too.
  */
 final class DeviceSweepMain {
 
@@ -25,6 +27,13 @@ final class DeviceSweepMain {
       run(engine, capture, "test", new DeployCommand.TestConnection());
       run(engine, capture, "listDeviceInfo", new DeployCommand.ListDeviceInfo());
       run(engine, capture, "listInstalledApps", new DeployCommand.ListInstalledApps());
+      if (args.length > 4) {
+        var app = new PackageRef.NameAndId(args[3], args[4]);
+        run(engine, capture, "verify", new DeployCommand.VerifyApp(app));
+        run(engine, capture, "isAppRunning", new DeployCommand.IsAppRunning(app));
+        var filePath = args.length > 5 ? args[5] : "logs/devmode_exitcode.txt";
+        run(engine, capture, "getFile", new DeployCommand.GetFile(app, filePath, null));
+      }
     } finally {
       engine.close();
     }
