@@ -27,9 +27,22 @@ public final class PackageTool implements DevTool {
 
   private static final int USAGE_ERROR = 2;
   private static final int PACKAGE_ERROR = 1;
+  private static final int DEVICE_PORT = 443;
 
   /** The tool version reported by {@code -version}. */
   static final String VERSION = "1.0";
+
+  private final BarDeployer deployer;
+
+  /**
+   * Creates the tool.
+   *
+   * @param deployer installs or launches the built bar on a device, for {@code -installApp} /
+   *     {@code -launchApp}
+   */
+  public PackageTool(BarDeployer deployer) {
+    this.deployer = deployer;
+  }
 
   @Override
   public int run(List<String> rawArguments, Output output) {
@@ -55,6 +68,10 @@ public final class PackageTool implements DevTool {
     String appVersion = null;
     String descriptorPath = null;
     boolean devMode = false;
+    boolean installApp = false;
+    boolean launchApp = false;
+    String device = null;
+    var password = "";
     Path extraRoot = null;
     var extras = new ArrayList<Packager.ExtraFile>();
 
@@ -77,6 +94,10 @@ public final class PackageTool implements DevTool {
           extras.add(new Packager.ExtraFile(path, resolve(extraRoot, file)));
         }
         case "-devMode" -> devMode = true;
+        case "-installApp" -> installApp = true;
+        case "-launchApp" -> launchApp = true;
+        case "-device" -> device = value(arguments, ++index);
+        case "-password" -> password = value(arguments, ++index);
         default -> {
           var argument = arguments.get(index);
           // Unknown options are ignored, as blackberry-nativepackager does; a non-option is the
@@ -117,6 +138,12 @@ public final class PackageTool implements DevTool {
               + "Run 'bb-dev package -help' for the full list of options.",
           Json.object("ok", false, "error", "-package and a descriptor are required"));
     }
+    if ((installApp || launchApp) && device == null) {
+      return output.emit(
+          USAGE_ERROR,
+          "bb-dev package: -installApp and -launchApp require -device <host>",
+          Json.object("ok", false, "error", "-installApp and -launchApp require -device <host>"));
+    }
 
     return pack(
         descriptorPath,
@@ -127,7 +154,15 @@ public final class PackageTool implements DevTool {
         appVersion,
         extras,
         devMode,
+        new Deploy(installApp, launchApp, device, password),
         output);
+  }
+
+  /** The on-device step after a build: install and/or launch, or neither. */
+  private record Deploy(boolean installApp, boolean launchApp, String device, String password) {
+    boolean requested() {
+      return installApp || launchApp;
+    }
   }
 
   private int pack(
@@ -139,6 +174,7 @@ public final class PackageTool implements DevTool {
       String appVersion,
       List<Packager.ExtraFile> extras,
       boolean devMode,
+      Deploy deploy,
       Output output) {
     var descriptorFile = Path.of(descriptorPath);
     var bar = Path.of(barPath);
@@ -159,10 +195,12 @@ public final class PackageTool implements DevTool {
       if (current != null) {
         writeBuildId(Path.of(buildIdFile), current);
       }
-      return output.emit(
-          0,
-          "bb-dev package: wrote " + barPath + " (" + packed.size() + " files)",
-          Json.object("ok", true, "bar", barPath, "files", packed.size()));
+      var wrote = "bb-dev package: wrote " + barPath + " (" + packed.size() + " files)";
+      if (!deploy.requested()) {
+        return output.emit(
+            0, wrote, Json.object("ok", true, "bar", barPath, "files", packed.size()));
+      }
+      return deploy(bar, barPath, packed.size(), wrote, devMode, deploy, output);
     } catch (InvalidDescriptorException failure) {
       return output.emit(
           PACKAGE_ERROR,
@@ -174,6 +212,41 @@ public final class PackageTool implements DevTool {
           "bb-dev package: " + failure.getMessage(),
           Json.object("ok", false, "error", String.valueOf(failure.getMessage())));
     }
+  }
+
+  private int deploy(
+      Path bar,
+      String barPath,
+      int files,
+      String wrote,
+      boolean devMode,
+      Deploy deploy,
+      Output output) {
+    String summary;
+    try {
+      summary =
+          deploy.installApp()
+              ? deployer.install(
+                  bar, deploy.device(), DEVICE_PORT, deploy.password(), devMode, deploy.launchApp())
+              : deployer.launch(bar, deploy.device(), DEVICE_PORT, deploy.password());
+    } catch (IOException failure) {
+      return output.emit(
+          PACKAGE_ERROR,
+          wrote + System.lineSeparator() + "✗ deploy failed: " + failure.getMessage(),
+          Json.object(
+              "ok",
+              false,
+              "bar",
+              barPath,
+              "files",
+              files,
+              "error",
+              String.valueOf(failure.getMessage())));
+    }
+    return output.emit(
+        0,
+        wrote + System.lineSeparator() + "✓ " + summary,
+        Json.object("ok", true, "bar", barPath, "files", files, "deploy", summary));
   }
 
   private int list(String barPath, Output output) {
@@ -305,6 +378,11 @@ public final class PackageTool implements DevTool {
             + " be a number from 0 to 65535. Not all 0.",
         "  -configuration <id-or-name> - specify which configuration to use from the bar"
             + " descriptor",
+        "<on-device options> (install/launch the built bar via bb-dev's own deploy): ",
+        "  -installApp          - install the built bar on the device (requires -device)",
+        "  -launchApp           - launch the application (after install, or on its own)",
+        "  -device <host>       - the device host or IP address",
+        "  -password <password> - the device password",
         "<path options>: ",
         "  -C <dir>             - use <dir> as a root directory;all files that follow will be used"
             + " with tail paths in the final package",
@@ -317,8 +395,8 @@ public final class PackageTool implements DevTool {
         "  @<options_file>      - read options/arguments from a file, with one command-line"
             + " argument per line",
         "",
-        "Signing and debug tokens are not supported (bars are unsigned only); on-device",
-        "install and launch belong to 'bb-dev deploy'.",
+        "Signing and debug tokens are not supported (bars are unsigned only). On-device",
+        "install and launch are also available on their own under 'bb-dev deploy'.",
         "",
         "Examples:",
         "Create a development BAR file with (mybinary,locale) assets:",

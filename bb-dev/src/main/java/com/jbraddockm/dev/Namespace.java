@@ -11,7 +11,7 @@ import java.util.Optional;
 enum Namespace {
   CONNECT("connect", new ConnectTool()),
   DEPLOY("deploy", new DeployTool()),
-  PACKAGE("package", new PackageTool());
+  PACKAGE("package", new PackageTool(new DeployBarDeployer()));
 
   private final String wireName;
   private final DevTool tool;
