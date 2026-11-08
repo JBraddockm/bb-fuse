@@ -1,0 +1,34 @@
+Archive-Manifest-Version: 1.5
+
+Package-Type: application
+Package-Name: com.example.TLSDeBug
+Package-Version: 1.0.0.1
+
+Application-Name: TLSDeBug
+Application-Development-Mode: true
+
+Entry-Point-Name: TLSDeBug
+Entry-Point-Key: e1
+Entry-Point: LD_LIBRARY_PATH=app/native/lib CASCADES_THEME=dark app/native/TLSDeBug
+Entry-Point-Type: Qnx/Elf
+Entry-Point-Icon: native/icon.png
+
+Archive-Asset-Name: native/bar-descriptor.xml
+Archive-Asset-SHA-512-Digest: AAAAbardescriptordigestAAAA
+
+Archive-Asset-Name: native/icon.png
+Archive-Asset-SHA-512-Digest: BBBBicondigestBBBB
+
+Archive-Asset-Name: native/assets/main.qml
+Archive-Asset-SHA-512-Digest: CCCCqmldigestCCCC
+
+Archive-Asset-Name: native/TLSDeBug
+Archive-Asset-SHA-512-Digest: DDDDbinarydigestDDDD
+Archive-Asset-Type: Qnx/Elf
+
+Archive-Asset-Name: native/lib/libFoo.so.1
+Archive-Asset-SHA-512-Digest: EEEElibdigestEEEE
+Archive-Asset-Type: Qnx/Elf
+
+Archive-Asset-Name: META-INF/MANIFEST_fr.bbr
+Archive-Asset-SHA-512-Digest: FFFFlocalizeddigestFFFF
