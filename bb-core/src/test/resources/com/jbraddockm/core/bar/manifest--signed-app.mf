@@ -2,21 +2,21 @@ Archive-Manifest-Version: 1.5
 Archive-Created-By: BlackBerry Cascades BAR Packager 1.11
 
 Package-Type: application
-Package-Author: Toysoft
-Package-Author-Id: gYAAgK5QWaqVESfenYd7oB8X4OY
+Package-Author: Example Inc.
+Package-Author-Id: testRXhhbXBsZSBJbmMuICAgICA
 Package-Name: PowerTools
-Package-Id: gYABgPDgFfPoXLpNVzWX_c5N47M
+Package-Id: testRel_le_TLSDeBugc09806e9
 Package-Version: 7.7.4.1
-Package-Version-Id: gYACgPq3dAI0qjuIcgKcmNLPhmI
+Package-Version-Id: testMS4wLjAuMSAgICAgICAgICA
 Package-Architecture: armle-v7
-Package-Author-Certificate-Hash: BvNzak4enAWaWcExXDquWB3AhnWhqq9-pew7Q2ssSCvtqJ48AQgRNpkeq63Jh3oRcCbAGUUxwZlUJraGrQ-dCw
+Package-Author-Certificate-Hash: abc
 Package-Issue-Date: 2016-04-10T15:02:50Z
 
 Application-Name: Power Tools
-Application-Id: gYADgHbk3QjvrMDnRb-9oktBM8U
+Application-Id: testRel_le_TLSDeBugc09806e9
 Application-Description: The Power Tools application
 Application-Version: 7.7.4.1
-Application-Version-Id: gYAEgLU6mHldfktbHlHxhBAOHPI
+Application-Version-Id: testMS4wLjAuMSAgICAgICAgICA
 Application-Requires-System: BlackBerry 10/10.2.0.0
 Application-Development-Mode: false
 

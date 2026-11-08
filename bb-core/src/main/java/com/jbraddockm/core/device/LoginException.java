@@ -25,7 +25,7 @@ public final class LoginException extends Exception {
     UNUSABLE_RESPONSE
   }
 
-  private final transient Reason reason;
+  private final Reason reason;
 
   /**
    * Creates the exception.

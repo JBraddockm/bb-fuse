@@ -17,18 +17,18 @@ class JdkDeviceHttpTest {
   @Test
   @DisplayName("offers no certificate and holds no cookie when built without an identity")
   void withoutIdentity() {
-    var http = new JdkDeviceHttp("device.local", 8443, null);
-
-    assertThat(http.offersClientCertificate()).isFalse();
-    assertThat(http.hasLoginCookie()).isFalse();
+    try (var http = new JdkDeviceHttp("device.local", 8443, null)) {
+      assertThat(http.offersClientCertificate()).isFalse();
+      assertThat(http.hasLoginCookie()).isFalse();
+    }
   }
 
   @Test
   @DisplayName("reports that it offers a certificate when built with a client identity")
   void withIdentity() {
-    var http = new JdkDeviceHttp("device.local", 443, new KeyManager[] {new NoIdentity()});
-
-    assertThat(http.offersClientCertificate()).isTrue();
+    try (var http = new JdkDeviceHttp("device.local", 443, new KeyManager[] {new NoIdentity()})) {
+      assertThat(http.offersClientCertificate()).isTrue();
+    }
   }
 
   /** A key manager that offers nothing, enough to build the client. */

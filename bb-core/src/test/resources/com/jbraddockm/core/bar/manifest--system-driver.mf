@@ -2,14 +2,14 @@ Archive-Manifest-Version: 1.5
 Archive-Created-By: BlackBerry Data BAR Packager 1.11
 
 Package-Type: system-data
-Package-Author: Research In Motion Limited
-Package-Author-Id: gYAAgNpMbwE-hW4khx0h8BidUeI
+Package-Author: Example Inc.
+Package-Author-Id: testRXhhbXBsZSBJbmMuICAgICA
 Package-Name: sys.data.exfat
-Package-Id: gYABgIEqdiB1KcMBG_fjQX5oRyk
+Package-Id: testRel_le_TLSDeBugc09806e9
 Package-Version: 10.3.1.224
-Package-Version-Id: gYACgE09fKamtEbwtNLycqYurl4
+Package-Version-Id: testMS4wLjAuMSAgICAgICAgICA
 Package-Architecture: armle-v7
-Package-Author-Certificate-Hash: EpKB7Di7mrWl9rhqx1lQBexZDwlSBK_8PBLUBpWmI6fqa0hgI0uhw3HkL86_K0Xvz2NLG01Tzall60XyX0UWIw
+Package-Author-Certificate-Hash: abc
 Package-Issue-Date: 2014-08-09T00:59:22Z
 
 System-Data-Type: os_driver

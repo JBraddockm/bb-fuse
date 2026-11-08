@@ -1,5 +1,6 @@
 package com.jbraddockm.core.device;
 
+import com.jbraddockm.core.error.InvalidArgumentException;
 import java.io.IOException;
 import java.net.CookieManager;
 import java.net.URI;
@@ -7,6 +8,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.Objects;
 import javax.net.ssl.KeyManager;
 
 /**
@@ -21,7 +23,7 @@ import javax.net.ssl.KeyManager;
  * setting); there is no per-client switch. The trust manager still accepts the certificate, so only
  * the name check is turned off.
  */
-public final class JdkDeviceHttp implements DeviceHttp {
+public final class JdkDeviceHttp implements DeviceHttp, AutoCloseable {
 
   private static final String LOGIN_COOKIE = "dtmauth";
   private static final String USER_AGENT = "QNXWebClient/1.0";
@@ -38,8 +40,16 @@ public final class JdkDeviceHttp implements DeviceHttp {
    * @param host the device host or address
    * @param port the HTTPS port (8443 over the tunnel, 443 direct)
    * @param identity the client identity to offer, or {@code null} to offer none (a password login)
+   * @throws InvalidArgumentException if the host is blank or the port is out of range
    */
   public JdkDeviceHttp(String host, int port, KeyManager[] identity) {
+    Objects.requireNonNull(host, "host");
+    if (host.isBlank()) {
+      throw new InvalidArgumentException("host", "must not be blank");
+    }
+    if (port < 1 || port > 65535) {
+      throw new InvalidArgumentException("port", "must be between 1 and 65535");
+    }
     this.cookies = new CookieManager();
     this.client =
         HttpClient.newBuilder()
@@ -112,6 +122,7 @@ public final class JdkDeviceHttp implements DeviceHttp {
   }
 
   /** Closes the underlying client and releases its connections. */
+  @Override
   public void close() {
     client.close();
   }
