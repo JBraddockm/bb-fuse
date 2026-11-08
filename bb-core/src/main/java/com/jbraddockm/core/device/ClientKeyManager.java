@@ -1,4 +1,4 @@
-package com.jbraddockm.link.transport.tls;
+package com.jbraddockm.core.device;
 
 import java.net.Socket;
 import java.security.Principal;
@@ -15,14 +15,19 @@ import javax.net.ssl.X509KeyManager;
  * send nothing at all. A real client, such as BlackBerry Link, sends its certificate anyway, and
  * the device decides.
  */
-public final class FixedClientKeyManager implements X509KeyManager {
+public final class ClientKeyManager implements X509KeyManager {
 
-  private static final String ALIAS = "bb-link-client";
+  private static final String ALIAS = "device-client";
 
   private final X509Certificate[] chain;
   private final PrivateKey key;
 
-  public FixedClientKeyManager(PemIdentity.Loaded identity) {
+  /**
+   * Holds the identity to offer.
+   *
+   * @param identity the certificate chain and private key to present
+   */
+  public ClientKeyManager(PemIdentity.Loaded identity) {
     this.chain = identity.chain().clone();
     this.key = identity.key();
   }

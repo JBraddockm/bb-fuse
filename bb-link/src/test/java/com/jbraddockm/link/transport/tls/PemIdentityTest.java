@@ -3,6 +3,8 @@ package com.jbraddockm.link.transport.tls;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.jbraddockm.core.device.ClientCertificate;
+import com.jbraddockm.core.device.PemIdentity;
 import com.jbraddockm.core.error.InvalidArgumentException;
 import com.jbraddockm.link.endpoint.pairing.pki.TestKeys;
 import com.jbraddockm.link.testing.Resources;

@@ -4,8 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.jbraddockm.core.device.ClientCertificate;
 import com.jbraddockm.core.error.InvalidArgumentException;
-import com.jbraddockm.link.transport.tls.ClientCertificate;
 import java.nio.file.Path;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

@@ -4,11 +4,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.jbraddockm.core.daemon.RequestParams;
+import com.jbraddockm.core.device.ClientCertificate;
 import com.jbraddockm.core.error.InvalidArgumentException;
 import com.jbraddockm.core.json.Json;
-import com.jbraddockm.link.transport.cgi.Authentication;
-import com.jbraddockm.link.transport.tls.ClientCertificate;
 import com.jbraddockm.link.testing.Resources;
+import com.jbraddockm.link.transport.cgi.Authentication;
 import java.nio.file.Path;
 import java.util.Map;
 import org.junit.jupiter.api.DisplayName;

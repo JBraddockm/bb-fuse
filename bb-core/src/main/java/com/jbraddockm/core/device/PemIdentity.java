@@ -1,4 +1,4 @@
-package com.jbraddockm.link.transport.tls;
+package com.jbraddockm.core.device;
 
 import com.jbraddockm.core.error.InvalidArgumentException;
 import java.io.ByteArrayInputStream;
@@ -35,7 +35,7 @@ import java.util.regex.Pattern;
 public final class PemIdentity {
 
   /** The certificate chain, leaf first, and the private key that belongs to the leaf. */
-  record Loaded(PrivateKey key, X509Certificate[] chain) {}
+  public record Loaded(PrivateKey key, X509Certificate[] chain) {}
 
   private static final Pattern KEY_BLOCK =
       Pattern.compile(
@@ -63,10 +63,18 @@ public final class PemIdentity {
   private static final byte[] VERSION_ZERO = {0x02, 0x01, 0x00};
 
   private static final String EC_SIGNATURE = "SHA256withECDSA";
-  private static final byte[] PROBE = "bb-link key check".getBytes(StandardCharsets.UTF_8);
+  private static final byte[] PROBE = "device key check".getBytes(StandardCharsets.UTF_8);
 
   private PemIdentity() {}
 
+  /**
+   * Reads the certificate chain and the private key, and checks that the key belongs to the leaf.
+   *
+   * @param source where the certificate and the key are
+   * @return the loaded identity
+   * @throws IOException if a file cannot be read
+   * @throws InvalidArgumentException if the certificate or key cannot be used
+   */
   public static Loaded load(ClientCertificate source) throws IOException {
     var chain = readChain(source);
     var key = readKey(source);

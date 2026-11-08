@@ -1,4 +1,4 @@
-package com.jbraddockm.link.transport.tls;
+package com.jbraddockm.core.device;
 
 import java.nio.file.Path;
 import java.util.Objects;

@@ -1,7 +1,7 @@
 package com.jbraddockm.link.transport.cgi;
 
+import com.jbraddockm.core.device.ClientCertificate;
 import com.jbraddockm.core.error.InvalidArgumentException;
-import com.jbraddockm.link.transport.tls.ClientCertificate;
 import java.util.Objects;
 import java.util.Optional;
 

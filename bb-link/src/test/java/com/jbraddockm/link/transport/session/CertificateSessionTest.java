@@ -5,6 +5,7 @@ import static com.jbraddockm.link.testing.Outcomes.succeeded;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.jbraddockm.core.command.CommandListener;
+import com.jbraddockm.core.device.ClientCertificate;
 import com.jbraddockm.core.error.CoreErrorCode;
 import com.jbraddockm.link.LinkErrorCode;
 import com.jbraddockm.link.endpoint.pairing.pki.CertificateDetails;
@@ -17,7 +18,6 @@ import com.jbraddockm.link.transport.cgi.Authentication;
 import com.jbraddockm.link.transport.cgi.DeviceTarget;
 import com.jbraddockm.link.transport.cgi.TransportScheme;
 import com.jbraddockm.link.transport.login.FailureClassifier;
-import com.jbraddockm.link.transport.tls.ClientCertificate;
 import java.nio.file.Path;
 import java.util.List;
 import javax.net.ssl.SSLHandshakeException;

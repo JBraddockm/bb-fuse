@@ -4,6 +4,7 @@ import static com.jbraddockm.link.testing.Outcomes.succeeded;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.jbraddockm.core.command.LogLevel;
+import com.jbraddockm.core.device.ClientCertificate;
 import com.jbraddockm.core.error.CoreErrorCode;
 import com.jbraddockm.core.error.ServiceError;
 import com.jbraddockm.link.endpoint.pairing.pki.CertificateDetails;
@@ -14,7 +15,6 @@ import com.jbraddockm.link.endpoint.pairing.store.StoredIdentity;
 import com.jbraddockm.link.testing.DeviceFixture;
 import com.jbraddockm.link.testing.Logs;
 import com.jbraddockm.link.testing.TestDer;
-import com.jbraddockm.link.transport.tls.ClientCertificate;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;

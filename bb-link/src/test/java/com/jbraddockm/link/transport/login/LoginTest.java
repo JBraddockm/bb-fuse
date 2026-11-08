@@ -3,6 +3,7 @@ package com.jbraddockm.link.transport.login;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.jbraddockm.core.device.ClientCertificate;
 import com.jbraddockm.link.testing.FakeDevice;
 import com.jbraddockm.link.testing.Resources;
 import com.jbraddockm.link.testing.ScriptedServer;
@@ -12,7 +13,6 @@ import com.jbraddockm.link.transport.cgi.CgiTransport;
 import com.jbraddockm.link.transport.cgi.DeviceTarget;
 import com.jbraddockm.link.transport.cgi.ExchangeObserver;
 import com.jbraddockm.link.transport.cgi.TransportScheme;
-import com.jbraddockm.link.transport.tls.ClientCertificate;
 import java.io.IOException;
 import java.nio.file.Path;
 import org.apache.http.cookie.Cookie;

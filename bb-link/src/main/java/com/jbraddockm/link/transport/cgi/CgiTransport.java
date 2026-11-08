@@ -1,9 +1,9 @@
 package com.jbraddockm.link.transport.cgi;
 
+import com.jbraddockm.core.device.ClientCertificate;
+import com.jbraddockm.core.device.ClientKeyManager;
+import com.jbraddockm.core.device.PemIdentity;
 import com.jbraddockm.core.error.InvalidArgumentException;
-import com.jbraddockm.link.transport.tls.ClientCertificate;
-import com.jbraddockm.link.transport.tls.FixedClientKeyManager;
-import com.jbraddockm.link.transport.tls.PemIdentity;
 import com.jbraddockm.link.transport.tls.TrustAllTls;
 import java.io.IOException;
 import java.io.InputStream;
@@ -65,7 +65,7 @@ public final class CgiTransport implements AutoCloseable {
   }
 
   private static KeyManager[] clientKeyManagers(ClientCertificate source) throws IOException {
-    return new KeyManager[] {new FixedClientKeyManager(PemIdentity.load(source))};
+    return new KeyManager[] {new ClientKeyManager(PemIdentity.load(source))};
   }
 
   private static String valueOf(Header header) {

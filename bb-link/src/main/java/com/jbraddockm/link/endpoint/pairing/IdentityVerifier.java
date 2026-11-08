@@ -3,11 +3,11 @@ package com.jbraddockm.link.endpoint.pairing;
 import com.jbraddockm.core.command.CommandListener;
 import com.jbraddockm.core.command.CommandOutcome;
 import com.jbraddockm.core.command.NoData;
+import com.jbraddockm.core.device.ClientCertificate;
 import com.jbraddockm.link.transport.cgi.Authentication;
 import com.jbraddockm.link.transport.cgi.TransportScheme;
 import com.jbraddockm.link.transport.login.LoginOnly;
 import com.jbraddockm.link.transport.session.DeviceSession;
-import com.jbraddockm.link.transport.tls.ClientCertificate;
 
 /** Tries a new identity against the device that issued its certificate. */
 @FunctionalInterface

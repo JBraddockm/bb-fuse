@@ -3,6 +3,7 @@ package com.jbraddockm.link.endpoint.pairing;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.jbraddockm.core.command.CommandListener;
+import com.jbraddockm.core.device.ClientCertificate;
 import com.jbraddockm.core.error.CoreErrorCode;
 import com.jbraddockm.link.LinkErrorCode;
 import com.jbraddockm.link.endpoint.pairing.pki.CertificateDetails;
@@ -13,7 +14,6 @@ import com.jbraddockm.link.transport.cgi.Authentication;
 import com.jbraddockm.link.transport.cgi.DeviceTarget;
 import com.jbraddockm.link.transport.cgi.TransportScheme;
 import com.jbraddockm.link.transport.session.DeviceSession;
-import com.jbraddockm.link.transport.tls.ClientCertificate;
 import java.nio.file.Path;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;

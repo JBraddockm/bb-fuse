@@ -2,28 +2,31 @@ package com.jbraddockm.link.transport.tls;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.jbraddockm.core.device.ClientCertificate;
+import com.jbraddockm.core.device.ClientKeyManager;
+import com.jbraddockm.core.device.PemIdentity;
 import com.jbraddockm.link.testing.Resources;
 import com.jbraddockm.link.testing.TestPki;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.security.cert.X509Certificate;
+import java.util.Objects;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * Tests for {@link FixedClientKeyManager}: one client certificate and key, offered in every
- * handshake.
+ * Tests for {@link ClientKeyManager}: one client certificate and key, offered in every handshake.
  */
-@DisplayName("FixedClientKeyManager: offers the one certificate of the client")
-class FixedClientKeyManagerTest {
+@DisplayName("ClientKeyManager: offers the one certificate of the client")
+class ClientKeyManagerTest {
 
-  private static final String ALIAS = "bb-link-client";
+  private static final String ALIAS = "device-client";
 
   @TempDir private Path folder;
   private PemIdentity.Loaded loaded;
-  private FixedClientKeyManager manager;
+  private ClientKeyManager manager;
 
   @BeforeEach
   void loadThePair() throws IOException {
@@ -32,7 +35,7 @@ class FixedClientKeyManagerTest {
             new ClientCertificate(
                 Resources.copyTo(TestPki.class, "test-pki--leaf-certificate.pem", folder),
                 Resources.copyTo(TestPki.class, "test-pki--leaf-key-pkcs8.pem", folder)));
-    manager = new FixedClientKeyManager(loaded);
+    manager = new ClientKeyManager(loaded);
   }
 
   @Test
@@ -55,10 +58,10 @@ class FixedClientKeyManagerTest {
   @Test
   @DisplayName("gives a copy of the chain: changing what it gave does not change what it offers")
   void givesACopyOfTheChain() {
-    var first = manager.getCertificateChain(ALIAS);
+    var first = Objects.requireNonNull(manager.getCertificateChain(ALIAS));
     first[0] = null;
 
-    assertThat(manager.getCertificateChain(ALIAS)[0]).isNotNull();
+    assertThat(Objects.requireNonNull(manager.getCertificateChain(ALIAS))[0]).isNotNull();
   }
 
   @Test
@@ -66,11 +69,11 @@ class FixedClientKeyManagerTest {
       "keeps a copy of the chain it was made with: changing the array afterwards changes nothing")
   void keepsACopyOfTheChain() {
     X509Certificate[] chain = loaded.chain();
-    var local = new FixedClientKeyManager(new PemIdentity.Loaded(loaded.key(), chain));
+    var local = new ClientKeyManager(new PemIdentity.Loaded(loaded.key(), chain));
 
     chain[0] = null;
 
-    assertThat(local.getCertificateChain(ALIAS)[0]).isNotNull();
+    assertThat(Objects.requireNonNull(local.getCertificateChain(ALIAS))[0]).isNotNull();
   }
 
   @Test
