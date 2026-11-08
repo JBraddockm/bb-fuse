@@ -24,6 +24,7 @@ import javax.net.ssl.KeyManager;
 public final class JdkDeviceHttp implements DeviceHttp {
 
   private static final String LOGIN_COOKIE = "dtmauth";
+  private static final String USER_AGENT = "QNXWebClient/1.0";
   private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(10);
 
   private final HttpClient client;
@@ -52,9 +53,47 @@ public final class JdkDeviceHttp implements DeviceHttp {
 
   @Override
   public String get(String pathAndQuery) throws IOException {
-    var request = HttpRequest.newBuilder(base.resolve(pathAndQuery)).GET().build();
+    var request =
+        HttpRequest.newBuilder(base.resolve(pathAndQuery))
+            .header("User-Agent", USER_AGENT)
+            .GET()
+            .build();
     try {
       return client.send(request, HttpResponse.BodyHandlers.ofString()).body();
+    } catch (InterruptedException interrupted) {
+      Thread.currentThread().interrupt();
+      throw new IOException("the device request was interrupted", interrupted);
+    }
+  }
+
+  /**
+   * POSTs a body to a path on the same connection and cookie jar as {@link #get}, so a request made
+   * after a successful login carries the {@code dtmauth} session cookie. The request identifies
+   * itself as the device web client and streams its body with the length the publisher reports, so
+   * the device never receives a chunked upload.
+   *
+   * @param pathAndQuery the absolute path and query, for example {@code /cgi-bin/appInstaller.cgi}
+   * @param contentType the value of the {@code Content-Type} header
+   * @param body the request body
+   * @param handler the handler for the response
+   * @param <T> the type the handler produces
+   * @return the response
+   * @throws IOException if the request fails
+   */
+  public <T> HttpResponse<T> post(
+      String pathAndQuery,
+      String contentType,
+      HttpRequest.BodyPublisher body,
+      HttpResponse.BodyHandler<T> handler)
+      throws IOException {
+    var request =
+        HttpRequest.newBuilder(base.resolve(pathAndQuery))
+            .header("Content-Type", contentType)
+            .header("User-Agent", USER_AGENT)
+            .POST(body)
+            .build();
+    try {
+      return client.send(request, handler);
     } catch (InterruptedException interrupted) {
       Thread.currentThread().interrupt();
       throw new IOException("the device request was interrupted", interrupted);
@@ -70,5 +109,10 @@ public final class JdkDeviceHttp implements DeviceHttp {
   @Override
   public boolean offersClientCertificate() {
     return clientCertificate;
+  }
+
+  /** Closes the underlying client and releases its connections. */
+  public void close() {
+    client.close();
   }
 }
