@@ -1,8 +1,11 @@
-package com.jbraddockm.dev.packaging;
+package com.jbraddockm.dev.packaging.internal;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.jbraddockm.core.bar.BarValidation.Message;
+import com.jbraddockm.dev.packaging.descriptor.BarDescriptor;
+import com.jbraddockm.dev.packaging.descriptor.DescriptorAsset;
+import com.jbraddockm.dev.packaging.descriptor.DescriptorConfiguration;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;

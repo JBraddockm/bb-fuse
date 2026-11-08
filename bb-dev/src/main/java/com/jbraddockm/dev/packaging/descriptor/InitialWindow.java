@@ -1,4 +1,4 @@
-package com.jbraddockm.dev.packaging;
+package com.jbraddockm.dev.packaging.descriptor;
 
 /**
  * The {@code initialWindow} of a descriptor: how the application's first window is oriented.

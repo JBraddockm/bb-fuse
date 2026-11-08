@@ -3,6 +3,13 @@ package com.jbraddockm.dev.packaging;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.jbraddockm.dev.packaging.descriptor.BarDescriptor;
+import com.jbraddockm.dev.packaging.descriptor.DescriptorAsset;
+import com.jbraddockm.dev.packaging.descriptor.DescriptorConfiguration;
+import com.jbraddockm.dev.packaging.descriptor.EnvironmentVariable;
+import com.jbraddockm.dev.packaging.descriptor.InitialWindow;
+import com.jbraddockm.dev.packaging.descriptor.InvalidDescriptorException;
+import com.jbraddockm.dev.packaging.descriptor.Permission;
 import com.jbraddockm.dev.testing.Resources;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;

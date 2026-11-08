@@ -1,7 +1,9 @@
-package com.jbraddockm.dev.packaging;
+package com.jbraddockm.dev.packaging.internal;
 
 import com.jbraddockm.core.bar.BarValidation.Message;
 import com.jbraddockm.core.bar.BarValidation.Severity;
+import com.jbraddockm.dev.packaging.descriptor.BarDescriptor;
+import com.jbraddockm.dev.packaging.descriptor.DescriptorAsset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;

@@ -1,8 +1,13 @@
-package com.jbraddockm.dev.packaging;
+package com.jbraddockm.dev.packaging.internal;
 
 import com.jbraddockm.core.bar.Manifest;
 import com.jbraddockm.core.bar.ManifestAttribute;
 import com.jbraddockm.core.bar.ManifestSection;
+import com.jbraddockm.dev.packaging.descriptor.BarDescriptor;
+import com.jbraddockm.dev.packaging.descriptor.DescriptorConfiguration;
+import com.jbraddockm.dev.packaging.descriptor.InvokeFilter;
+import com.jbraddockm.dev.packaging.descriptor.InvokeTarget;
+import com.jbraddockm.dev.packaging.descriptor.Permission;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.security.MessageDigest;

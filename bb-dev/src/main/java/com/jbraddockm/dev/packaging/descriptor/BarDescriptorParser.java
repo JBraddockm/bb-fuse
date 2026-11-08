@@ -1,4 +1,4 @@
-package com.jbraddockm.dev.packaging;
+package com.jbraddockm.dev.packaging.descriptor;
 
 import com.jbraddockm.core.xml.MalformedXmlException;
 import com.jbraddockm.core.xml.XmlElement;

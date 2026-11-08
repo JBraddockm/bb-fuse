@@ -1,4 +1,4 @@
-package com.jbraddockm.dev.packaging;
+package com.jbraddockm.dev.packaging.internal;
 
 import java.nio.file.Path;
 import java.util.Objects;
@@ -14,7 +14,7 @@ import java.util.Objects;
  * @param entry whether this asset is the application entry point
  * @param entryPointId the id of the entry point this asset is the binary of; may be {@code null}
  */
-record PackagedAsset(
+public record PackagedAsset(
     String archivePath, Path source, String type, boolean entry, String entryPointId) {
 
   /**
@@ -22,7 +22,7 @@ record PackagedAsset(
    *
    * @throws NullPointerException if the archive path or the source is {@code null}
    */
-  PackagedAsset {
+  public PackagedAsset {
     Objects.requireNonNull(archivePath, "archivePath");
     Objects.requireNonNull(source, "source");
   }

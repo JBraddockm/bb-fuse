@@ -1,5 +1,8 @@
-package com.jbraddockm.dev.packaging;
+package com.jbraddockm.dev.packaging.internal;
 
+import com.jbraddockm.dev.packaging.descriptor.BarDescriptor;
+import com.jbraddockm.dev.packaging.descriptor.DescriptorAsset;
+import com.jbraddockm.dev.packaging.descriptor.DescriptorConfiguration;
 import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;

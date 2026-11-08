@@ -6,6 +6,8 @@ import com.jbraddockm.core.bar.InvalidBarException;
 import com.jbraddockm.core.json.Json;
 import com.jbraddockm.dev.DevTool;
 import com.jbraddockm.dev.Output;
+import com.jbraddockm.dev.packaging.descriptor.InvalidDescriptorException;
+import com.jbraddockm.dev.packaging.internal.Packager;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;

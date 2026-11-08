@@ -1,4 +1,4 @@
-package com.jbraddockm.dev.packaging;
+package com.jbraddockm.dev.packaging.internal;
 
 import com.jbraddockm.core.bar.Manifest;
 import java.io.IOException;

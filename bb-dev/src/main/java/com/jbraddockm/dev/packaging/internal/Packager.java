@@ -1,6 +1,11 @@
-package com.jbraddockm.dev.packaging;
+package com.jbraddockm.dev.packaging.internal;
 
 import com.jbraddockm.core.bar.Manifest;
+import com.jbraddockm.dev.packaging.descriptor.BarDescriptor;
+import com.jbraddockm.dev.packaging.descriptor.DescriptorAsset;
+import com.jbraddockm.dev.packaging.descriptor.DescriptorConfiguration;
+import com.jbraddockm.dev.packaging.descriptor.InvalidDescriptorException;
+import com.jbraddockm.dev.packaging.descriptor.InvokeTarget;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
@@ -14,7 +19,7 @@ import java.util.stream.Stream;
  * signing: parse the descriptor, choose the configuration, resolve and flatten its files, add any
  * extra files the command line names, generate the manifest, and write the archive.
  */
-final class Packager {
+public final class Packager {
 
   private Packager() {}
 
@@ -31,19 +36,19 @@ final class Packager {
    *     {@code Application-Development-Mode: true}, which grants the on-device development sandbox
    *     and lets deploy sync files into it; off by default and not required for an unsigned bar
    */
-  record PackageOptions(
+  public record PackageOptions(
       String configuration,
       String buildId,
       String appVersion,
       List<ExtraFile> extraFiles,
       boolean devMode) {
 
-    PackageOptions {
+    public PackageOptions {
       extraFiles = List.copyOf(extraFiles);
     }
 
     /** The options for a plain build of one configuration, with no overrides or extra files. */
-    static PackageOptions of(String configuration) {
+    public static PackageOptions of(String configuration) {
       return new PackageOptions(configuration, null, null, List.of(), false);
     }
   }
@@ -55,7 +60,7 @@ final class Packager {
    *     files take)
    * @param source the file or folder on the host
    */
-  record ExtraFile(String archivePath, Path source) {}
+  public record ExtraFile(String archivePath, Path source) {}
 
   /**
    * A package worked out but not yet written: the manifest, the files it covers, and the version.
@@ -64,7 +69,7 @@ final class Packager {
    * @param assets the files to write, in order
    * @param version the resolved four-segment package version
    */
-  record PackagePlan(Manifest manifest, List<PackagedAsset> assets, String version) {}
+  public record PackagePlan(Manifest manifest, List<PackagedAsset> assets, String version) {}
 
   /**
    * Packages an application.
@@ -78,7 +83,7 @@ final class Packager {
    * @throws InvalidDescriptorException if the descriptor is not usable or the configuration is
    *     unknown or has no entry point
    */
-  static List<PackagedAsset> pack(
+  public static List<PackagedAsset> pack(
       Path descriptorFile, Path projectRoot, Path output, PackageOptions options)
       throws IOException, InvalidDescriptorException {
     var plan = plan(descriptorFile, projectRoot, options);
@@ -98,7 +103,7 @@ final class Packager {
    * @throws InvalidDescriptorException if the descriptor is not usable or the configuration is
    *     unknown or has no entry point
    */
-  static PackagePlan plan(Path descriptorFile, Path projectRoot, PackageOptions options)
+  public static PackagePlan plan(Path descriptorFile, Path projectRoot, PackageOptions options)
       throws IOException, InvalidDescriptorException {
     var descriptor = BarDescriptor.parse(Files.readString(descriptorFile));
 

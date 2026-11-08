@@ -6,6 +6,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.jbraddockm.core.bar.BarArchive;
 import com.jbraddockm.core.bar.BarAsset;
 import com.jbraddockm.core.bar.BarInspector;
+import com.jbraddockm.dev.packaging.descriptor.InvalidDescriptorException;
+import com.jbraddockm.dev.packaging.internal.Packager;
 import com.jbraddockm.dev.testing.Resources;
 import java.io.IOException;
 import java.nio.file.Files;

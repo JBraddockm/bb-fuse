@@ -1,9 +1,11 @@
-package com.jbraddockm.dev.packaging;
+package com.jbraddockm.dev.packaging.internal;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.jbraddockm.core.bar.Manifest;
 import com.jbraddockm.core.bar.ManifestValidator;
+import com.jbraddockm.dev.packaging.descriptor.BarDescriptor;
+import com.jbraddockm.dev.packaging.descriptor.InvalidDescriptorException;
 import com.jbraddockm.dev.testing.Resources;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

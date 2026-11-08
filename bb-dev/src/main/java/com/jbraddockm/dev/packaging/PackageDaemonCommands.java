@@ -9,6 +9,8 @@ import com.jbraddockm.core.daemon.ServiceSession;
 import com.jbraddockm.core.error.CoreErrorCode;
 import com.jbraddockm.core.error.ServiceError;
 import com.jbraddockm.core.json.Json;
+import com.jbraddockm.dev.packaging.descriptor.InvalidDescriptorException;
+import com.jbraddockm.dev.packaging.internal.Packager;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
