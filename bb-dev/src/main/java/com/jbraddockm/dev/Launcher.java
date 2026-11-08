@@ -61,6 +61,11 @@ public final class Launcher {
     }
 
     var name = remaining.getFirst();
+    if (name.equals("help") || name.equals("-help") || name.equals("--help") || name.equals("-h")) {
+      out.println(usage());
+      return 0;
+    }
+
     Optional<Namespace> namespace = Namespace.byName(name);
     if (namespace.isEmpty()) {
       err.println("bb-dev: unknown namespace '" + name + "'");
@@ -74,13 +79,19 @@ public final class Launcher {
 
   private static String usage() {
     return """
+    bb-dev - an all-in-one BlackBerry 10 developer tool
+
     Usage: bb-dev <connect|deploy|package> [--json] [options...]
 
       connect   start the device's SSH daemon (was bb-connect)
       deploy    install and manage applications on the device (was bb-deploy)
       package   build a BlackBerry application archive (was bb-packager)
 
-      --json    emit one JSON object instead of plain text\
+      --json    emit one JSON object instead of plain text
+      help      print this help
+
+    Run 'bb-dev <command> -help' for a command's own options,
+    for example 'bb-dev package -help'.\
     """;
   }
 }

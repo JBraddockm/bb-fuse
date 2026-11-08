@@ -20,8 +20,9 @@ import java.util.Objects;
  * paths and the asset bytes, so they are built from the {@link PackagedAsset packed assets}. The
  * result validates clean against bb-core's unsigned-application rule set.
  *
- * <p>Only unsigned, development-mode bars are built, so the signing attributes are never written,
- * {@code Application-Development-Mode} is {@code true}, and the asset digests are advisory.
+ * <p>Only unsigned bars are built, so the signing attributes are never written and the asset
+ * digests are advisory. {@code Application-Development-Mode} is {@code true} only when a
+ * development-mode bar was asked for (the {@code -devMode} option); it is independent of signing.
  */
 final class ManifestGenerator {
 
@@ -70,7 +71,8 @@ final class ManifestGenerator {
    */
   static Manifest generate(BarDescriptor descriptor) {
     var buildId = descriptor.buildId() == null ? DEFAULT_BUILD_ID : descriptor.buildId();
-    return new Manifest(header(descriptor, version(descriptor, buildId), architecture(descriptor)));
+    return new Manifest(
+        header(descriptor, version(descriptor, buildId), architecture(descriptor), false));
   }
 
   /**
@@ -83,7 +85,8 @@ final class ManifestGenerator {
    * @param arguments the entry-point arguments, top-level and from the chosen configuration
    * @param splashScreen the ready {@code Entry-Point-Splash-Screen} value; may be {@code null}
    * @param assets the files the bar holds, with their archive paths and bytes
-   * @param buildId the resolved build id, the fourth version segment
+   * @param version the resolved four-segment package version
+   * @param devMode whether to mark the bar as a development-mode build
    * @return the manifest
    * @throws IOException if an asset's bytes cannot be read for its digest
    */
@@ -94,9 +97,10 @@ final class ManifestGenerator {
       List<String> arguments,
       String splashScreen,
       List<PackagedAsset> assets,
-      String buildId)
+      String version,
+      boolean devMode)
       throws IOException {
-    var sections = new ArrayList<>(header(descriptor, version(descriptor, buildId), architecture));
+    var sections = new ArrayList<>(header(descriptor, version, architecture, devMode));
     sections.addAll(entryPoints(descriptor, assets, configEntryPointType, arguments, splashScreen));
     for (var target : descriptor.invokeTargets()) {
       sections.add(invokeTarget(target, assets));
@@ -108,12 +112,12 @@ final class ManifestGenerator {
   }
 
   private static List<ManifestSection> header(
-      BarDescriptor descriptor, String version, String architecture) {
+      BarDescriptor descriptor, String version, String architecture, boolean devMode) {
     var archive = new ArrayList<ManifestAttribute>();
     add(archive, "Archive-Manifest-Version", MANIFEST_VERSION);
     add(archive, "Archive-Created-By", CREATED_BY);
 
-    var packageId = packageId(descriptor.id());
+    var packageId = packageId(descriptor.id(), devMode);
     var author = descriptor.author() == null ? DEFAULT_AUTHOR : descriptor.author();
     var versionId = id(version);
     var pkg = new ArrayList<ManifestAttribute>();
@@ -135,7 +139,7 @@ final class ManifestGenerator {
     add(application, "Application-Version", version);
     add(application, "Application-Version-Id", versionId);
     add(application, "Application-Category", descriptor.category());
-    add(application, "Application-Development-Mode", "true");
+    add(application, "Application-Development-Mode", Boolean.toString(devMode));
     add(application, "Application-Requires-System", requiresSystem(descriptor));
 
     return new ArrayList<>(
@@ -157,17 +161,18 @@ final class ManifestGenerator {
       assets.stream()
           .filter(PackagedAsset::entry)
           .findFirst()
-          .ifPresent(entry ->
-              sections.add(
-                  entryPoint(
-                      descriptor,
-                      ENTRY_POINT_KEY,
-                      descriptor.name(),
-                      entry.archivePath(),
-                      entryPointType(null, configEntryPointType, entry.type()),
-                      descriptor.permissions(),
-                      arguments,
-                      splashScreen)));
+          .ifPresent(
+              entry ->
+                  sections.add(
+                      entryPoint(
+                          descriptor,
+                          ENTRY_POINT_KEY,
+                          descriptor.name(),
+                          entry.archivePath(),
+                          entryPointType(null, configEntryPointType, entry.type()),
+                          descriptor.permissions(),
+                          arguments,
+                          splashScreen)));
       return sections;
     }
     for (var entryPoint : descriptor.entryPoints()) {
@@ -212,7 +217,7 @@ final class ManifestGenerator {
     add(attributes, "Entry-Point-Icon", icon(descriptor));
     add(attributes, "Entry-Point-Orientation", orientation(descriptor));
     add(attributes, "Entry-Point-Splash-Screen", splashScreen);
-    add(attributes, "Entry-Point-User-Actions", actions(permissions, false));
+    add(attributes, "Entry-Point-User-Actions", userActions(permissions));
     add(attributes, "Entry-Point-System-Actions", systemActions(permissions));
     return new ManifestSection(attributes);
   }
@@ -337,11 +342,11 @@ final class ManifestGenerator {
     return String.join(",", names);
   }
 
-  /** The user or system actions: the matching permission names, in order, without duplicates. */
-  private static String actions(List<Permission> permissions, boolean system) {
+  /** The user actions: the non-system permission names, in order, without duplicates. */
+  private static String userActions(List<Permission> permissions) {
     var names =
         permissions.stream()
-            .filter(permission -> permission.system() == system)
+            .filter(permission -> !permission.system())
             .map(Permission::name)
             .distinct()
             .toList();
@@ -382,14 +387,15 @@ final class ManifestGenerator {
   }
 
   /**
-   * A development package id, as BlackBerry's packager generates one when no signing supplies it: a
+   * A package id, as BlackBerry's packager generates one when no signing supplies it: a
    * 27-character id the device needs to register the package. It is derived from the package name,
-   * so the same application keeps the same id.
+   * so the same application keeps the same id, and from whether this is a development build —
+   * {@code testDev_} for one, {@code testRel_} otherwise — matching {@code generatePackageId}.
    */
-  private static String packageId(String name) {
+  private static String packageId(String name, boolean devMode) {
     var cleaned = name.replaceAll("[^\\w]", "_");
     var hash = Integer.toHexString(name.hashCode());
-    return "testDev_" + lastChars(cleaned, 11) + lastChars(hash, 8);
+    return "test" + (devMode ? "Dev" : "Rel") + "_" + lastChars(cleaned, 11) + lastChars(hash, 8);
   }
 
   /**

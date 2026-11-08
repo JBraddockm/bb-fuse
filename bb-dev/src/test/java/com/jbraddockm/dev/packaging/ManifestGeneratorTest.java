@@ -38,7 +38,7 @@ class ManifestGeneratorTest {
       assertThat(manifest.value("Application-Name")).hasValue("My App");
       assertThat(manifest.value("Application-Version")).hasValue("1.0.0.0");
       assertThat(manifest.value("Application-Category")).hasValue("core.games");
-      assertThat(manifest.value("Application-Development-Mode")).hasValue("true");
+      assertThat(manifest.value("Application-Development-Mode")).hasValue("false");
       assertThat(manifest.value("Application-Requires-System")).hasValue("BlackBerry 10/2.0.0.0");
     }
 
@@ -51,7 +51,7 @@ class ManifestGeneratorTest {
       assertThat(manifest.value("Package-Version")).hasValue("1.0.0.0");
       assertThat(manifest.value("Package-Architecture")).hasValue("armle-v7");
       assertThat(manifest.value("Application-Requires-System")).isEmpty();
-      assertThat(manifest.value("Application-Development-Mode")).hasValue("true");
+      assertThat(manifest.value("Application-Development-Mode")).hasValue("false");
     }
 
     @Test
@@ -59,7 +59,8 @@ class ManifestGeneratorTest {
     void writesDevelopmentIdentity() throws Exception {
       var manifest = generate("descriptor--native.xml");
 
-      // The device needs these generated ids to register the package, even in development mode.
+      // The device needs these generated ids to register an unsigned package, with or without a
+      // signature.
       assertThat(manifest.value("Package-Id")).hasValueSatisfying(id -> assertThat(id).hasSize(27));
       assertThat(manifest.value("Application-Id")).isEqualTo(manifest.value("Package-Id"));
       assertThat(manifest.value("Package-Author-Id"))

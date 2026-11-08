@@ -10,6 +10,7 @@ import com.jbraddockm.dev.testing.Resources;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -43,7 +44,7 @@ class PackagerTest {
       file("public.key", new byte[] {'k'});
       file("myapp-icon.png", new byte[] {(byte) 0x89, 'P', 'N', 'G'});
       var bar = project.resolve("app.bar");
-      Packager.pack(descriptorFile, project, "Device-Release", bar);
+      Packager.pack(descriptorFile, project, bar, Packager.PackageOptions.of("Device-Release"));
       return bar;
     }
 
@@ -56,7 +57,7 @@ class PackagerTest {
       var info = BarInspector.inspect(bar);
       assertThat(info.packageName()).isEqualTo("com.example.myapp");
       assertThat(info.architecture()).isEqualTo("armle-v7");
-      assertThat(info.developmentMode()).isTrue();
+      assertThat(info.developmentMode()).isFalse();
       assertThat(info.signed()).isFalse();
     }
 
@@ -88,7 +89,7 @@ class PackagerTest {
       file("arm/minimal", BINARY);
       var bar = project.resolve("minimal.bar");
 
-      Packager.pack(descriptorFile, project, null, bar);
+      Packager.pack(descriptorFile, project, bar, Packager.PackageOptions.of(null));
 
       assertThat(BarInspector.validate(bar).valid()).isTrue();
       try (var archive = BarArchive.open(bar)) {
@@ -111,7 +112,12 @@ class PackagerTest {
       file("arm/binary", BINARY);
 
       assertThatThrownBy(
-              () -> Packager.pack(descriptorFile, project, "Device-Nope", project.resolve("x.bar")))
+              () ->
+                  Packager.pack(
+                      descriptorFile,
+                      project,
+                      project.resolve("x.bar"),
+                      Packager.PackageOptions.of("Device-Nope")))
           .isInstanceOf(InvalidDescriptorException.class)
           .hasMessageContaining("no configuration named 'Device-Nope'");
     }
@@ -129,7 +135,7 @@ class PackagerTest {
       file("arm/service", BINARY);
       var bar = project.resolve("multi.bar");
 
-      Packager.pack(descriptorFile, project, "Device-Release", bar);
+      Packager.pack(descriptorFile, project, bar, Packager.PackageOptions.of("Device-Release"));
 
       assertThat(BarInspector.validate(bar).valid()).isTrue();
       try (var archive = BarArchive.open(bar)) {
@@ -186,7 +192,7 @@ class PackagerTest {
       file("splash_port.png", png(480, 800));
       var bar = project.resolve("splash.bar");
 
-      Packager.pack(descriptorFile, project, null, bar);
+      Packager.pack(descriptorFile, project, bar, Packager.PackageOptions.of(null));
 
       assertThat(BarInspector.validate(bar).valid()).isTrue();
       try (var archive = BarArchive.open(bar)) {
@@ -203,7 +209,8 @@ class PackagerTest {
   @DisplayName("with public assets, excludes and an invoke-target icon")
   class LooseEnds {
 
-    private byte[] png(int width, int height) {
+    /** A 100x100 PNG header, the size the invoke-target icon assertion expects. */
+    private byte[] png() {
       var b = new byte[24];
       b[0] = (byte) 0x89;
       b[1] = 'P';
@@ -214,8 +221,8 @@ class PackagerTest {
       b[14] = 'D';
       b[15] = 'R';
       for (int i = 0; i < 4; i++) {
-        b[16 + i] = (byte) (width >>> (24 - 8 * i));
-        b[20 + i] = (byte) (height >>> (24 - 8 * i));
+        b[16 + i] = (byte) (100 >>> (24 - 8 * i));
+        b[20 + i] = (byte) (100 >>> (24 - 8 * i));
       }
       return b;
     }
@@ -225,14 +232,14 @@ class PackagerTest {
     void handlesLooseEnds() throws Exception {
       var descriptorFile = descriptor("descriptor--loose.xml");
       file("arm/app", BINARY);
-      file("icon.png", png(100, 100));
+      file("icon.png", png());
       file("pub/lib.so", BINARY);
       file("data/keep.txt", new byte[] {1});
       file("data/drop.tmp", new byte[] {2});
       file("data/.DS_Store", new byte[] {3});
       var bar = project.resolve("loose.bar");
 
-      Packager.pack(descriptorFile, project, null, bar);
+      Packager.pack(descriptorFile, project, bar, Packager.PackageOptions.of(null));
 
       assertThat(BarInspector.validate(bar).valid()).isTrue();
       try (var archive = BarArchive.open(bar)) {
@@ -256,7 +263,7 @@ class PackagerTest {
       file("arm/so.le-v7/libInvoker.so.1", BINARY);
       var bar = project.resolve("invoke.bar");
 
-      Packager.pack(descriptorFile, project, "Device-Release", bar);
+      Packager.pack(descriptorFile, project, bar, Packager.PackageOptions.of("Device-Release"));
 
       assertThat(BarInspector.validate(bar).valid()).isTrue();
       try (var archive = BarArchive.open(bar)) {
@@ -274,6 +281,143 @@ class PackagerTest {
         assertThat(manifest.value("Invoke-Target-Filter"))
             .hasValue("actions=bb.action.OPEN,bb.action.VIEW;types=text/plain;uris=invoke://;");
       }
+    }
+  }
+
+  @Nested
+  @DisplayName("with command-line version overrides")
+  class VersionOverrides {
+
+    private Path descriptorFile;
+    private Path bar;
+
+    private void prepare() throws IOException {
+      descriptorFile = descriptor("descriptor--native.xml");
+      file("arm/binary", BINARY);
+      file("public.key", new byte[] {'k'});
+      file("myapp-icon.png", new byte[] {(byte) 0x89, 'P', 'N', 'G'});
+      bar = project.resolve("app.bar");
+    }
+
+    private String versionOf() throws Exception {
+      try (var archive = BarArchive.open(bar)) {
+        return archive.manifest().value("Package-Version").orElseThrow();
+      }
+    }
+
+    @Test
+    @DisplayName("sets the fourth version segment from -buildId")
+    void appliesBuildId() throws Exception {
+      prepare();
+
+      Packager.pack(
+          descriptorFile,
+          project,
+          bar,
+          new Packager.PackageOptions("Device-Release", "42", null, List.of(), false));
+
+      assertThat(BarInspector.validate(bar).valid()).isTrue();
+      assertThat(versionOf()).isEqualTo("1.0.0.42");
+    }
+
+    @Test
+    @DisplayName("replaces the first three segments from -appVersion, keeping the default build id")
+    void appliesAppVersion() throws Exception {
+      prepare();
+
+      Packager.pack(
+          descriptorFile,
+          project,
+          bar,
+          new Packager.PackageOptions("Device-Release", null, "2.5.1", List.of(), false));
+
+      assertThat(BarInspector.validate(bar).valid()).isTrue();
+      assertThat(versionOf()).isEqualTo("2.5.1.0");
+    }
+  }
+
+  @Nested
+  @DisplayName("with extra command-line files")
+  class ExtraFiles {
+
+    @Test
+    @DisplayName("adds each extra file at the archive path given, and still validates clean")
+    void addsExtraFiles() throws Exception {
+      var descriptorFile = descriptor("descriptor--native.xml");
+      file("arm/binary", BINARY);
+      file("public.key", new byte[] {'k'});
+      file("myapp-icon.png", new byte[] {(byte) 0x89, 'P', 'N', 'G'});
+      var extra = file("extra/notes.txt", new byte[] {'n', 'o', 't', 'e'});
+      var bar = project.resolve("app.bar");
+
+      Packager.pack(
+          descriptorFile,
+          project,
+          bar,
+          new Packager.PackageOptions(
+              "Device-Release",
+              null,
+              null,
+              List.of(new Packager.ExtraFile("native/notes.txt", extra)),
+              false));
+
+      assertThat(BarInspector.validate(bar).valid()).isTrue();
+      try (var archive = BarArchive.open(bar)) {
+        assertThat(archive.assets()).extracting(BarAsset::path).contains("native/notes.txt");
+      }
+    }
+
+    @Test
+    @DisplayName("fails when an extra file does not exist")
+    void missingExtraFile() throws Exception {
+      var descriptorFile = descriptor("descriptor--native.xml");
+      file("arm/binary", BINARY);
+      file("public.key", new byte[] {'k'});
+      file("myapp-icon.png", new byte[] {(byte) 0x89, 'P', 'N', 'G'});
+      var bar = project.resolve("app.bar");
+
+      assertThatThrownBy(
+              () ->
+                  Packager.pack(
+                      descriptorFile,
+                      project,
+                      bar,
+                      new Packager.PackageOptions(
+                          "Device-Release",
+                          null,
+                          null,
+                          List.of(
+                              new Packager.ExtraFile(
+                                  "native/missing", project.resolve("nope/missing"))),
+                          false)))
+          .isInstanceOf(java.nio.file.NoSuchFileException.class);
+    }
+  }
+
+  @Nested
+  @DisplayName("in development mode")
+  class DevelopmentMode {
+
+    @Test
+    @DisplayName("marks Application-Development-Mode true only when -devMode is given")
+    void marksDevelopmentMode() throws Exception {
+      var descriptorFile = descriptor("descriptor--native.xml");
+      file("arm/binary", BINARY);
+      file("public.key", new byte[] {'k'});
+      file("myapp-icon.png", new byte[] {(byte) 0x89, 'P', 'N', 'G'});
+      var bar = project.resolve("dev.bar");
+
+      Packager.pack(
+          descriptorFile,
+          project,
+          bar,
+          new Packager.PackageOptions("Device-Release", null, null, List.of(), true));
+
+      assertThat(BarInspector.validate(bar).valid()).isTrue();
+      try (var archive = BarArchive.open(bar)) {
+        assertThat(archive.manifest().value("Application-Development-Mode")).hasValue("true");
+      }
+      assertThat(BarInspector.inspect(bar).developmentMode()).isTrue();
     }
   }
 }

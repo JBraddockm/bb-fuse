@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<qnx xmlns="http://www.qnx.com/schemas/application/1.0">
+  <id>com.example.cli</id>
+  <name>CLI App</name>
+  <versionNumber>1.0.0</versionNumber>
+  <asset path="arm/app" entry="true" type="Qnx/Elf">app</asset>
+</qnx>

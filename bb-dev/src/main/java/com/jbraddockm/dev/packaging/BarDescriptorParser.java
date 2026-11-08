@@ -29,7 +29,7 @@ final class BarDescriptorParser {
 
     return new BarDescriptor(
         requiredText(root, "id"),
-        requiredLocalizedText(root, "name"),
+        requiredName(root),
         localizedText(root, "description"),
         requiredText(root, "versionNumber"),
         initialWindow(root),
@@ -248,11 +248,11 @@ final class BarDescriptorParser {
     return parent.childText(childName).orElse(null);
   }
 
-  private static String requiredLocalizedText(XmlElement parent, String childName)
-      throws InvalidDescriptorException {
-    var text = localizedText(parent, childName);
+  /** The required, possibly localized {@code name} of the descriptor root. */
+  private static String requiredName(XmlElement parent) throws InvalidDescriptorException {
+    var text = localizedText(parent, "name");
     if (text == null) {
-      throw new InvalidDescriptorException("it has no " + childName);
+      throw new InvalidDescriptorException("it has no name");
     }
     return text;
   }
