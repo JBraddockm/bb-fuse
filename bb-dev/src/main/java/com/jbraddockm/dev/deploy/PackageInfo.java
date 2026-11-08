@@ -12,7 +12,8 @@ import java.util.Map;
 record PackageInfo(String name, String id, String version) {
 
   /**
-   * Parses the response lines of a {@code Verify} command.
+   * Parses the identity lines a {@code Verify}, {@code Install} or {@code Uninstall} command
+   * returns.
    *
    * @param lines the device's reply lines
    * @return the confirmed package identity, each field {@code null} when the device did not report

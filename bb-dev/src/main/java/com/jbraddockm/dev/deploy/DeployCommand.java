@@ -6,8 +6,7 @@ import java.util.Objects;
 /**
  * A command the deploy engine can run on a device. Each variant carries only the parameters its
  * {@code appInstaller.cgi} request needs and validates them when it is created, so an instance is
- * always ready to run. Unlike the legacy model it holds no command-line arguments and no output
- * parser — the engine maps the variant to a request and parses the device's answer itself.
+ * always ready to run; the engine maps the variant to a request and parses the device's answer.
  */
 public sealed interface DeployCommand {
 

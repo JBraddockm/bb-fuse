@@ -59,7 +59,7 @@ final class DeployBarDeployer implements BarDeployer {
     }
   }
 
-  private static String pid(List<String> lines) {
+  static String pid(List<String> lines) {
     for (var line : lines) {
       var matcher = PID.matcher(line);
       if (matcher.find()) {

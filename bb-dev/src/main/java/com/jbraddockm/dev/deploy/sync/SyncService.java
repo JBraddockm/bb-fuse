@@ -18,7 +18,7 @@ import java.util.List;
  * manifest so the next install diffs clean. A re-install of an unchanged bar uploads nothing.
  *
  * <p>Sync applies only to a development-mode bar with a native entry point; otherwise the caller
- * does a full install. See {@code analysis/DEPLOY-sync-plan.md}.
+ * does a full install.
  */
 public final class SyncService {
 

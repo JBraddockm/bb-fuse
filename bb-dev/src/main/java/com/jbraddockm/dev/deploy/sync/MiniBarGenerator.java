@@ -25,9 +25,6 @@ import java.util.zip.ZipOutputStream;
  * <strong>empty</strong> entries (their content is pushed by the sync, so the mini-BAR stays tiny),
  * and drops every other asset — section and file both — so the installed manifest declares only
  * what the archive carries and the first sync's diff pushes everything.
- *
- * <p>This mirrors the legacy {@code MiniBARGenerator} (prune to the manifest + image + binary
- * whitelist, then flatten the kept binaries and images to empty with the empty-content digest).
  */
 final class MiniBarGenerator {
 

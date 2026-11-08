@@ -93,7 +93,7 @@ class LauncherTest {
     void connectRoutesAndValidates() {
       // No -sshPublicKey, so the connect tool itself reports a usage error — which proves the
       // namespace word was consumed and the remaining options were handed to the tool.
-      assertThat(dispatch("connect", "192.168.1.118", "-password", "12345")).isEqualTo(2);
+      assertThat(dispatch("connect", "device.invalid", "-password", "abc")).isEqualTo(2);
       assertThat(out()).contains("Usage: bb-dev connect");
     }
 
