@@ -1,4 +1,4 @@
-package com.jbraddockm.dev.deploy;
+package com.jbraddockm.dev.deploy.sync;
 
 /**
  * The outcome of a dev-mode sync install.
@@ -6,4 +6,4 @@ package com.jbraddockm.dev.deploy;
  * @param nothingToSync whether the device was already up to date, so no asset was uploaded
  * @param uploadedAssets how many assets were pushed
  */
-record SyncResult(boolean nothingToSync, int uploadedAssets) {}
+public record SyncResult(boolean nothingToSync, int uploadedAssets) {}

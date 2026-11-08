@@ -1,4 +1,4 @@
-package com.jbraddockm.dev.deploy;
+package com.jbraddockm.dev.deploy.sync;
 
 import com.jbraddockm.core.bar.BarArchive;
 import com.jbraddockm.core.bar.BarAsset;
@@ -20,7 +20,7 @@ import java.util.List;
  * <p>Sync applies only to a development-mode bar with a native entry point; otherwise the caller
  * does a full install. See {@code analysis/DEPLOY-sync-plan.md}.
  */
-final class SyncService {
+public final class SyncService {
 
   private static final String MANIFEST_PATH = "META-INF/MANIFEST.MF";
 
@@ -37,7 +37,7 @@ final class SyncService {
    * @throws IOException if the device transport fails
    * @throws InvalidBarException if the bar has no manifest that can be understood
    */
-  static SyncResult synchronize(BarArchive bar, TargetFileService files, Installer installer)
+  public static SyncResult synchronize(BarArchive bar, TargetFileService files, Installer installer)
       throws IOException, InvalidBarException {
     var host = bar.manifest();
     var base = deviceAppBasePath(host);
@@ -70,7 +70,7 @@ final class SyncService {
    * @param manifest the bar's manifest
    * @return {@code true} if sync applies
    */
-  static boolean isSyncCompatible(Manifest manifest) {
+  public static boolean isSyncCompatible(Manifest manifest) {
     var developmentMode =
         manifest.value("Application-Development-Mode").map("true"::equalsIgnoreCase).orElse(false);
     var entryPointType = manifest.value("Entry-Point-Type").orElse("");
@@ -141,7 +141,7 @@ final class SyncService {
 
   /** Installs the mini-BAR — the appInstaller.cgi install the sync rides on. */
   @FunctionalInterface
-  interface Installer {
+  public interface Installer {
     void install(byte[] miniBar) throws IOException;
   }
 }

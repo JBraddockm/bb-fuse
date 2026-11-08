@@ -1,4 +1,4 @@
-package com.jbraddockm.dev.deploy;
+package com.jbraddockm.dev.deploy.sync;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

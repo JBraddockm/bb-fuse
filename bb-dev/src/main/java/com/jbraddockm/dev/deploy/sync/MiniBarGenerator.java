@@ -1,4 +1,4 @@
-package com.jbraddockm.dev.deploy;
+package com.jbraddockm.dev.deploy.sync;
 
 import com.jbraddockm.core.bar.BarArchive;
 import com.jbraddockm.core.bar.BarAsset;

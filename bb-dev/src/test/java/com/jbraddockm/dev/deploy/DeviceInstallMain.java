@@ -25,7 +25,11 @@ final class DeviceInstallMain {
     var engine = AppInstallerEngine.forDevice(host, port, password, null);
     try {
       run(engine, capture, "uninstall", new DeployCommand.UninstallApp(app));
-      run(engine, capture, "install", new DeployCommand.InstallApp(bar, false, true, null, false, false));
+      run(
+          engine,
+          capture,
+          "install",
+          new DeployCommand.InstallApp(bar, false, true, null, false, false));
     } finally {
       engine.close();
     }

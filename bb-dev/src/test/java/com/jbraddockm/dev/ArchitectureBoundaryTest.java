@@ -102,15 +102,17 @@ class ArchitectureBoundaryTest {
   void featuresDoNotImportEachOther() {
     var violations =
         sources().stream()
-            .flatMap(file -> {
-              var from = feature(file.pkg());
-              if (from == null) {
-                return Stream.empty();
-              }
-              return file.imports().stream()
-                  .filter(imported -> feature(imported) != null && !from.equals(feature(imported)))
-                  .map(imported -> file.name() + ": " + from + " -> " + feature(imported));
-            })
+            .flatMap(
+                file -> {
+                  var from = feature(file.pkg());
+                  if (from == null) {
+                    return Stream.empty();
+                  }
+                  return file.imports().stream()
+                      .filter(
+                          imported -> feature(imported) != null && !from.equals(feature(imported)))
+                      .map(imported -> file.name() + ": " + from + " -> " + feature(imported));
+                })
             .toList();
 
     assertThat(violations).isEmpty();
@@ -122,10 +124,11 @@ class ArchitectureBoundaryTest {
     var violations =
         sources().stream()
             .filter(file -> file.pkg().equals(BASE + "qconn"))
-            .flatMap(file ->
-                file.imports().stream()
-                    .filter(imported -> feature(imported) != null)
-                    .map(imported -> file.name() + " imports " + imported))
+            .flatMap(
+                file ->
+                    file.imports().stream()
+                        .filter(imported -> feature(imported) != null)
+                        .map(imported -> file.name() + " imports " + imported))
             .toList();
 
     assertThat(violations).isEmpty();
@@ -137,13 +140,40 @@ class ArchitectureBoundaryTest {
     var violations =
         sources().stream()
             .filter(file -> "packaging".equals(feature(file.pkg())))
-            .flatMap(file -> {
-              var here = packagingLayer(file.pkg());
-              return file.imports().stream()
-                  .filter(imported -> "packaging".equals(feature(imported)))
-                  .filter(imported -> packagingLayer(imported) > here)
-                  .map(imported -> file.name() + ": " + file.pkg() + " -> " + imported);
-            })
+            .flatMap(
+                file -> {
+                  var here = packagingLayer(file.pkg());
+                  return file.imports().stream()
+                      .filter(imported -> "packaging".equals(feature(imported)))
+                      .filter(imported -> packagingLayer(imported) > here)
+                      .map(imported -> file.name() + ": " + file.pkg() + " -> " + imported);
+                })
+            .toList();
+
+    assertThat(violations).isEmpty();
+  }
+
+  /**
+   * The deploy layer of a package or imported class: {@code sync}=0, the engine and front-ends=1.
+   */
+  private static int deployLayer(String packageOrClass) {
+    return inPackage(packageOrClass, BASE + "deploy.sync") ? 0 : 1;
+  }
+
+  @Test
+  @DisplayName("inside deploy the sync sub-feature does not reach up into the engine or front-ends")
+  void deployLayersPointDownward() {
+    var violations =
+        sources().stream()
+            .filter(file -> "deploy".equals(feature(file.pkg())))
+            .flatMap(
+                file -> {
+                  var here = deployLayer(file.pkg());
+                  return file.imports().stream()
+                      .filter(imported -> "deploy".equals(feature(imported)))
+                      .filter(imported -> deployLayer(imported) > here)
+                      .map(imported -> file.name() + ": " + file.pkg() + " -> " + imported);
+                })
             .toList();
 
     assertThat(violations).isEmpty();

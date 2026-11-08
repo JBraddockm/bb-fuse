@@ -6,6 +6,8 @@ import com.jbraddockm.core.device.LoginException;
 import com.jbraddockm.core.json.Json;
 import com.jbraddockm.dev.DevTool;
 import com.jbraddockm.dev.Output;
+import com.jbraddockm.dev.deploy.sync.SyncResult;
+import com.jbraddockm.dev.deploy.sync.SyncService;
 import com.jbraddockm.dev.qconn.QconnSocket;
 import com.jbraddockm.dev.qconn.TargetFileService;
 import java.io.IOException;
