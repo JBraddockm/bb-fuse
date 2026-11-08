@@ -35,13 +35,14 @@ class TargetFileServiceTest {
   }
 
   @Test
-  @DisplayName("write sends the fd and length then the bytes, and returns the count written")
+  @DisplayName(
+      "write sends the fd, offset and length then the bytes, and returns the count written")
   void write() throws IOException {
     var written =
-        over("o:5:c\n").write(5, "hello qconn\n".getBytes(StandardCharsets.US_ASCII), 0, 12);
+        over("o:c:c\n").write(5, 0, "hello qconn\n".getBytes(StandardCharsets.US_ASCII), 0, 12);
 
     assertThat(written).isEqualTo(12);
-    assertThat(sent()).isEqualTo("w:5:c\r\nhello qconn\n");
+    assertThat(sent()).isEqualTo("w:5:0:c:1\r\nhello qconn\n");
   }
 
   @Test
@@ -55,12 +56,79 @@ class TargetFileServiceTest {
   @Test
   @DisplayName("writeFile opens create+truncate, writes the content, and closes")
   void writeFile() throws IOException {
-    over("o:3:81fd:0:\"/x\"\no:3:c\no\n")
+    over("o:3:81fd:0:\"/x\"\no:c:c\no\n")
         .writeFile("/x", "hello qconn\n".getBytes(StandardCharsets.US_ASCII));
 
     assertThat(sent())
         .contains("o:\"/x\":302:1ff\r\n")
-        .contains("w:3:c\r\nhello qconn\n")
+        .contains("w:3:0:c:1\r\nhello qconn\n")
         .contains("c:3\r\n");
+  }
+
+  @Test
+  @DisplayName("read sends the fd, hex offset and length, then copies the returned bytes")
+  void read() throws IOException {
+    var buffer = new byte[16];
+    var count = over("o:5:5:a\nhello").read(3, 0, buffer, 0, 16);
+
+    assertThat(count).isEqualTo(5);
+    assertThat(new String(buffer, 0, 5, StandardCharsets.US_ASCII)).isEqualTo("hello");
+    assertThat(sent()).isEqualTo("r:3:0:10:1\r\n");
+  }
+
+  @Test
+  @DisplayName("readFile opens read-only, streams blocks until EOF, and closes")
+  void readFile() throws IOException {
+    var content = over("o:7:81b4:5:\"/m\"\no:5:5:5\nhelloo:0:0:5\no\n").readFile("/m");
+
+    assertThat(new String(content, StandardCharsets.US_ASCII)).isEqualTo("hello");
+    assertThat(sent())
+        .contains("o:\"/m\":0:1ff\r\n")
+        .contains("r:7:0:10000:1\r\n")
+        .contains("r:7:5:10000:1\r\n")
+        .contains("c:7\r\n");
+  }
+
+  @Test
+  @DisplayName("stat opens a transient handle, parses the metadata reply, and closes")
+  void stat() throws IOException {
+    var metadata =
+        over("""
+        o:9:81b4:14:"/m"
+        o:1:14:2:0:0:0:5f000000:5f000000:5f000000:81b4:1:1000:1:1000:1
+        o
+        """)
+            .stat("/m");
+
+    assertThat(metadata.size()).isEqualTo(0x14);
+    assertThat(metadata.isRegularFile()).isTrue();
+    assertThat(metadata.isDirectory()).isFalse();
+    assertThat(metadata.permissions()).isEqualTo(0x1b4);
+    assertThat(metadata.modifiedMillis()).isEqualTo(0x5f000000L * 1000);
+    assertThat(sent()).contains("oc:\"/m\":0\r\n").contains("s:9\r\n").contains("c:9\r\n");
+  }
+
+  @Test
+  @DisplayName("a directory stat reply reports a directory")
+  void statDirectory() throws IOException {
+    var metadata =
+        over("""
+        o:9:41ff:0:"/d"
+        o:2:0:2:0:0:0:5f000000:5f000000:5f000000:41ff:2:1000:0:1000:0
+        o
+        """)
+            .stat("/d");
+
+    assertThat(metadata.isDirectory()).isTrue();
+    assertThat(metadata.isRegularFile()).isFalse();
+    assertThat(metadata.permissions()).isEqualTo(0x1ff);
+  }
+
+  @Test
+  @DisplayName("stat of a missing path raises the device error")
+  void statMissing() {
+    assertThatThrownBy(() -> over("e:No such file or directory\n").stat("/nope"))
+        .isInstanceOf(IOException.class)
+        .hasMessageContaining("No such file or directory");
   }
 }
