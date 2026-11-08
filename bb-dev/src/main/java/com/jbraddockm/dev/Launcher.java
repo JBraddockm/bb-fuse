@@ -1,5 +1,8 @@
 package com.jbraddockm.dev;
 
+import com.jbraddockm.core.daemon.DaemonServer;
+import com.jbraddockm.dev.daemon.DevService;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -73,6 +76,15 @@ public final class Launcher {
       out.println(usage());
       return 0;
     }
+    if (name.equals("-daemon")) {
+      try {
+        DaemonServer.run(new DevService());
+        return 0;
+      } catch (IOException failure) {
+        err.println("bb-dev: the daemon failed: " + failure.getMessage());
+        return 1;
+      }
+    }
 
     Optional<Namespace> namespace = Namespace.byName(name);
     if (namespace.isEmpty()) {
@@ -95,6 +107,8 @@ public final class Launcher {
       deploy    install and manage applications on the device (was bb-deploy)
       package   build a BlackBerry application archive (was bb-packager)
 
+      -daemon   serve the deploy and package commands as a newline-JSON
+                daemon on stdin/stdout (bb-link style)
       --json    emit one JSON object instead of plain text
       help      print this help
 

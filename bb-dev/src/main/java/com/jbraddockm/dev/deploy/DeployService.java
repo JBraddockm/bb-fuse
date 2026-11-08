@@ -21,7 +21,7 @@ import java.util.function.Function;
  * and the results are shared with the terminal front-end; only the request parsing and the reply
  * shape are its own.
  */
-final class DeployService implements Service<DeploySession> {
+public final class DeployService implements Service<DeploySession> {
 
   static final String VERSION = "0.1.0";
 

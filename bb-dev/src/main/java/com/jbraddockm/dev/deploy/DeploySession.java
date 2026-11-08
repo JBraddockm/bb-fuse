@@ -7,7 +7,7 @@ import com.jbraddockm.core.daemon.ServiceSession;
  * native {@link AppInstallerEngine}, which logs in on the first command and keeps the session; the
  * daemon closes it when the client disconnects.
  */
-final class DeploySession implements ServiceSession {
+public final class DeploySession implements ServiceSession {
 
   private final AppInstallerEngine engine;
 
