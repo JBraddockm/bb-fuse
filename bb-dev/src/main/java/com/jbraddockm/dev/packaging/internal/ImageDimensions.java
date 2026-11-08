@@ -26,44 +26,48 @@ final class ImageDimensions {
     return size == null ? null : "{" + size[0] + "x" + size[1] + "}";
   }
 
-  private static boolean isPng(byte[] b) {
-    return b.length >= 24 && (b[0] & 0xFF) == 0x89 && b[1] == 'P' && b[2] == 'N' && b[3] == 'G';
+  private static boolean isPng(byte[] bytes) {
+    return bytes.length >= 24
+        && (bytes[0] & 0xFF) == 0x89
+        && bytes[1] == 'P'
+        && bytes[2] == 'N'
+        && bytes[3] == 'G';
   }
 
-  private static int[] png(byte[] b) {
+  private static int[] png(byte[] bytes) {
     // The IHDR chunk follows the 8-byte signature and the 8-byte chunk header; width then height.
-    return new int[] {intAt(b, 16), intAt(b, 20)};
+    return new int[] {intAt(bytes, 16), intAt(bytes, 20)};
   }
 
-  private static boolean isJpeg(byte[] b) {
-    return b.length > 3 && (b[0] & 0xFF) == 0xFF && (b[1] & 0xFF) == 0xD8;
+  private static boolean isJpeg(byte[] bytes) {
+    return bytes.length > 3 && (bytes[0] & 0xFF) == 0xFF && (bytes[1] & 0xFF) == 0xD8;
   }
 
-  private static int[] jpeg(byte[] b) {
+  private static int[] jpeg(byte[] bytes) {
     var index = 2;
-    while (index + 9 < b.length) {
-      if ((b[index] & 0xFF) != 0xFF) {
+    while (index + 9 < bytes.length) {
+      if ((bytes[index] & 0xFF) != 0xFF) {
         index++;
         continue;
       }
-      var marker = b[index + 1] & 0xFF;
+      var marker = bytes[index + 1] & 0xFF;
       if (marker >= 0xC0 && marker <= 0xCF && marker != 0xC4 && marker != 0xC8 && marker != 0xCC) {
         // A start-of-frame marker: height then width, each two bytes, after the 3-byte prefix.
-        return new int[] {shortAt(b, index + 7), shortAt(b, index + 5)};
+        return new int[] {shortAt(bytes, index + 7), shortAt(bytes, index + 5)};
       }
-      index += 2 + shortAt(b, index + 2);
+      index += 2 + shortAt(bytes, index + 2);
     }
     return null;
   }
 
-  private static int intAt(byte[] b, int offset) {
-    return (b[offset] & 0xFF) << 24
-        | (b[offset + 1] & 0xFF) << 16
-        | (b[offset + 2] & 0xFF) << 8
-        | (b[offset + 3] & 0xFF);
+  private static int intAt(byte[] bytes, int offset) {
+    return (bytes[offset] & 0xFF) << 24
+        | (bytes[offset + 1] & 0xFF) << 16
+        | (bytes[offset + 2] & 0xFF) << 8
+        | (bytes[offset + 3] & 0xFF);
   }
 
-  private static int shortAt(byte[] b, int offset) {
-    return (b[offset] & 0xFF) << 8 | (b[offset + 1] & 0xFF);
+  private static int shortAt(byte[] bytes, int offset) {
+    return (bytes[offset] & 0xFF) << 8 | (bytes[offset + 1] & 0xFF);
   }
 }
