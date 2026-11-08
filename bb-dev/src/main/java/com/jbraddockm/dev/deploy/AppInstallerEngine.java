@@ -101,8 +101,14 @@ public final class AppInstallerEngine {
   public List<String> run(DeployCommand command, Consumer<String> lineHandler)
       throws LoginException, DeviceReportException, IOException {
     ensureLoggedIn();
-    var request = requestFor(command);
     var lines = new ArrayList<String>();
+    if (command instanceof DeployCommand.TestConnection) {
+      // The device's appInstaller has no "test" command; -test is a successful-login check.
+      emit(SENDING_REQUEST + "TEST", lineHandler, lines);
+      emit("result::success", lineHandler, lines);
+      return List.copyOf(lines);
+    }
+    var request = requestFor(command);
     emit(SENDING_REQUEST + request.logName(), lineHandler, lines);
 
     var answer = poster.post(request.body());
@@ -148,7 +154,7 @@ public final class AppInstallerEngine {
   private Request requestFor(DeployCommand command) throws IOException {
     return switch (command) {
       case DeployCommand.TestConnection _ ->
-          new Request("TEST", MultipartBody.command("test").build());
+          throw new IllegalStateException("a connection test posts no command");
       case DeployCommand.ListInstalledApps _ ->
           new Request("LIST", MultipartBody.command("List").build());
       case DeployCommand.ListDeviceInfo _ ->

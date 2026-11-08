@@ -42,6 +42,16 @@ class AppInstallerEngineTest {
     return engine.run(command, forwarded::add);
   }
 
+  @Test
+  @DisplayName("a connection test logs in and reports success without posting a command")
+  void testConnectionIsLoginOnly() throws Exception {
+    var lines = run(new DeployCommand.TestConnection(), new ArrayList<>());
+
+    assertThat(lines).containsExactly("Info: Sending request: TEST", "result::success");
+    assertThat(poster.body).isNull();
+    assertThat(http.logins).isEqualTo(1);
+  }
+
   @Nested
   @DisplayName("the answer")
   class Answer {
@@ -53,10 +63,10 @@ class AppInstallerEngineTest {
       poster.reply("actual_id::gYABC\nresult::success");
       var forwarded = new ArrayList<String>();
 
-      var lines = run(new DeployCommand.TestConnection(), forwarded);
+      var lines = run(new DeployCommand.ListInstalledApps(), forwarded);
 
       assertThat(lines)
-          .containsExactly("Info: Sending request: TEST", "actual_id::gYABC", "result::success");
+          .containsExactly("Info: Sending request: LIST", "actual_id::gYABC", "result::success");
       assertThat(forwarded).isEqualTo(lines);
     }
 
@@ -134,7 +144,7 @@ class AppInstallerEngineTest {
     void marksTheStaleLogin() {
       poster.reply("Error: User authentication failed");
 
-      assertThatThrownBy(() -> run(new DeployCommand.TestConnection(), new ArrayList<>()))
+      assertThatThrownBy(() -> run(new DeployCommand.ListInstalledApps(), new ArrayList<>()))
           .isInstanceOf(DeviceReportException.class)
           .matches(failure -> ((DeviceReportException) failure).isAuthenticationFailure());
     }
@@ -150,7 +160,7 @@ class AppInstallerEngineTest {
       poster.reply("result::success");
       poster.reply("result::success");
 
-      run(new DeployCommand.TestConnection(), new ArrayList<>());
+      run(new DeployCommand.ListInstalledApps(), new ArrayList<>());
       run(new DeployCommand.ListInstalledApps(), new ArrayList<>());
 
       assertThat(http.logins).isEqualTo(1);
@@ -162,9 +172,9 @@ class AppInstallerEngineTest {
       poster.reply("result::success");
       poster.reply("result::success");
 
-      run(new DeployCommand.TestConnection(), new ArrayList<>());
+      run(new DeployCommand.ListInstalledApps(), new ArrayList<>());
       engine.forgetLogin();
-      run(new DeployCommand.TestConnection(), new ArrayList<>());
+      run(new DeployCommand.ListInstalledApps(), new ArrayList<>());
 
       assertThat(http.logins).isEqualTo(2);
     }

@@ -1,0 +1,46 @@
+Info: Sending request: DEVICE_INFO
+Info: Action: List Device Info
+[n]@deviceproperties
+defaultTheme::white
+device_os::BlackBerry 10
+devicename::RIM BlackBerry Device
+drmhwfp::0xFACEFACEFACEFACEFACEFACEFACEFACEFACEFACE
+du::8
+fingerprint::FAKE-DRM-FINGERPRINT-REDACTED
+hardwareid::0x07002e0a
+icon_res::90x90
+modelfamily::Touch
+modelfullname::BlackBerry Leap
+modelname::Leap
+modelnumber::STR100-1
+radiofingerprint::FAKE-RADIO-FINGERPRINT-REDACTED
+scmbundle::10.3.3.3216
+scmbundle0::10.3.3.3216
+scmbundle1::10.3.3.3216
+screen_dimensions::2.44x4.34x5.00
+screen_dpi::295
+screen_res::720x1280
+vendorid::?
+wlan_standard::wifi
+[n]@deviceproperties
+IMEI::000000000000000
+devicepin::0xdeadbeef
+deviceserialnumber::0000000000000000000000
+drmhwfp::0xFACEFACEFACEFACEFACEFACEFACEFACEFACEFACE
+[n]@devmode
+[n]debug_token_author::
+[n]debug_token_expiration::
+[n]debug_token_installed:b:false
+[n]debug_token_timeout::10d
+[n]debug_token_valid:b:
+[n]debug_token_validation_error::no debug token found
+[n]debug_token_validation_error_code:n:1
+[n]dev_mode_enabled:b:true
+[n]dev_mode_expiration::10d
+[n]dev_mode_waiting:b:true
+@versions
+build_id:: 911537
+Build Branch: BB10_3_3
+production_device:b:true
+perimeter::personal
+hostname::BLACKBERRY-BEEF
