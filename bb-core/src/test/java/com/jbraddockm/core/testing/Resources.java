@@ -3,6 +3,8 @@ package com.jbraddockm.core.testing;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -50,6 +52,22 @@ public final class Resources {
         throw new AssertionError("no test resource " + name + " beside " + owner.getName());
       }
       return stream.readAllBytes();
+    } catch (IOException failure) {
+      throw new UncheckedIOException(failure);
+    }
+  }
+
+  /**
+   * Copies a resource into a folder, for a test that needs the file on disk.
+   *
+   * @param owner the class whose package names the folder
+   * @param name the name of the file in that folder
+   * @param folder where to put the copy, which keeps the name
+   * @return the copy
+   */
+  public static Path copyTo(Class<?> owner, String name, Path folder) {
+    try {
+      return Files.write(folder.resolve(name), bytes(owner, name));
     } catch (IOException failure) {
       throw new UncheckedIOException(failure);
     }

@@ -1,12 +1,8 @@
-package com.jbraddockm.link.transport.tls;
+package com.jbraddockm.core.device;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.jbraddockm.core.device.ClientCertificate;
-import com.jbraddockm.core.device.ClientKeyManager;
-import com.jbraddockm.core.device.PemIdentity;
-import com.jbraddockm.link.testing.Resources;
-import com.jbraddockm.link.testing.TestPki;
+import com.jbraddockm.core.testing.Resources;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.security.cert.X509Certificate;
@@ -33,8 +29,10 @@ class ClientKeyManagerTest {
     loaded =
         PemIdentity.load(
             new ClientCertificate(
-                Resources.copyTo(TestPki.class, "test-pki--leaf-certificate.pem", folder),
-                Resources.copyTo(TestPki.class, "test-pki--leaf-key-pkcs8.pem", folder)));
+                Resources.copyTo(
+                    ClientKeyManagerTest.class, "test-pki--leaf-certificate.pem", folder),
+                Resources.copyTo(
+                    ClientKeyManagerTest.class, "test-pki--leaf-key-pkcs8.pem", folder)));
     manager = new ClientKeyManager(loaded);
   }
 
