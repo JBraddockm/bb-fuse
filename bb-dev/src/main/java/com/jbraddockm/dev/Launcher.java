@@ -29,6 +29,14 @@ public final class Launcher {
    * @param arguments the command-line arguments
    */
   public static void main(String[] arguments) {
+    // The device speaks TLSv1 and presents a certificate that names no host; the deploy namespace
+    // talks to it over HTTPS, so turn the host check off and prefer the device protocol before any
+    // client is built. (The TLSv1 protocol itself is re-enabled by the java.security file the
+    // native
+    // build and the test runner pass; see tls.security.)
+    System.setProperty("jdk.tls.client.protocols", "TLSv1");
+    System.setProperty("jdk.internal.httpclient.disableHostnameVerification", "true");
+
     var out = new PrintStream(System.out, true, StandardCharsets.UTF_8);
     var err = new PrintStream(System.err, true, StandardCharsets.UTF_8);
     System.exit(dispatch(arguments, out, err));

@@ -10,8 +10,6 @@ import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 
 @DisplayName("The bb-dev launcher")
 class LauncherTest {
@@ -65,32 +63,28 @@ class LauncherTest {
   @DisplayName("routing to a namespace")
   class Routing {
 
-    @ParameterizedTest
-    @ValueSource(strings = {"deploy"})
-    @DisplayName("routes a not-yet-built namespace to its stub")
-    void routesStubNamespace(String namespace) {
-      assertThat(dispatch(namespace)).isEqualTo(Output.NOT_IMPLEMENTED);
-      assertThat(out()).contains("bb-dev " + namespace + ": not implemented yet");
+    @Test
+    @DisplayName("routes to the deploy tool, which prints its help when given no command")
+    void deployRoutesAndShowsHelp() {
+      assertThat(dispatch("deploy")).isEqualTo(2);
+      assertThat(out()).contains("bb-dev deploy");
     }
 
     @Test
-    @DisplayName("emits a JSON object for a stub namespace when --json precedes it")
+    @DisplayName("emits a JSON object when --json precedes the namespace")
     void jsonBeforeNamespace() {
-      assertThat(dispatch("--json", "deploy")).isEqualTo(Output.NOT_IMPLEMENTED);
+      assertThat(dispatch("--json", "deploy")).isEqualTo(2);
       var parsed = Json.parse(out().strip());
       assertThat(parsed).isInstanceOf(Map.class);
       @SuppressWarnings("unchecked")
       var object = (Map<String, Object>) parsed;
-      assertThat(object)
-          .containsEntry("ok", false)
-          .containsEntry("namespace", "deploy")
-          .containsEntry("error", "not implemented");
+      assertThat(object).containsEntry("ok", false);
     }
 
     @Test
     @DisplayName("accepts --json after the namespace too")
     void jsonAfterNamespace() {
-      assertThat(dispatch("deploy", "--json")).isEqualTo(Output.NOT_IMPLEMENTED);
+      assertThat(dispatch("deploy", "--json")).isEqualTo(2);
       assertThat(Json.parse(out().strip())).isInstanceOf(Map.class);
     }
 
