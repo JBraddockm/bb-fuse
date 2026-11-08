@@ -22,17 +22,21 @@ final class DeviceMutateMain {
     var capture = Path.of("bb-dev", "target", "device-capture");
     Files.createDirectories(capture);
 
-    var local = Files.writeString(Files.createTempFile("bbdev-mutate", ".txt"), "bbdev mutate test\n");
-    var sandboxPath = "data/bbdev-mutate-test.txt";
+    var local =
+        Files.writeString(Files.createTempFile("bbdev-mutate", ".txt"), "bbdev mutate test\n");
+    var sandboxPath = args.length > 5 ? args[5] : "data/bbdev-mutate-test.txt";
 
     var engine = AppInstallerEngine.forDevice(host, port, password, null);
     try {
       run(engine, capture, "putFile", new DeployCommand.PutFile(app, local, sandboxPath));
       run(engine, capture, "getFile-success", new DeployCommand.GetFile(app, sandboxPath, null));
-      run(engine, capture, "launch", new DeployCommand.LaunchApp(app));
-      Thread.sleep(2000);
-      run(engine, capture, "isAppRunning-true", new DeployCommand.IsAppRunning(app));
-      run(engine, capture, "terminate", new DeployCommand.TerminateApp(app));
+      // The launch/terminate round only when a sandbox path was not being probed.
+      if (args.length <= 5) {
+        run(engine, capture, "launch", new DeployCommand.LaunchApp(app));
+        Thread.sleep(2000);
+        run(engine, capture, "isAppRunning-true", new DeployCommand.IsAppRunning(app));
+        run(engine, capture, "terminate", new DeployCommand.TerminateApp(app));
+      }
     } finally {
       engine.close();
     }
