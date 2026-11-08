@@ -45,6 +45,13 @@ class ClientKeyManagerTest {
   }
 
   @Test
+  @DisplayName("offers its alias to an SSLEngine client, which is how java.net.http asks for one")
+  void offersItsAliasToAnEngineClient() {
+    assertThat(manager.chooseEngineClientAlias(new String[] {"EC", "RSA"}, null, null))
+        .isEqualTo(ALIAS);
+  }
+
+  @Test
   @DisplayName("gives the chain and the private key for its alias, and nothing for another")
   void givesThePairForItsAlias() {
     assertThat(manager.getCertificateChain(ALIAS)).isEqualTo(loaded.chain());

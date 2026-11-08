@@ -1,20 +1,15 @@
-package com.jbraddockm.link.transport.tls;
+package com.jbraddockm.core.device;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.jbraddockm.core.device.ClientCertificate;
-import com.jbraddockm.core.device.PemIdentity;
 import com.jbraddockm.core.error.InvalidArgumentException;
-import com.jbraddockm.link.endpoint.pairing.pki.TestKeys;
-import com.jbraddockm.link.testing.Resources;
-import com.jbraddockm.link.testing.TestPki;
+import com.jbraddockm.core.testing.Resources;
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
-import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -32,12 +27,7 @@ class PemIdentityTest {
   @TempDir private Path folder;
 
   private Path copy(String name) {
-    for (var owner : List.of(PemIdentityTest.class, TestPki.class, TestKeys.class)) {
-      if (owner.getResource(name) != null) {
-        return Resources.copyTo(owner, name, folder);
-      }
-    }
-    throw new AssertionError("no test resource " + name);
+    return Resources.copyTo(PemIdentityTest.class, name, folder);
   }
 
   private PemIdentity.Loaded load(String certificate, String key) throws IOException {
