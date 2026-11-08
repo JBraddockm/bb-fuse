@@ -1,6 +1,7 @@
 package com.jbraddockm.dev.qconn;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -26,7 +27,9 @@ class QconnSocketTest {
   @Test
   @DisplayName("reads a response line up to the newline")
   void readsALine() throws IOException {
-    assertThat(over(bytes("QCONN\r\n")).receiveResponse()).isEqualTo("QCONN");
+    try (var agent = over(bytes("QCONN\r\n"))) {
+      assertThat(agent.receiveResponse()).isEqualTo("QCONN");
+    }
   }
 
   @Test
@@ -34,32 +37,36 @@ class QconnSocketTest {
   void skipsTelnetOptions() throws IOException {
     var input = new byte[] {'A', 'B', (byte) IAC, (byte) WILL, 1, 'C', '\n'};
 
-    assertThat(over(input).receiveResponse()).isEqualTo("ABC");
+    try (var agent = over(input)) {
+      assertThat(agent.receiveResponse()).isEqualTo("ABC");
+    }
   }
 
   @Test
   @DisplayName("parses the endianness from the info properties")
   void readsEndianness() throws IOException {
-    var agent = over(bytes("ENDIAN=l NUM_SRVCS=7\n"));
+    try (var agent = over(bytes("ENDIAN=l NUM_SRVCS=7\n"))) {
+      agent.readInfo();
 
-    agent.readInfo();
-
-    assertThat(agent.isLittleEndian()).isTrue();
+      assertThat(agent.isLittleEndian()).isTrue();
+    }
   }
 
   @Test
   @DisplayName("lists the services from the broker's reply, after the colon")
   void listsServices() throws IOException {
-    assertThat(over(bytes("OK: file launch sinfo\n")).services())
-        .containsExactly("file", "launch", "sinfo");
+    try (var agent = over(bytes("OK: file launch sinfo\n"))) {
+      assertThat(agent.services()).containsExactly("file", "launch", "sinfo");
+    }
   }
 
   @Test
   @DisplayName("raises the broker's error for a refused service list")
-  void refusedServiceList() {
-    org.assertj.core.api.Assertions.assertThatThrownBy(
-            () -> over(bytes("error unknown\n")).services())
-        .isInstanceOf(IOException.class)
-        .hasMessageContaining("refused");
+  void refusedServiceList() throws IOException {
+    try (var agent = over(bytes("error unknown\n"))) {
+      assertThatThrownBy(agent::services)
+          .isInstanceOf(IOException.class)
+          .hasMessageContaining("refused");
+    }
   }
 }

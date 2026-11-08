@@ -183,7 +183,7 @@ public final class QconnSocket implements AutoCloseable {
         previous = b;
       }
     } else if (command >= WILL && command <= DONT) {
-      input.read();
+      var _ = input.read();
     }
   }
 
