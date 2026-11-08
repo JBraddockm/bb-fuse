@@ -5,8 +5,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The application identity the device confirms for a {@code Verify} (the same {@code actual_*}
- * fields an uninstall returns): the full directory name, the package id and the version.
+ * The application identity the device confirms, from its {@code actual_dname}/{@code actual_id}/
+ * {@code actual_version} lines: the full directory name, the package id and the version. {@code
+ * Verify}, {@code Install} and {@code Uninstall} all return these fields.
  */
 record PackageInfo(String name, String id, String version) {
 

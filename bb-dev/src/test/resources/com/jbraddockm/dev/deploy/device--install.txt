@@ -1,0 +1,12 @@
+Info: Sending request: INSTALL
+Info: Action: Install
+Info: Development mode: on
+Info: File size: 1816671
+Info: Installing ...
+Info: Processing 1816671 bytes
+Info: Progress 100%...
+Info: Progress 100%...
+actual_dname::com.example.TLSDeBug.testDev_le_TLSDeBugc09806e9
+actual_id::testDev_le_TLSDeBugc09806e9
+actual_version::1.0.0.1
+result::success
