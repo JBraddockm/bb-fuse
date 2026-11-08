@@ -34,6 +34,26 @@ class PackagerTest {
     return Files.write(file, content);
   }
 
+  @Test
+  @DisplayName("fails with a clear error when the configuration's entry binary is not built")
+  void missingEntryBinary() throws Exception {
+    var descriptorFile = descriptor("descriptor--native.xml");
+    // Everything but the entry binary is present, as when that configuration was not compiled.
+    file("public.key", new byte[] {'k'});
+    file("myapp-icon.png", new byte[] {(byte) 0x89, 'P', 'N', 'G'});
+    var bar = project.resolve("app.bar");
+
+    assertThatThrownBy(
+            () ->
+                Packager.pack(
+                    descriptorFile, project, bar, Packager.PackageOptions.of("Device-Release")))
+        .isInstanceOf(InvalidDescriptorException.class)
+        .hasMessageContaining("Device-Release")
+        .hasMessageContaining("arm/binary")
+        .hasMessageContaining("was not found");
+    assertThat(Files.exists(bar)).isFalse();
+  }
+
   @Nested
   @DisplayName("for a chosen configuration")
   class Chosen {

@@ -130,6 +130,17 @@ final class Packager {
             .distinct()
             .toList();
     var sources = sources(assets, icons, descriptor.splashScreens(), projectRoot);
+    for (var asset : assets) {
+      if (asset.entry() && !sources.containsKey(asset.path())) {
+        throw new InvalidDescriptorException(
+            (options.configuration() == null
+                    ? "the entry binary '"
+                    : "configuration '" + options.configuration() + "': the entry binary '")
+                + asset.path()
+                + "' was not found under "
+                + projectRoot);
+      }
+    }
     var packaged =
         new ArrayList<>(AssetFlattener.flatten(assets, icons, descriptor.splashScreens(), sources));
     addExtras(packaged, options.extraFiles());
