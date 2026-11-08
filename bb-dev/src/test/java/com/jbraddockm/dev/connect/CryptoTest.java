@@ -8,6 +8,7 @@ import java.security.KeyPair;
 import java.security.MessageDigest;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
+import java.util.HexFormat;
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
@@ -18,14 +19,10 @@ import org.junit.jupiter.api.Test;
 @DisplayName("The qconndoor cryptography")
 class CryptoTest {
 
-  private static final char[] HEX = "0123456789ABCDEF".toCharArray();
+  private static final HexFormat UPPER_HEX = HexFormat.of().withUpperCase();
 
   private static String upperHex(byte[] data) {
-    var builder = new StringBuilder();
-    for (byte value : data) {
-      builder.append(HEX[(value >> 4) & 0xF]).append(HEX[value & 0xF]);
-    }
-    return builder.toString();
+    return UPPER_HEX.formatHex(data);
   }
 
   private static byte[] sha(String algorithm, byte[] data) throws Exception {

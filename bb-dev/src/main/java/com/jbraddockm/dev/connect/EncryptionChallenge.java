@@ -5,8 +5,7 @@ import java.nio.ByteOrder;
 
 /**
  * The device's RSA encryption challenge, parsed from an {@code EncryptedChallengeResponse} payload.
- * The header is little-endian; only the RSA container is needed to recover the session key. See
- * {@code analysis/QCONNDOOR-protocol.md} §8.
+ * The header is little-endian; only the RSA container is needed to recover the session key.
  *
  * @param container the RSA-encrypted blob to decrypt with our private key
  * @param expectedSignatureLength the signature length the device expects (128)

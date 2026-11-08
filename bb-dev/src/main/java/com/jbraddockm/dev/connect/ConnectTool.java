@@ -10,8 +10,7 @@ import java.security.GeneralSecurityException;
 import java.util.List;
 
 /**
- * The {@code connect} namespace: starts the device's SSH daemon over the qconndoor protocol, the
- * job of the former bb-connect tool.
+ * The {@code connect} namespace: starts the device's SSH daemon over the qconndoor protocol.
  *
  * <p>Usage: {@code bb-dev connect <host> -sshPublicKey <path> [-password <password>]}. The command
  * runs the handshake and then stays running to hold the session open, because the device keeps its
@@ -32,7 +31,7 @@ public final class ConnectTool implements DevTool {
     String password = "";
     String keyPath = null;
     int index = 0;
-    // The host is the leading positional argument, as bb-connect took it.
+    // The host is the leading positional argument.
     if (!arguments.isEmpty() && !arguments.getFirst().startsWith("-")) {
       host = arguments.getFirst();
       index = 1;
@@ -42,7 +41,7 @@ public final class ConnectTool implements DevTool {
         case "-password" -> password = value(arguments, ++index);
         case "-sshPublicKey" -> keyPath = value(arguments, ++index);
         default -> {
-          // Unknown options (such as the old -targetVersion) are ignored for compatibility.
+          // Unknown options are ignored.
         }
       }
     }

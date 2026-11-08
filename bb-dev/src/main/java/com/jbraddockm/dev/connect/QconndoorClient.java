@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
@@ -16,7 +17,6 @@ import java.util.concurrent.TimeUnit;
  * Speaks the qconndoor SecureTarget protocol to a device on TCP 4455 to start its SSH daemon: the
  * RSA session-key exchange, the password proof, the SSH-key push and the start-services request,
  * then holds the session open with keepalives (the daemon stays up only while the session is held).
- * See {@code analysis/QCONNDOOR-protocol.md}.
  */
 final class QconndoorClient {
 
@@ -99,7 +99,8 @@ final class QconndoorClient {
     SecureTarget.write(
         out,
         SecureTarget.AUTHENTICATE,
-        Crypto.encryptFrame(sessionKey, lengthPrefixed(hashed.getBytes())));
+        Crypto.encryptFrame(
+            sessionKey, lengthPrefixed(hashed.getBytes(StandardCharsets.US_ASCII))));
     expect(in, SecureTarget.FEEDBACK);
 
     progress.note("Sending SSH key");
@@ -158,7 +159,7 @@ final class QconndoorClient {
    * The DecryptedChallengeResponse plaintext: a 6-byte length header, then the blob and signature.
    */
   private static byte[] decryptedResponse(byte[] blob, byte[] signature) {
-    return ByteBuffer.allocate(12 + blob.length + signature.length)
+    return ByteBuffer.allocate(6 + blob.length + signature.length)
         .putShort((short) (4 + blob.length + signature.length))
         .putShort((short) blob.length)
         .putShort((short) signature.length)
@@ -172,7 +173,9 @@ final class QconndoorClient {
   }
 
   private byte[] trimmedKey() {
-    return new String(sshPublicKey).trim().getBytes();
+    return new String(sshPublicKey, StandardCharsets.US_ASCII)
+        .trim()
+        .getBytes(StandardCharsets.US_ASCII);
   }
 
   private static byte[] expect(InputStream in, int code) throws IOException {

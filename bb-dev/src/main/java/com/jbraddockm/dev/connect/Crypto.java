@@ -2,6 +2,7 @@ package com.jbraddockm.dev.connect;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -10,6 +11,7 @@ import java.security.SecureRandom;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Arrays;
+import java.util.HexFormat;
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
@@ -17,7 +19,7 @@ import javax.crypto.spec.SecretKeySpec;
 /**
  * The qconndoor cryptography, all with the stock JDK providers: the ephemeral RSA key exchange that
  * recovers the AES session key, the SHA-1 blob signature, the AES-CBC frame encryption, and the
- * salted-and-iterated password hash. See {@code analysis/QCONNDOOR-protocol.md} §4, §8.
+ * salted-and-iterated password hash.
  */
 final class Crypto {
 
@@ -31,7 +33,7 @@ final class Crypto {
 
   private static final int RSA_MODULUS_BYTES = 128;
   private static final int IV_BYTES = 16;
-  private static final char[] HEX = "0123456789ABCDEF".toCharArray();
+  private static final HexFormat UPPER_HEX = HexFormat.of().withUpperCase();
   private static final SecureRandom RANDOM = new SecureRandom();
 
   private Crypto() {}
@@ -125,16 +127,17 @@ final class Crypto {
   static String hashAndEncode(
       String password, int algorithm, byte[] salt, int iterations, byte[] challenge)
       throws GeneralSecurityException {
+    var passwordBytes = password.getBytes(StandardCharsets.UTF_8);
     byte[] hash =
         algorithm == 0
-            ? digest("SHA-1", password.getBytes())
-            : iterate(algorithm, salt, iterations, password.getBytes());
+            ? digest("SHA-1", passwordBytes)
+            : iterate(algorithm, salt, iterations, passwordBytes);
     if (challenge.length > 0) {
       byte[] buffer = concat(challenge, hash);
       hash =
           algorithm == 0 ? digest("SHA-1", buffer) : iterate(algorithm, salt, iterations, buffer);
     }
-    return hex(hash);
+    return UPPER_HEX.formatHex(hash);
   }
 
   private static byte[] iterate(int algorithm, byte[] salt, int iterations, byte[] input)
@@ -162,13 +165,5 @@ final class Crypto {
     byte[] out = Arrays.copyOf(first, first.length + second.length);
     System.arraycopy(second, 0, out, first.length, second.length);
     return out;
-  }
-
-  private static String hex(byte[] data) {
-    var builder = new StringBuilder(data.length * 2);
-    for (byte value : data) {
-      builder.append(HEX[(value >> 4) & 0xF]).append(HEX[value & 0xF]);
-    }
-    return builder.toString();
   }
 }

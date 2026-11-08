@@ -59,10 +59,9 @@ final class SecureTarget {
   }
 
   /**
-   * Reads one frame: the 6-byte header in full, then the payload from a single read. The frame's
-   * own length field is not trusted for the payload — the device over-states it on at least one
-   * frame — so, like the original tool, the payload is whatever arrives in one read after the
-   * header (each response arrives in one segment). The payload's own inner length fields bound the
+   * Reads one frame: the 6-byte header in full, then the payload. The header's length field is not
+   * used to size the payload; the payload is whatever arrives in the single read after the header
+   * (each response arrives in one segment), and the payload's own inner length fields bound the
    * fields that matter.
    *
    * @param in the device stream
