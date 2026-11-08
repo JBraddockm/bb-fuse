@@ -28,45 +28,22 @@ public final class Launcher {
 
   private Launcher() {}
 
-  /** What the command line asks for. */
-  sealed interface Invocation {
-
-    /**
-     * Serve the protocol on standard input and output.
-     *
-     * @param traceDirectory the folder in which to record every exchange with a device, when one
-     *     was given
-     */
-    record Daemon(Optional<Path> traceDirectory) implements Invocation {}
-
-    /**
-     * Replay recorded answers through a command, without a device.
-     *
-     * @param command the name of the command
-     */
-    record Replay(String command) implements Invocation {}
-
-    /**
-     * Arguments that mean nothing: say how the tool is used.
-     *
-     * @param text what to say
-     */
-    record Usage(String text) implements Invocation {}
-  }
-
   /**
    * Starts the requested mode.
    *
    * @param arguments the command-line arguments
    * @throws IOException if reading the daemon's input fails
    */
-  public static void main(String[] arguments) throws IOException {
-    System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.NoOpLog");
+  static void main(String[] arguments) throws IOException {
     System.setProperty("jdk.tls.client.protocols", "TLSv1");
+    // A device certificate names no address, so the host cannot be verified against it; the client
+    // turns that check off here (there is no per-client switch) before any HttpClient is built. The
+    // trust manager still accepts the certificate, see DeviceTls.
+    System.setProperty("jdk.internal.httpclient.disableHostnameVerification", "true");
 
     switch (interpret(arguments)) {
       case Invocation.Daemon(var traceDirectory) ->
-          DaemonServer.run(new LinkService(observerFor(traceDirectory)));
+          DaemonServer.run(new LinkService(observerFor(traceDirectory.orElse(null))));
       case Invocation.Replay(var command) -> System.exit(FixtureReplay.run(command));
       case Invocation.Usage(var text) -> {
         System.err.println(text);
@@ -96,9 +73,33 @@ public final class Launcher {
     return new Invocation.Usage(USAGE);
   }
 
-  private static ExchangeObserver observerFor(Optional<Path> traceDirectory) throws IOException {
-    return traceDirectory.isPresent()
-        ? new TraceRecorder(traceDirectory.get())
-        : ExchangeObserver.NONE;
+  private static ExchangeObserver observerFor(Path traceDirectory) throws IOException {
+    return traceDirectory != null ? new TraceRecorder(traceDirectory) : ExchangeObserver.NONE;
+  }
+
+  /** What the command line asks for. */
+  sealed interface Invocation {
+
+    /**
+     * Serve the protocol on standard input and output.
+     *
+     * @param traceDirectory the folder in which to record every exchange with a device, when one
+     *     was given
+     */
+    record Daemon(Optional<Path> traceDirectory) implements Invocation {}
+
+    /**
+     * Replay recorded answers through a command, without a device.
+     *
+     * @param command the name of the command
+     */
+    record Replay(String command) implements Invocation {}
+
+    /**
+     * Arguments that mean nothing: say how the tool is used.
+     *
+     * @param text what to say
+     */
+    record Usage(String text) implements Invocation {}
   }
 }

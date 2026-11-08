@@ -14,8 +14,8 @@ import com.jbraddockm.link.transport.cgi.DeviceTarget;
 import com.jbraddockm.link.transport.cgi.ExchangeObserver;
 import com.jbraddockm.link.transport.cgi.TransportScheme;
 import java.io.IOException;
+import java.net.HttpCookie;
 import java.nio.file.Path;
-import org.apache.http.cookie.Cookie;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -93,7 +93,9 @@ class LoginTest {
     void keepsTheCookie() throws Exception {
       Login.perform(openDevice(new Authentication.Password("secret")));
 
-      assertThat(transport.cookies().getCookies()).extracting(Cookie::getName).contains("dtmauth");
+      assertThat(transport.cookies().getCookies())
+          .extracting(HttpCookie::getName)
+          .contains("dtmauth");
     }
 
     @Test
@@ -185,7 +187,7 @@ class LoginTest {
 
       assertThat(transport.cookies().getCookies()).hasSize(1);
       assertThat(transport.cookies().getCookies().getFirst().getName()).isEqualTo("dtmauth");
-      assertThat(transport.cookies().getCookies().getFirst().getExpiryDate()).isNull();
+      assertThat(transport.cookies().getCookies().getFirst().getMaxAge()).isEqualTo(-1L);
     }
 
     @Test
@@ -212,7 +214,7 @@ class LoginTest {
 
       assertThat(credentials).isPresent();
       assertThat(transport.cookies().getCookies())
-          .extracting(Cookie::getName)
+          .extracting(HttpCookie::getName)
           .doesNotContain("dtmauth");
     }
   }

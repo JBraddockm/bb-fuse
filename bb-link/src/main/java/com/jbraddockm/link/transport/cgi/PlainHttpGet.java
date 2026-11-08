@@ -1,12 +1,12 @@
 package com.jbraddockm.link.transport.cgi;
 
 import java.io.IOException;
-import org.apache.http.HttpEntity;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.params.HttpConnectionParams;
-import org.apache.http.params.HttpProtocolParams;
-import org.apache.http.util.EntityUtils;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 
 /**
  * A single unauthenticated plain-HTTP {@code GET}, separate from the device-manager {@link
@@ -16,8 +16,8 @@ import org.apache.http.util.EntityUtils;
  */
 public final class PlainHttpGet {
 
-  private static final int CONNECT_TIMEOUT_MILLIS = 10_000;
-  private static final int READ_TIMEOUT_MILLIS = 10_000;
+  private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(10);
+  private static final Duration READ_TIMEOUT = Duration.ofSeconds(10);
   private static final String USER_AGENT = "QNXWebClient/1.0";
 
   private PlainHttpGet() {}
@@ -30,22 +30,26 @@ public final class PlainHttpGet {
    * @throws IOException if the request could not be made
    */
   public static CgiResponse fetch(String url) throws IOException {
-    var client = new DefaultHttpClient();
-    try {
-      HttpConnectionParams.setConnectionTimeout(client.getParams(), CONNECT_TIMEOUT_MILLIS);
-      HttpConnectionParams.setSoTimeout(client.getParams(), READ_TIMEOUT_MILLIS);
-      HttpProtocolParams.setUserAgent(client.getParams(), USER_AGENT);
-      var response = client.execute(new HttpGet(url));
-      HttpEntity entity = response.getEntity();
-      var body = entity == null ? "" : EntityUtils.toString(entity, "UTF-8");
-      var contentType = response.getFirstHeader("Content-Type");
+    try (var client =
+        HttpClient.newBuilder()
+            .version(HttpClient.Version.HTTP_1_1)
+            .connectTimeout(CONNECT_TIMEOUT)
+            .build()) {
+      var request =
+          HttpRequest.newBuilder(URI.create(url))
+              .timeout(READ_TIMEOUT)
+              .header("User-Agent", USER_AGENT)
+              .GET()
+              .build();
+      var response = client.send(request, HttpResponse.BodyHandlers.ofByteArray());
       return new CgiResponse(
-          response.getStatusLine().getStatusCode(),
-          contentType == null ? null : contentType.getValue(),
-          body,
+          response.statusCode(),
+          response.headers().firstValue("Content-Type").orElse(null),
+          new String(response.body(), StandardCharsets.UTF_8),
           null);
-    } finally {
-      client.getConnectionManager().shutdown();
+    } catch (InterruptedException interrupted) {
+      Thread.currentThread().interrupt();
+      throw new IOException("the request was interrupted", interrupted);
     }
   }
 }

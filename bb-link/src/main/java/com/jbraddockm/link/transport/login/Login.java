@@ -5,13 +5,8 @@ import com.jbraddockm.link.transport.cgi.CgiTransport;
 import com.jbraddockm.link.transport.internal.Impossible;
 import com.qnx.bbt.deploy.PwCrypto;
 import java.io.IOException;
+import java.net.HttpCookie;
 import java.util.Optional;
-import org.apache.http.cookie.Cookie;
-import org.apache.http.cookie.CookieOrigin;
-import org.apache.http.cookie.MalformedCookieException;
-import org.apache.http.impl.cookie.BasicClientCookie;
-import org.apache.http.impl.cookie.BestMatchSpec;
-import org.apache.http.message.BasicHeader;
 
 /**
  * The login of the device's web interface, the same as in the original tool.
@@ -20,8 +15,6 @@ import org.apache.http.message.BasicHeader;
  * password, the device's salt and the challenge, and receives the {@code dtmauth} cookie. The
  * password itself is never sent.
  */
-@SuppressWarnings(
-    "deprecation") // deprecated only in newer HttpClient versions; the build pins 4.0.3
 public final class Login {
 
   private static final String LOGIN_PATH = "/cgi-bin/login.cgi";
@@ -111,8 +104,8 @@ public final class Login {
   /**
    * Makes sure the cookie jar holds the {@code dtmauth} cookie.
    *
-   * <p>If the device's clock is ahead of the host's, HttpClient treats the cookie as expired and
-   * drops it. The cookie header is then parsed again and the expiry removed, so the session works
+   * <p>If the device's clock is ahead of the host's, the client treats the cookie as expired and
+   * drops it. The cookie header is then parsed again and kept with no expiry, so the session works
    * anyway. Only if that fails too is the clock blamed.
    */
   private static void acceptCookie(CgiTransport transport, CgiResponse response)
@@ -126,24 +119,17 @@ public final class Login {
       }
       throw new InvalidPasswordException();
     }
-    for (Cookie cookie : transport.cookies().getCookies()) {
+    for (var cookie : transport.cookies().getCookies()) {
       if (COOKIE_NAME.equals(cookie.getName())) {
         return;
       }
     }
-    var target = transport.target();
-    var origin = new CookieOrigin(target.host(), target.port(), "/", false);
-    try {
-      for (Cookie cookie :
-          new BestMatchSpec().parse(new BasicHeader("Set-Cookie", response.setCookie()), origin)) {
-        if (COOKIE_NAME.equals(cookie.getName()) && cookie instanceof BasicClientCookie basic) {
-          basic.setExpiryDate(null);
-          transport.cookies().addCookie(basic);
-          return;
-        }
+    for (var cookie : HttpCookie.parse(response.setCookie())) {
+      if (COOKIE_NAME.equals(cookie.getName())) {
+        cookie.setMaxAge(-1);
+        transport.keepCookie(cookie);
+        return;
       }
-    } catch (MalformedCookieException _) {
-      // falls through to the clock explanation
     }
     throw new ClockOutOfSyncException();
   }

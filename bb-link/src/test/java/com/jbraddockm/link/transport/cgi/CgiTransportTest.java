@@ -10,15 +10,14 @@ import com.jbraddockm.link.testing.TestPhase;
 import com.jbraddockm.link.testing.TlsTestDevice;
 import java.io.IOException;
 import java.net.ConnectException;
-import java.net.SocketTimeoutException;
+import java.net.HttpCookie;
+import java.net.http.HttpTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import org.apache.http.NoHttpResponseException;
-import org.apache.http.cookie.Cookie;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -286,7 +285,7 @@ class CgiTransportTest {
       transport.get("/cgi-bin/one");
 
       assertThat(transport.cookies().getCookies())
-          .extracting(Cookie::getName)
+          .extracting(HttpCookie::getName)
           .containsExactly("dtmauth");
     }
   }
@@ -338,13 +337,13 @@ class CgiTransportTest {
       server.dropConnection();
       var form = CgiRequest.Form.to(Endpoint.DISCOVERY).echo(FormField.ACTION);
 
-      assertThatThrownBy(() -> transport.send(form)).isInstanceOf(NoHttpResponseException.class);
+      assertThatThrownBy(() -> transport.send(form)).isInstanceOf(IOException.class);
 
       assertThat(observed).isEmpty();
       assertThat(observedFailures).hasSize(1);
       assertThat(observedFailures.getFirst().requestLine())
           .isEqualTo("POST /cgi-bin/discovery.cgi");
-      assertThat(observedFailures.getFirst().failure()).isInstanceOf(NoHttpResponseException.class);
+      assertThat(observedFailures.getFirst().failure()).isInstanceOf(IOException.class);
     }
   }
 
@@ -365,14 +364,12 @@ class CgiTransportTest {
 
     @Test
     @DisplayName(
-        "an answer that takes longer than the request is willing to wait is a"
-            + " SocketTimeoutException")
+        "an answer that takes longer than the request is willing to wait is a HttpTimeoutException")
     void aTimeout() {
       server.answerAfter(Duration.ofSeconds(3), answerXml());
       var impatient = CgiRequest.Form.to(Endpoint.SUPPORT).waitingUpTo(Duration.ofMillis(200));
 
-      assertThatThrownBy(() -> transport.send(impatient))
-          .isInstanceOf(SocketTimeoutException.class);
+      assertThatThrownBy(() -> transport.send(impatient)).isInstanceOf(HttpTimeoutException.class);
     }
 
     @Test
@@ -384,7 +381,7 @@ class CgiTransportTest {
       server.answer(200, answerXml());
       var form = CgiRequest.Form.to(Endpoint.DISCOVERY).echo(FormField.ACTION);
 
-      assertThatThrownBy(() -> transport.send(form)).isInstanceOf(NoHttpResponseException.class);
+      assertThatThrownBy(() -> transport.send(form)).isInstanceOf(IOException.class);
 
       assertThat(server.requests()).hasSize(1);
     }

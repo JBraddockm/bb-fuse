@@ -12,12 +12,11 @@ import java.io.IOException;
 import java.net.ConnectException;
 import java.net.MalformedURLException;
 import java.net.SocketException;
-import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
+import java.net.http.HttpConnectTimeoutException;
+import java.net.http.HttpTimeoutException;
 import java.util.stream.Stream;
 import javax.net.ssl.SSLException;
-import org.apache.http.NoHttpResponseException;
-import org.apache.http.conn.ConnectTimeoutException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Named;
 import org.junit.jupiter.api.Nested;
@@ -41,7 +40,7 @@ class FailureClassifierTest {
             "refused"),
         arguments(
             Named.of(
-                "a timeout while connecting", new ConnectTimeoutException("connect timed out")),
+                "a timeout while connecting", new HttpConnectTimeoutException("connect timed out")),
             CoreErrorCode.CONNECTION_FAILED,
             "timeout"),
         arguments(
@@ -53,15 +52,11 @@ class FailureClassifierTest {
             CoreErrorCode.CONNECTION_FAILED,
             "tls"),
         arguments(
-            Named.of("a timeout while reading", new SocketTimeoutException("Read timed out")),
+            Named.of("a timeout while reading", new HttpTimeoutException("request timed out")),
             CoreErrorCode.CONNECTION_LOST,
             "timeout"),
         arguments(
             Named.of("a reset", new SocketException("Connection reset")),
-            CoreErrorCode.CONNECTION_LOST,
-            "reset"),
-        arguments(
-            Named.of("no response", new NoHttpResponseException("the target failed to respond")),
             CoreErrorCode.CONNECTION_LOST,
             "reset"));
   }
@@ -295,8 +290,6 @@ class FailureClassifierTest {
             + " was stale")
     void aResetIsStale() {
       assertThat(FailureClassifier.isStaleConnection(new SocketException("reset"))).isTrue();
-      assertThat(FailureClassifier.isStaleConnection(new NoHttpResponseException("no answer")))
-          .isTrue();
     }
 
     @Test
@@ -305,7 +298,7 @@ class FailureClassifierTest {
             + " a connection")
     void aRefusalIsNotStale() {
       assertThat(FailureClassifier.isStaleConnection(new ConnectException("refused"))).isFalse();
-      assertThat(FailureClassifier.isStaleConnection(new ConnectTimeoutException("timeout")))
+      assertThat(FailureClassifier.isStaleConnection(new HttpConnectTimeoutException("timeout")))
           .isFalse();
       assertThat(FailureClassifier.isStaleConnection(new UnknownHostException("x"))).isFalse();
       assertThat(FailureClassifier.isStaleConnection(new IOException("x"))).isFalse();

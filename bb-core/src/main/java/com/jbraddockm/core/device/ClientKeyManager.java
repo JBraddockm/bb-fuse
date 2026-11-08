@@ -4,7 +4,8 @@ import java.net.Socket;
 import java.security.Principal;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
-import javax.net.ssl.X509KeyManager;
+import javax.net.ssl.SSLEngine;
+import javax.net.ssl.X509ExtendedKeyManager;
 
 /**
  * Offers one client identity to the device, whatever the device asks for.
@@ -14,8 +15,13 @@ import javax.net.ssl.X509KeyManager;
  * issued by an intermediate that only the device holds, in which case the standard manager would
  * send nothing at all. A real client, such as BlackBerry Link, sends its certificate anyway, and
  * the device decides.
+ *
+ * <p>It extends {@link X509ExtendedKeyManager} so that a client built on an {@code SSLEngine} —
+ * which {@code java.net.http} is — asks it for the client alias through {@link
+ * #chooseEngineClientAlias}; a plain {@code X509KeyManager} is consulted only by the socket path
+ * and would never present the certificate over the engine.
  */
-public final class ClientKeyManager implements X509KeyManager {
+public final class ClientKeyManager extends X509ExtendedKeyManager {
 
   private static final String ALIAS = "device-client";
 
@@ -39,6 +45,11 @@ public final class ClientKeyManager implements X509KeyManager {
 
   @Override
   public String chooseClientAlias(String[] keyTypes, Principal[] issuers, Socket socket) {
+    return ALIAS;
+  }
+
+  @Override
+  public String chooseEngineClientAlias(String[] keyTypes, Principal[] issuers, SSLEngine engine) {
     return ALIAS;
   }
 

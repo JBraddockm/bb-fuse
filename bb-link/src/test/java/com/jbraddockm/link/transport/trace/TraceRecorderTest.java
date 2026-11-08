@@ -2,10 +2,11 @@ package com.jbraddockm.link.transport.trace;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.jbraddockm.link.transport.cgi.CgiResponse;
 import com.jbraddockm.link.testing.Resources;
+import com.jbraddockm.link.transport.cgi.CgiResponse;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -14,7 +15,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
-import org.apache.http.NoHttpResponseException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -69,14 +69,13 @@ class TraceRecorderTest {
         "POST /cgi-bin/wipe.cgi",
         "wipe=wipe",
         List.of(),
-        new NoHttpResponseException("The target server failed to respond"));
+        new SocketException("The target server failed to respond"));
 
     var file = folder.resolve("0001.txt");
     assertThat(file).exists();
     var content = Files.readString(file, StandardCharsets.UTF_8);
     assertThat(content).startsWith(">>> POST /cgi-bin/wipe.cgi");
-    assertThat(content)
-        .contains("<<< NoHttpResponseException: The target server failed to respond");
+    assertThat(content).contains("<<< SocketException: The target server failed to respond");
     assertThat(content).doesNotContain("HTTP");
   }
 
@@ -179,7 +178,9 @@ class TraceRecorderTest {
       assertThat(file(1)).contains("/cgi-bin/1");
       assertThat(file(2)).contains("/cgi-bin/2");
       assertThat(file(3)).contains("/cgi-bin/3");
-      assertThat(Files.list(folder).count()).isEqualTo(3);
+      try (var files = Files.list(folder)) {
+        assertThat(files.count()).isEqualTo(3);
+      }
     }
 
     @Test
@@ -227,11 +228,10 @@ class TraceRecorderTest {
         assertThat(pool.awaitTermination(20, TimeUnit.SECONDS)).isTrue();
       }
 
-      assertThat(Files.list(folder).count()).isEqualTo(40);
-      assertThat(
-              IntStream.rangeClosed(1, 40)
-                  .mapToObj(number -> "%04d.txt".formatted(number))
-                  .map(folder::resolve))
+      try (var files = Files.list(folder)) {
+        assertThat(files.count()).isEqualTo(40);
+      }
+      assertThat(IntStream.rangeClosed(1, 40).mapToObj("%04d.txt"::formatted).map(folder::resolve))
           .allMatch(Files::exists);
     }
   }

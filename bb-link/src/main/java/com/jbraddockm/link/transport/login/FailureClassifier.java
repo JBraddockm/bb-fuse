@@ -7,16 +7,18 @@ import com.jbraddockm.core.error.ServiceError;
 import com.jbraddockm.core.json.Json;
 import com.jbraddockm.link.LinkErrorCode;
 import com.jbraddockm.link.transport.cgi.ConnectionPath;
+import java.io.EOFException;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.MalformedURLException;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
+import java.net.http.HttpConnectTimeoutException;
+import java.net.http.HttpTimeoutException;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import javax.net.ssl.SSLException;
-import org.apache.http.NoHttpResponseException;
-import org.apache.http.conn.ConnectTimeoutException;
 
 /** Maps failures to errors and decides what may be retried. */
 public final class FailureClassifier {
@@ -98,7 +100,7 @@ public final class FailureClassifier {
               describe(unusable),
               Json.object("extra", unusable.extra()));
       case ConnectException _ -> connection(CoreErrorCode.CONNECTION_FAILED, "refused", failure);
-      case ConnectTimeoutException _ ->
+      case HttpConnectTimeoutException _ ->
           connection(CoreErrorCode.CONNECTION_FAILED, "timeout", failure);
       case UnknownHostException _ ->
           connection(CoreErrorCode.CONNECTION_FAILED, "unknown_host", failure);
@@ -119,12 +121,13 @@ public final class FailureClassifier {
                   + ")",
               Json.object("cause", "tls"));
       case SSLException _ -> connection(CoreErrorCode.CONNECTION_FAILED, "tls", failure);
-      case SocketTimeoutException _ ->
+      case HttpTimeoutException _, SocketTimeoutException _ ->
           connection(CoreErrorCode.CONNECTION_LOST, "timeout", failure);
-      case SocketException _, NoHttpResponseException _ ->
-          connection(CoreErrorCode.CONNECTION_LOST, "reset", failure);
+      case SocketException _ -> connection(CoreErrorCode.CONNECTION_LOST, "reset", failure);
       case MalformedURLException _ ->
           new ServiceError(CoreErrorCode.INVALID_ARGUMENT, describe(failure));
+      case IOException io when isConnectionDropped(io) ->
+          connection(CoreErrorCode.CONNECTION_LOST, "reset", failure);
       case IOException _ -> new ServiceError(CoreErrorCode.IO_ERROR, describe(failure));
       case IllegalArgumentException _ ->
           new ServiceError(CoreErrorCode.INVALID_ARGUMENT, describe(failure));
@@ -138,10 +141,36 @@ public final class FailureClassifier {
    */
   public static boolean isStaleConnection(Throwable failure) {
     return switch (failure) {
-      case ConnectTimeoutException _, ConnectException _, UnknownHostException _ -> false;
-      case SocketException _, NoHttpResponseException _ -> true;
+      case HttpConnectTimeoutException _, ConnectException _, UnknownHostException _ -> false;
+      case SocketException _ -> true;
+      case IOException io when isConnectionDropped(io) -> true;
       default -> false;
     };
+  }
+
+  /**
+   * Whether an {@code IOException} is the device closing the connection with no, or only a partial,
+   * answer. {@code java.net.http} reports this as a plain {@code IOException} (or an {@link
+   * EOFException}) with no dedicated type, so it is recognised by what it says — the same event
+   * that the Apache stack reported as {@code NoHttpResponseException}.
+   */
+  private static boolean isConnectionDropped(Throwable failure) {
+    if (failure instanceof EOFException) {
+      return true;
+    }
+    var message = failure.getMessage();
+    if (message == null) {
+      return false;
+    }
+    var lower = message.toLowerCase(Locale.ROOT);
+    return lower.contains("received no bytes")
+        || lower.contains("connection reset")
+        || lower.contains("broken pipe")
+        || lower.contains("end of stream")
+        || lower.contains("eof")
+        || lower.contains("goaway")
+        || lower.contains("connection closed")
+        || lower.contains("stream closed");
   }
 
   /**
