@@ -121,4 +121,41 @@ class ManifestTest {
       assertThat(Manifest.parse(manifest.toBytes())).isEqualTo(manifest);
     }
   }
+
+  @Nested
+  @DisplayName("describing its assets for the dev-mode sync")
+  class Assets {
+
+    @Test
+    @DisplayName("lists every asset section with its SHA-512 digest and type")
+    void assets() throws Exception {
+      var assets = Manifest.parse(bytes("manifest--real-development.mf")).assets();
+
+      assertThat(assets).extracting(ManifestAsset::name).hasSize(6);
+      assertThat(assets.getFirst().name()).isEqualTo("native/bar-descriptor.xml");
+      assertThat(assets.getFirst().sha512Digest()).isNotBlank();
+      assertThat(assets.getFirst().isNativeBinary()).isFalse();
+
+      var binary =
+          assets.stream().filter(asset -> asset.name().equals("native/TLSDeBug")).findFirst();
+      assertThat(binary).isPresent();
+      assertThat(binary.get().isNativeBinary()).isTrue();
+    }
+
+    @Test
+    @DisplayName("names the entry-point binary, stripping the app/ sandbox prefix")
+    void entryPointBinaries() throws Exception {
+      var manifest = Manifest.parse(bytes("manifest--real-development.mf"));
+
+      assertThat(manifest.entryPointBinaries()).containsExactly("native/TLSDeBug");
+    }
+
+    @Test
+    @DisplayName("names the entry-point icon as an image asset")
+    void imageAssets() throws Exception {
+      var manifest = Manifest.parse(bytes("manifest--real-development.mf"));
+
+      assertThat(manifest.imageAssets()).containsExactly("native/icon.png");
+    }
+  }
 }
