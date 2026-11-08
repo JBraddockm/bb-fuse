@@ -9,10 +9,13 @@ import com.jbraddockm.dev.packaging.descriptor.InvokeFilter;
 import com.jbraddockm.dev.packaging.descriptor.InvokeTarget;
 import com.jbraddockm.dev.packaging.descriptor.Permission;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
@@ -409,15 +412,15 @@ final class ManifestGenerator {
    */
   private static String id(String value) {
     var padded = new byte[17];
-    java.util.Arrays.fill(padded, (byte) ' ');
-    var raw = value.getBytes(java.nio.charset.StandardCharsets.US_ASCII);
+    Arrays.fill(padded, (byte) ' ');
+    var raw = value.getBytes(StandardCharsets.US_ASCII);
     System.arraycopy(raw, 0, padded, 0, Math.min(raw.length, padded.length));
     return "test" + Base64.getUrlEncoder().withoutPadding().encodeToString(padded);
   }
 
   /** The last {@code n} characters, padding the right with {@code _} when there are fewer. */
   private static String lastChars(String value, int n) {
-    StringBuilder padded = new StringBuilder(value);
+    var padded = new StringBuilder(value);
     while (padded.length() < n) {
       padded.append("_");
     }
@@ -432,7 +435,7 @@ final class ManifestGenerator {
   }
 
   /** The SHA-512 of a file, URL-safe Base64 without padding, as the manifest records digests. */
-  private static String digest(java.nio.file.Path file) throws IOException {
+  private static String digest(Path file) throws IOException {
     try {
       var sha512 = MessageDigest.getInstance("SHA-512");
       return Base64.getUrlEncoder()

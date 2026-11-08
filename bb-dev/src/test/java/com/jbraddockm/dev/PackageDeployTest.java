@@ -10,6 +10,7 @@ import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -33,7 +34,7 @@ class PackageDeployTest {
 
   private int run(RecordingDeployer deployer, String... extra) throws Exception {
     var bar = project.resolve("out.bar");
-    var arguments = new java.util.ArrayList<>(List.of("-package", bar.toString()));
+    var arguments = new ArrayList<>(List.of("-package", bar.toString()));
     arguments.addAll(List.of(extra));
     arguments.add(descriptor().toString());
     return new PackageTool(deployer)

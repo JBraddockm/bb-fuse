@@ -2,6 +2,7 @@ package com.jbraddockm.dev.deploy;
 
 import com.jbraddockm.core.json.Json;
 import java.util.List;
+import java.util.function.ToIntFunction;
 
 /**
  * Renders a deploy command's device reply as readable text and as a JSON object. The text form is a
@@ -96,8 +97,7 @@ final class DeployRenderer {
     return new Rendered(text.toString(), Json.object("ok", true, "apps", apps.json()));
   }
 
-  private static int width(
-      InstalledApps apps, java.util.function.ToIntFunction<InstalledApps.App> of) {
+  private static int width(InstalledApps apps, ToIntFunction<InstalledApps.App> of) {
     return apps.apps().stream().mapToInt(of).max().orElse(0);
   }
 

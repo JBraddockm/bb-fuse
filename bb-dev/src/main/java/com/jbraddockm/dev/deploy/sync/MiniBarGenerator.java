@@ -8,6 +8,7 @@ import com.jbraddockm.core.bar.ManifestAttribute;
 import com.jbraddockm.core.bar.ManifestSection;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -51,7 +52,7 @@ final class MiniBarGenerator {
    * @throws IOException if the bar cannot be read
    * @throws InvalidBarException if it is not a readable bar with a manifest
    */
-  static byte[] generate(java.nio.file.Path fullBar) throws IOException, InvalidBarException {
+  static byte[] generate(Path fullBar) throws IOException, InvalidBarException {
     try (var bar = BarArchive.open(fullBar)) {
       return generate(bar);
     }
