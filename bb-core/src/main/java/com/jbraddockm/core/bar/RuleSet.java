@@ -9,7 +9,8 @@ import java.util.Optional;
  *
  * @param version the {@code barSpecificationVersion}, e.g. {@code 1.6}
  * @param userDefinedAttributesAllowed whether attributes outside the rules are permitted
- * @param barNameRegexId the pattern id for the archive's file name
+ * @param barNameRegexId the pattern id for the archive's file name; retained from the rule set but
+ *     not applied by the manifest-only {@link ManifestValidator}
  * @param packages the rules per package type, keyed by {@code Package-Type}
  */
 record RuleSet(

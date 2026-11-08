@@ -91,6 +91,8 @@ final class PwCrypto {
       buffer.putInt(round);
       buffer.put(salt);
       buffer.put(digest);
+      // SHA-512 for ALGORITHM_SHA512_V2; SHA-1 for the salted, iterated SHA-1 form
+      // (ALGORITHM_SHA1_V2) — the two iterated algorithms the device challenge selects.
       digest = algorithm == ALGORITHM_SHA512_V2 ? sha512(buffer.array()) : sha1(buffer.array());
       round++;
     } while (round < iterationCount);

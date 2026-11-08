@@ -3,6 +3,7 @@ package com.jbraddockm.core.bar;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.jbraddockm.core.testing.Resources;
+import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -58,7 +59,7 @@ class ManifestValidatorTest {
 
     private ManifestSection packageSection(ManifestAttribute... extra) {
       var attributes =
-          new java.util.ArrayList<>(
+          new ArrayList<>(
               List.of(
                   new ManifestAttribute("Package-Type", "application"),
                   new ManifestAttribute("Package-Name", "com.example.app"),

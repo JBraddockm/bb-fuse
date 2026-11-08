@@ -14,6 +14,11 @@ import java.util.regex.Pattern;
  * {@code Archive-Manifest-Version}, the package type by {@code Package-Type}, and the signed or
  * unsigned rules by whether the manifest carries the signing attribute. The result is the same
  * {@link BarValidation} the inspector returns.
+ *
+ * <p>It checks the required sections and their cardinality, the required attributes, and each
+ * value's length and pattern. Attribute cardinality, mandatory-first ordering and line continuation
+ * are carried in the rules but not enforced here: this validation is informational, and the device
+ * is the authority on what it accepts.
  */
 public final class ManifestValidator {
 
@@ -109,13 +114,15 @@ public final class ManifestValidator {
         error("Attribute " + attribute.name() + ": value is too long.");
       }
       if (!rule.regexId().isEmpty()) {
+        // A rule naming a pattern that regex.properties does not define is treated as no
+        // constraint, not an error, so an incomplete rule set never rejects an otherwise valid
+        // value.
         RULE_SETS
             .regexes()
             .pattern(rule.regexId())
             .filter(pattern -> !pattern.matcher(value).matches())
             .ifPresent(
-                ignored ->
-                    error("Attribute " + attribute.name() + ": value is not valid: " + value));
+                _ -> error("Attribute " + attribute.name() + ": value is not valid: " + value));
       }
     }
 
@@ -175,7 +182,7 @@ public final class ManifestValidator {
       if (ASSET_DIGEST_NAME.matcher(attributeName).matches()) {
         return rules.section(ASSET_SECTION);
       }
-      return localizedOwner(attributeName).map(owner -> owner.section);
+      return localizedOwner(attributeName).map(Owner::section);
     }
 
     private Optional<AttributeRule> ruleFor(String attributeName) {
@@ -190,7 +197,7 @@ public final class ManifestValidator {
             .section(ASSET_SECTION)
             .flatMap(section -> section.attribute(ASSET_DIGEST_RULE));
       }
-      return localizedOwner(attributeName).map(owner -> owner.attribute);
+      return localizedOwner(attributeName).map(Owner::attribute);
     }
 
     /** A localizable attribute of which {@code name} is a locale-suffixed variant. */
