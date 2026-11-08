@@ -30,6 +30,7 @@ class JdkDeviceHttpTest {
 
   @Test
   @DisplayName("rejects a null host, and a blank one naming the host argument")
+  @SuppressWarnings("resource")
   void rejectsABadHost() {
     assertThatThrownBy(() -> new JdkDeviceHttp(null, 443, null))
         .isInstanceOf(NullPointerException.class);
@@ -41,6 +42,7 @@ class JdkDeviceHttpTest {
 
   @Test
   @DisplayName("rejects a port outside 1..65535, naming the port argument")
+  @SuppressWarnings("resource")
   void rejectsABadPort() {
     assertThatThrownBy(() -> new JdkDeviceHttp("device.local", 0, null))
         .isInstanceOfSatisfying(

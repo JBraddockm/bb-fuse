@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.jbraddockm.dev.Output;
 import com.jbraddockm.dev.testing.Resources;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -27,11 +28,11 @@ class DeployToolTest {
   private int run(List<String> arguments, String reply) {
     poster = new FakePoster(reply);
     DeployTool.Engines engines =
-        (host, port, password, identity) ->
+        (_, _, password, _) ->
             new AppInstallerEngine(
                 new FakeDeviceHttp(Resources.text(DeployToolTest.class, "login--success.xml")),
                 poster,
-                bar -> new AppInstallerEngine.Identity("gYABC", "com.example.App"),
+                _ -> new AppInstallerEngine.Identity("gYABC", "com.example.App"),
                 password,
                 () -> {});
     return new DeployTool(engines)
@@ -44,7 +45,7 @@ class DeployToolTest {
 
   @Test
   @DisplayName("falls through to a full install when the bar cannot be synced")
-  void fallsBackToAFullInstall(@TempDir Path folder) throws Exception {
+  void fallsBackToAFullInstall(@TempDir Path folder) throws IOException {
     var bar = Files.writeString(folder.resolve("app.bar"), "not a bar archive");
 
     var code = run(List.of("install", bar.toString(), "--device", "d", "--dev"), "result::success");
@@ -56,7 +57,7 @@ class DeployToolTest {
 
   @Test
   @DisplayName("saves a downloaded file to the path given by --out")
-  void savesADownloadToTheOutPath(@TempDir Path folder) throws Exception {
+  void savesADownloadToTheOutPath(@TempDir Path folder) {
     var out = folder.resolve("x.txt");
 
     var code =

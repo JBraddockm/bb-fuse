@@ -66,6 +66,11 @@ final class PwCrypto {
    */
   static String hashAndEncode(
       byte[] password, int algorithm, byte[] salt, int iterationCount, byte[] challenge) {
+    if (algorithm != ALGORITHM_SHA1_V1
+        && algorithm != ALGORITHM_SHA1_V2
+        && algorithm != ALGORITHM_SHA512_V2) {
+      throw new IllegalArgumentException("unknown challenge algorithm: " + algorithm);
+    }
     var digest =
         algorithm == ALGORITHM_SHA1_V1
             ? sha1(password)
