@@ -95,13 +95,14 @@ public final class TargetFileService {
    * @param flags the open flags (for example {@link #O_WRONLY} | {@link #O_CREAT} | {@link
    *     #O_TRUNC})
    * @param mode the permissions for a created file
-   * @return the file descriptor
+   * @return the file descriptor, an opaque token echoed back verbatim on later commands
    * @throws IOException if the device reports an error
    */
-  int open(String path, int flags, int mode) throws IOException {
+  String open(String path, int flags, int mode) throws IOException {
     send("o:\"" + path + "\":" + hex(flags) + ":" + hex(mode), null);
-    // o:<fd>:<hex mode>:<?>:"<path>"
-    return Integer.parseInt(field(readReply()));
+    // o:<fd>:<hex mode>:<?>:"<path>" — the device numbers descriptors in hex (…,9,a,…,f,10,…),
+    // so the fd is kept as an opaque string and never reparsed as a decimal int.
+    return field(readReply());
   }
 
   /**
@@ -115,7 +116,7 @@ public final class TargetFileService {
    * @return the number of bytes the device accepted
    * @throws IOException if the device reports an error
    */
-  int write(int fd, long fileOffset, byte[] data, int offset, int length) throws IOException {
+  int write(String fd, long fileOffset, byte[] data, int offset, int length) throws IOException {
     send("w:" + fd + ":" + hex(fileOffset) + ":" + hex(length) + ":1", slice(data, offset, length));
     // o:<hex bytes written>:<hex new offset>
     return fromHexInt(field(readReply()));
@@ -127,7 +128,7 @@ public final class TargetFileService {
    * @param fd the descriptor
    * @throws IOException if the device reports an error
    */
-  void close(int fd) throws IOException {
+  void close(String fd) throws IOException {
     send("c:" + fd, null);
     readReply();
   }
@@ -141,7 +142,7 @@ public final class TargetFileService {
    */
   void mkdir(String path) throws IOException {
     send("o:\"" + path + "\":" + hex(O_CREAT) + ":" + hex(S_IFDIR | MODE_DEFAULT), null);
-    close(Integer.parseInt(field(readReply())));
+    close(field(readReply()));
   }
 
   /**
@@ -194,7 +195,7 @@ public final class TargetFileService {
    * @return the number of bytes read, or {@code 0} at end of file
    * @throws IOException if the device reports an error
    */
-  int read(int fd, long offset, byte[] data, int off, int length) throws IOException {
+  int read(String fd, long offset, byte[] data, int off, int length) throws IOException {
     send("r:" + fd + ":" + hex(offset) + ":" + hex(length) + ":1", null);
     // o:<hex count>:<hex count>:<hex new offset>, then <count> raw bytes
     var reply = readReply();
@@ -268,9 +269,9 @@ public final class TargetFileService {
   }
 
   /** Opens a path for metadata only ({@code oc:"<path>":0}) and returns the descriptor. */
-  private int openForStat(String path) throws IOException {
+  private String openForStat(String path) throws IOException {
     send("oc:\"" + path + "\":0", null);
-    return Integer.parseInt(field(readReply()));
+    return field(readReply());
   }
 
   /** Reads exactly {@code length} bytes from the service stream into {@code data}. */

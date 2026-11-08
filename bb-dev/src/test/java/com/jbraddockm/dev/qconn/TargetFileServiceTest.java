@@ -30,8 +30,20 @@ class TargetFileServiceTest {
   void open() throws IOException {
     var fd = over("o:5:81fd:0:\"/x\"\n").open("/x", 0x302, 0x1ff);
 
-    assertThat(fd).isEqualTo(5);
+    assertThat(fd).isEqualTo("5");
     assertThat(sent()).isEqualTo("o:\"/x\":302:1ff\r\n");
+  }
+
+  @Test
+  @DisplayName("keeps a high hex descriptor opaque and echoes it back on write and close")
+  void highHexDescriptor() throws IOException {
+    over("o:a:81fd:0:\"/x\"\no:c:c\no\n")
+        .writeFile("/x", "hello qconn\n".getBytes(StandardCharsets.US_ASCII));
+
+    assertThat(sent())
+        .contains("o:\"/x\":302:1ff\r\n")
+        .contains("w:a:0:c:1\r\nhello qconn\n")
+        .contains("c:a\r\n");
   }
 
   @Test
@@ -39,7 +51,7 @@ class TargetFileServiceTest {
       "write sends the fd, offset and length then the bytes, and returns the count written")
   void write() throws IOException {
     var written =
-        over("o:c:c\n").write(5, 0, "hello qconn\n".getBytes(StandardCharsets.US_ASCII), 0, 12);
+        over("o:c:c\n").write("5", 0, "hello qconn\n".getBytes(StandardCharsets.US_ASCII), 0, 12);
 
     assertThat(written).isEqualTo(12);
     assertThat(sent()).isEqualTo("w:5:0:c:1\r\nhello qconn\n");
@@ -69,7 +81,7 @@ class TargetFileServiceTest {
   @DisplayName("read sends the fd, hex offset and length, then copies the returned bytes")
   void read() throws IOException {
     var buffer = new byte[16];
-    var count = over("o:5:5:a\nhello").read(3, 0, buffer, 0, 16);
+    var count = over("o:5:5:a\nhello").read("3", 0, buffer, 0, 16);
 
     assertThat(count).isEqualTo(5);
     assertThat(new String(buffer, 0, 5, StandardCharsets.US_ASCII)).isEqualTo("hello");
@@ -80,7 +92,7 @@ class TargetFileServiceTest {
   @DisplayName("read returns 0 at end of file and copies no bytes")
   void readAtEndOfFile() throws IOException {
     var buffer = new byte[16];
-    var count = over("o:0:0:a\n").read(3, 10, buffer, 0, 16);
+    var count = over("o:0:0:a\n").read("3", 10, buffer, 0, 16);
 
     assertThat(count).isZero();
   }
