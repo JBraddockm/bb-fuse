@@ -77,6 +77,15 @@ class TargetFileServiceTest {
   }
 
   @Test
+  @DisplayName("read returns 0 at end of file and copies no bytes")
+  void readAtEndOfFile() throws IOException {
+    var buffer = new byte[16];
+    var count = over("o:0:0:a\n").read(3, 10, buffer, 0, 16);
+
+    assertThat(count).isZero();
+  }
+
+  @Test
   @DisplayName("readFile opens read-only, streams blocks until EOF, and closes")
   void readFile() throws IOException {
     var content = over("o:7:81b4:5:\"/m\"\no:5:5:5\nhelloo:0:0:5\no\n").readFile("/m");

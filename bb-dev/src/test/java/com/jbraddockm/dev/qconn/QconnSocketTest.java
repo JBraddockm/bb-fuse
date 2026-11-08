@@ -15,9 +15,17 @@ class QconnSocketTest {
 
   private static final int IAC = 255;
   private static final int WILL = 251;
+  private static final int SB = 250;
+  private static final int SE = 240;
 
-  private static QconnSocket over(byte[] input) {
-    return new QconnSocket(new ByteArrayInputStream(input), new ByteArrayOutputStream());
+  private final ByteArrayOutputStream sent = new ByteArrayOutputStream();
+
+  private QconnSocket over(byte[] input) {
+    return new QconnSocket(new ByteArrayInputStream(input), sent);
+  }
+
+  private String sent() {
+    return sent.toString(StandardCharsets.US_ASCII);
   }
 
   private static byte[] bytes(String text) {
@@ -67,6 +75,37 @@ class QconnSocketTest {
       assertThatThrownBy(agent::services)
           .isInstanceOf(IOException.class)
           .hasMessageContaining("refused");
+    }
+  }
+
+  @Test
+  @DisplayName("switches to a named service when the agent answers ok")
+  void switchesToAService() throws IOException {
+    try (var agent = over(bytes("ok\n"))) {
+      agent.setService("file");
+
+      assertThat(agent.service()).isEqualTo("file");
+      assertThat(sent()).isEqualTo("service file\r\n");
+    }
+  }
+
+  @Test
+  @DisplayName("raises an error when a command is not answered with ok")
+  void raisesWhenACommandIsRefused() throws IOException {
+    try (var agent = over(bytes("no\n"))) {
+      assertThatThrownBy(() -> agent.setService("file"))
+          .isInstanceOf(IOException.class)
+          .hasMessageContaining("failed");
+    }
+  }
+
+  @Test
+  @DisplayName("skips a Telnet sub-negotiation up to IAC SE while reading a line")
+  void skipsASubNegotiation() throws IOException {
+    var input = new byte[] {'A', (byte) IAC, (byte) SB, 1, 2, (byte) IAC, (byte) SE, 'B', '\n'};
+
+    try (var agent = over(input)) {
+      assertThat(agent.receiveResponse()).isEqualTo("AB");
     }
   }
 }

@@ -3,6 +3,7 @@ package com.jbraddockm.dev.qconn;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 /**
  * The qconn {@code file} service: opening, writing and closing files on the device, over a {@link
@@ -21,19 +22,19 @@ import java.nio.charset.StandardCharsets;
 public final class TargetFileService {
 
   /** Open for reading. */
-  public static final int O_RDONLY = 0;
+  static final int O_RDONLY = 0;
 
   /** Open for writing. */
-  public static final int O_WRONLY = 2;
+  static final int O_WRONLY = 2;
 
   /** Create the file if it does not exist. */
-  public static final int O_CREAT = 256;
+  static final int O_CREAT = 256;
 
   /** Truncate the file to empty. */
-  public static final int O_TRUNC = 512;
+  static final int O_TRUNC = 512;
 
   /** Default permissions for a created file, {@code 0777}. */
-  public static final int MODE_DEFAULT = 0x1ff;
+  static final int MODE_DEFAULT = 0x1ff;
 
   /** The {@code S_IFDIR} mode bit — marks an open-create as a directory. */
   private static final int S_IFDIR = 0x4000;
@@ -57,21 +58,34 @@ public final class TargetFileService {
   }
 
   /** The value field of a reply — the token after the {@code o}/{@code e} reply code. */
-  private static String field(String reply) {
+  private static String field(String reply) throws IOException {
     var parts = reply.split(":");
     if (parts.length < 2) {
-      throw new NumberFormatException("unexpected file reply: " + reply);
+      throw new IOException("qconn file service: unexpected reply: " + reply);
     }
     return parts[1];
   }
 
+  private static String hex(int value) {
+    return Integer.toHexString(value);
+  }
+
+  private static String hex(long value) {
+    return Long.toHexString(value);
+  }
+
+  private static int fromHexInt(String field) {
+    return Integer.parseInt(field, 16);
+  }
+
+  private static long fromHexLong(String field) {
+    return Long.parseLong(field, 16);
+  }
+
   private static byte[] slice(byte[] data, int offset, int length) {
-    if (offset == 0 && length == data.length) {
-      return data;
-    }
-    var slice = new byte[length];
-    System.arraycopy(data, offset, slice, 0, length);
-    return slice;
+    return offset == 0 && length == data.length
+        ? data
+        : Arrays.copyOfRange(data, offset, offset + length);
   }
 
   /**
@@ -84,9 +98,8 @@ public final class TargetFileService {
    * @return the file descriptor
    * @throws IOException if the device reports an error
    */
-  public int open(String path, int flags, int mode) throws IOException {
-    send(
-        "o:\"" + path + "\":" + Integer.toHexString(flags) + ":" + Integer.toHexString(mode), null);
+  int open(String path, int flags, int mode) throws IOException {
+    send("o:\"" + path + "\":" + hex(flags) + ":" + hex(mode), null);
     // o:<fd>:<hex mode>:<?>:"<path>"
     return Integer.parseInt(field(readReply()));
   }
@@ -102,13 +115,10 @@ public final class TargetFileService {
    * @return the number of bytes the device accepted
    * @throws IOException if the device reports an error
    */
-  public int write(int fd, long fileOffset, byte[] data, int offset, int length)
-      throws IOException {
-    send(
-        "w:" + fd + ":" + Long.toHexString(fileOffset) + ":" + Integer.toHexString(length) + ":1",
-        slice(data, offset, length));
+  int write(int fd, long fileOffset, byte[] data, int offset, int length) throws IOException {
+    send("w:" + fd + ":" + hex(fileOffset) + ":" + hex(length) + ":1", slice(data, offset, length));
     // o:<hex bytes written>:<hex new offset>
-    return Integer.parseInt(field(readReply()), 16);
+    return fromHexInt(field(readReply()));
   }
 
   /**
@@ -117,7 +127,7 @@ public final class TargetFileService {
    * @param fd the descriptor
    * @throws IOException if the device reports an error
    */
-  public void close(int fd) throws IOException {
+  void close(int fd) throws IOException {
     send("c:" + fd, null);
     readReply();
   }
@@ -129,15 +139,8 @@ public final class TargetFileService {
    * @param path the device path
    * @throws IOException if the device reports an error
    */
-  public void mkdir(String path) throws IOException {
-    send(
-        "o:\""
-            + path
-            + "\":"
-            + Integer.toHexString(O_CREAT)
-            + ":"
-            + Integer.toHexString(S_IFDIR | MODE_DEFAULT),
-        null);
+  void mkdir(String path) throws IOException {
+    send("o:\"" + path + "\":" + hex(O_CREAT) + ":" + hex(S_IFDIR | MODE_DEFAULT), null);
     close(Integer.parseInt(field(readReply())));
   }
 
@@ -191,13 +194,11 @@ public final class TargetFileService {
    * @return the number of bytes read, or {@code 0} at end of file
    * @throws IOException if the device reports an error
    */
-  public int read(int fd, long offset, byte[] data, int off, int length) throws IOException {
-    send(
-        "r:" + fd + ":" + Long.toHexString(offset) + ":" + Integer.toHexString(length) + ":1",
-        null);
+  int read(int fd, long offset, byte[] data, int off, int length) throws IOException {
+    send("r:" + fd + ":" + hex(offset) + ":" + hex(length) + ":1", null);
     // o:<hex count>:<hex count>:<hex new offset>, then <count> raw bytes
     var reply = readReply();
-    var count = (int) Long.parseLong(field(reply), 16);
+    var count = (int) fromHexLong(field(reply));
     if (count > 0) {
       readFully(data, off, count);
     }
@@ -246,21 +247,21 @@ public final class TargetFileService {
         throw new IOException("qconn file service: unexpected stat reply");
       }
       return new TargetStat(
-          Long.parseLong(fields[1], 16),
-          Long.parseLong(fields[2], 16),
-          Integer.parseInt(fields[3], 16),
-          Integer.parseInt(fields[4], 16),
-          Integer.parseInt(fields[5], 16),
-          Integer.parseInt(fields[6], 16),
-          Long.parseLong(fields[7], 16) * 1000,
-          Long.parseLong(fields[8], 16) * 1000,
-          Long.parseLong(fields[9], 16) * 1000,
-          Integer.parseInt(fields[10], 16),
-          Integer.parseInt(fields[11], 16),
-          Integer.parseInt(fields[12], 16),
-          Integer.parseInt(fields[13], 16),
-          Integer.parseInt(fields[14], 16),
-          Long.parseLong(fields[15], 16));
+          fromHexLong(fields[1]),
+          fromHexLong(fields[2]),
+          fromHexInt(fields[3]),
+          fromHexInt(fields[4]),
+          fromHexInt(fields[5]),
+          fromHexInt(fields[6]),
+          fromHexLong(fields[7]) * 1000,
+          fromHexLong(fields[8]) * 1000,
+          fromHexLong(fields[9]) * 1000,
+          fromHexInt(fields[10]),
+          fromHexInt(fields[11]),
+          fromHexInt(fields[12]),
+          fromHexInt(fields[13]),
+          fromHexInt(fields[14]),
+          fromHexLong(fields[15]));
     } finally {
       close(fd);
     }
