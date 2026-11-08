@@ -6,11 +6,11 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * What BlackBerry's rules say about a manifest.
+ * What the packaging rules say about a manifest.
  *
- * <p>The rules are the library's own, for the kind of package and for a signed or an unsigned one.
- * They are not necessarily the rules of the device, which may accept what they refuse or refuse
- * what they accept; the result is information.
+ * <p>The bundled rule sets apply, chosen for the kind of package and for a signed or an unsigned
+ * one. They are not necessarily the rules of the device, which may accept what they refuse or
+ * refuse what they accept; the result is information.
  *
  * @param rules which rules were applied, {@code signed} or {@code unsigned}
  * @param messages what the rules found, errors and warnings

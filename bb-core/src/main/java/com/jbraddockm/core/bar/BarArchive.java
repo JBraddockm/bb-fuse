@@ -14,8 +14,7 @@ import java.util.zip.ZipFile;
 /**
  * An opened {@code .bar} — a ZIP whose {@code META-INF/MANIFEST.MF} describes the package and whose
  * other entries are its assets. Reading is pure Java, with no BlackBerry library. The archive stays
- * open until {@link #close}, so use it with try-with-resources. See {@code analysis/BAR-FORMAT.md}
- * §1.
+ * open until {@link #close}, so use it with try-with-resources.
  */
 public final class BarArchive implements AutoCloseable {
 

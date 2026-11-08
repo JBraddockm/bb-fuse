@@ -10,10 +10,10 @@ import javax.net.ssl.X509TrustManager;
 
 /**
  * The TLS context for talking to a device over HTTPS. It accepts any server certificate, because a
- * device presents a self-signed certificate for an address there is nothing to validate against
- * (the original tools do the same), and offers an optional client identity when the device asks for
- * one. Trusting the transport this way exposes nothing: the login never sends the password, only a
- * hash of a device challenge (see {@link PwCrypto}).
+ * device presents a self-signed certificate for an address there is nothing to validate against,
+ * and offers an optional client identity when the device asks for one. Trusting the transport this
+ * way exposes nothing: the login never sends the password, only a hash of a device challenge (see
+ * {@link PwCrypto}).
  *
  * <p>The client identity is the caller's, passed in as a {@link KeyManager}: bb-link, bb-tunnel and
  * bb-blend offer their paired certificate, while a password-only consumer such as deploy offers

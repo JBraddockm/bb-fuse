@@ -9,7 +9,7 @@ import java.util.Optional;
 /**
  * A {@code META-INF/MANIFEST.MF}, read and written in pure Java: an ordered list of sections. A
  * package's attributes sit in a section of their own, not at the top, so {@link #value} looks
- * through every section. The read and write grammar is described in {@code analysis/BAR-FORMAT.md}.
+ * through every section.
  *
  * @param sections the sections, in order
  */

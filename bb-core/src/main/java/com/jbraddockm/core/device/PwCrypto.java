@@ -9,11 +9,11 @@ import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
 
 /**
- * The device web interface's login password hash, in pure JDK — a faithful port of the BlackBerry
- * tools' {@code PwCrypto}. The device answers a login request with a challenge; the client replies
- * with this hash of the password, the device's salt and the challenge, so the password itself never
- * travels. The result is byte-for-byte identical to the original (pinned by golden vectors in the
- * tests), which is what lets the three consumers drop their dependency on the BlackBerry jar.
+ * The device web interface's login password hash, in pure JDK. The device answers a login request
+ * with a challenge; the client replies with this hash of the password, the device's salt and the
+ * challenge, so the password itself never travels. Three algorithms are defined — single-pass SHA-1
+ * ({@link #ALGORITHM_SHA1_V1}), salted iterated SHA-1 ({@link #ALGORITHM_SHA1_V2}) and salted
+ * iterated SHA-512 ({@link #ALGORITHM_SHA512_V2}) — selected by the challenge the device sends.
  */
 final class PwCrypto {
 
@@ -33,7 +33,7 @@ final class PwCrypto {
   /**
    * Hashes a login answer from the strings the device's login form supplies: the salt is a
    * hexadecimal number read as a 64-bit value, and the password and challenge are taken in the
-   * platform default charset, exactly as the original tool reads them.
+   * platform default charset.
    *
    * @param password the device password
    * @param algorithm the challenge algorithm: {@link #ALGORITHM_SHA1_V1}, {@link

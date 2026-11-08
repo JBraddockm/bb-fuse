@@ -11,8 +11,7 @@ import java.util.regex.Pattern;
 
 /**
  * The value patterns of {@code regex.properties}, compiled and keyed by {@code regexId}. The file
- * is loaded the same way the original library loads it — as a {@link Properties} file — so the
- * compiled patterns are identical.
+ * is a {@link Properties} file; each value is compiled once to a {@link Pattern}.
  */
 final class Regexes {
 

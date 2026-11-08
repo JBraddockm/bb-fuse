@@ -5,7 +5,6 @@ import java.nio.charset.StandardCharsets;
 /**
  * Writes a manifest in the BlackBerry layout: UTF-8 with {@code LF} line endings, {@code Name:
  * Value} entries that are not wrapped, one blank line between sections, and no trailing blank line.
- * See {@code analysis/BAR-FORMAT.md} §2.
  */
 final class ManifestWriter {
 

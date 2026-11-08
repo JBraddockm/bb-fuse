@@ -8,7 +8,7 @@ import java.util.List;
 
 /**
  * Parses a {@code rulesets_X_Y.xml} into a {@link RuleSet}. The element and attribute names, and
- * the property defaults, follow the rule-set format (see {@code analysis/BAR-FORMAT.md} §5).
+ * the property defaults, follow the rule-set format.
  */
 final class RuleSetParser {
 

@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
  * Checks a {@link Manifest} against the bundled rule sets, in pure Java. The rule set is chosen by
  * {@code Archive-Manifest-Version}, the package type by {@code Package-Type}, and the signed or
  * unsigned rules by whether the manifest carries the signing attribute. The result is the same
- * {@link BarValidation} the inspector returns. See {@code analysis/BAR-FORMAT.md} §5.
+ * {@link BarValidation} the inspector returns.
  */
 public final class ManifestValidator {
 

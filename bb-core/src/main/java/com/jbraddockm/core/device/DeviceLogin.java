@@ -3,8 +3,8 @@ package com.jbraddockm.core.device;
 import java.io.IOException;
 
 /**
- * Logs in to the device's web interface — the same challenge-response the BlackBerry tools use, and
- * the first exchange of every session (bb-link's CGI surface and bb-dev's deploy surface alike).
+ * Logs in to the device's web interface with its challenge-response handshake — the first exchange
+ * of every device session.
  *
  * <p>The device answers the first request with a challenge; the client replies with a {@link
  * PwCrypto} hash of the password, the device's salt and the challenge, and the device sets the

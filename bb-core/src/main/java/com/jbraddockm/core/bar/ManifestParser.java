@@ -6,7 +6,7 @@ import java.util.ArrayList;
 /**
  * Reads a {@code META-INF/MANIFEST.MF}: UTF-8 text, {@code Name: Value} entries,
  * blank-line-separated sections, continuation lines that begin with a space, and a tolerated
- * leading byte-order mark. See {@code analysis/BAR-FORMAT.md} §2.
+ * leading byte-order mark.
  */
 final class ManifestParser {
 

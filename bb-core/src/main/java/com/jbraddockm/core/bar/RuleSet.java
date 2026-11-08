@@ -6,7 +6,6 @@ import java.util.Optional;
 
 /**
  * One manifest-specification version's validation rules, parsed from a {@code rulesets_X_Y.xml}.
- * See {@code analysis/BAR-FORMAT.md} §5.
  *
  * @param version the {@code barSpecificationVersion}, e.g. {@code 1.6}
  * @param userDefinedAttributesAllowed whether attributes outside the rules are permitted

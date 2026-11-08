@@ -209,7 +209,7 @@ class BarInspectorTest {
   }
 
   @Nested
-  @DisplayName("what the library tolerates")
+  @DisplayName("what the reader tolerates")
   class Tolerating {
 
     @Test
@@ -385,8 +385,7 @@ class BarInspectorTest {
     }
 
     @Test
-    @DisplayName(
-        "a version of the format that the library does not support is rejected, saying which")
+    @DisplayName("a manifest version the reader does not support is rejected, saying which")
     void unsupportedVersion() throws Exception {
       var validation = validate("manifest--unsupported-version.mf");
 

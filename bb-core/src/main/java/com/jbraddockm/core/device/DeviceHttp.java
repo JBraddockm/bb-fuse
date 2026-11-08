@@ -4,8 +4,8 @@ import java.io.IOException;
 
 /**
  * One device HTTPS connection, enough to log in: GET a path, and tell whether the connection now
- * holds the login cookie or offers a client certificate. Keeping the login logic to this small seam
- * lets it be driven in tests without a network; {@link JdkDeviceHttp} is the real connection.
+ * holds the login cookie or offers a client certificate. {@link JdkDeviceHttp} is the real
+ * connection over {@code java.net.http}.
  */
 public interface DeviceHttp {
 
