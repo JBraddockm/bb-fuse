@@ -15,10 +15,10 @@ import java.util.regex.Pattern;
  * unsigned rules by whether the manifest carries the signing attribute. The result is the same
  * {@link BarValidation} the inspector returns.
  *
- * <p>It checks the required sections and their cardinality, the required attributes, and each
- * value's length and pattern. Attribute cardinality, mandatory-first ordering and line continuation
- * are carried in the rules but not enforced here: this validation is informational, and the device
- * is the authority on what it accepts.
+ * <p>It checks the required sections and their cardinality, the required attributes and their
+ * cardinality, each value's length and pattern, and that an attribute marked mandatory-first begins
+ * its section. Line continuation is carried in the rules but not enforced (the parsed model does
+ * not record it). This validation is informational: the device is the authority on what it accepts.
  */
 public final class ManifestValidator {
 
@@ -102,7 +102,12 @@ public final class ManifestValidator {
         }
         validateValue(attribute, rule.orElseThrow());
       }
-      sectionRule.ifPresent(rule -> checkRequiredAttributes(section, rule));
+      sectionRule.ifPresent(
+          rule -> {
+            checkRequiredAttributes(section, rule);
+            checkAttributeCardinality(section, rule);
+            checkMandatoryFirst(section, rule);
+          });
     }
 
     private void validateValue(ManifestAttribute attribute, AttributeRule rule) {
@@ -137,6 +142,32 @@ public final class ManifestValidator {
                 + " is missing required attribute "
                 + rule.name()
                 + ".");
+      }
+    }
+
+    private void checkAttributeCardinality(ManifestSection section, SectionRule sectionRule) {
+      for (var rule : sectionRule.attributes()) {
+        var count =
+            section.attributes().stream()
+                .filter(attribute -> attribute.name().equalsIgnoreCase(rule.name()))
+                .count();
+        if (count > rule.maxCardinality()) {
+          error("Section " + sectionRule.name() + " has too many " + rule.name() + " attributes.");
+        }
+      }
+    }
+
+    private void checkMandatoryFirst(ManifestSection section, SectionRule sectionRule) {
+      if (section.attributes().isEmpty()) {
+        return;
+      }
+      var first = section.attributes().getFirst().name();
+      for (var rule : sectionRule.attributes()) {
+        if (rule.mandatoryFirstInSection()
+            && section.value(rule.name()).isPresent()
+            && !first.equalsIgnoreCase(rule.name())) {
+          error("Section " + sectionRule.name() + " must begin with " + rule.name() + ".");
+        }
       }
     }
 

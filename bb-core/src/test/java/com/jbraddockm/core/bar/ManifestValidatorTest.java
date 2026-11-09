@@ -151,5 +151,68 @@ class ManifestValidatorTest {
 
       assertThat(ManifestValidator.validate(manifest).rules()).isEqualTo("signed");
     }
+
+    @Test
+    @DisplayName("accepts a locale-suffixed variant of a localizable attribute")
+    void acceptsALocalizedVariant() {
+      var manifest =
+          new Manifest(
+              List.of(
+                  archive(),
+                  packageSection(),
+                  ManifestSection.of(
+                      new ManifestAttribute("Application-Name", "App"),
+                      new ManifestAttribute("Application-Name-fr", "Appli"),
+                      new ManifestAttribute("Application-Version", "1.0.0.0"))));
+
+      assertThat(ManifestValidator.validate(manifest).valid()).isTrue();
+    }
+
+    @Test
+    @DisplayName("matches an Archive-Asset-SHA-512-Digest to the asset-digest rule")
+    void matchesAnAssetDigest() {
+      var asset =
+          ManifestSection.of(
+              new ManifestAttribute("Archive-Asset-Name", "native/app"),
+              new ManifestAttribute(
+                  "Archive-Asset-SHA-512-Digest", "z4PhNX7vuL3xVChQ1m2AB9Yg5AULVxXcg"));
+      var manifest =
+          new Manifest(List.of(archive(), packageSection(), applicationSection(), asset));
+
+      assertThat(ManifestValidator.validate(manifest).valid()).isTrue();
+    }
+
+    @Test
+    @DisplayName("reports an attribute that appears more often than its cardinality allows")
+    void tooManyOfAnAttribute() {
+      var manifest =
+          new Manifest(
+              List.of(
+                  archive(),
+                  packageSection(),
+                  ManifestSection.of(
+                      new ManifestAttribute("Application-Name", "App"),
+                      new ManifestAttribute("Application-Name", "Again"),
+                      new ManifestAttribute("Application-Version", "1.0.0.0"))));
+
+      assertThat(ManifestValidator.validate(manifest).messages())
+          .anyMatch(message -> message.text().contains("too many Application-Name"));
+    }
+
+    @Test
+    @DisplayName("reports a section whose mandatory-first attribute is not first")
+    void mandatoryFirstOutOfPlace() {
+      var entryPoint =
+          ManifestSection.of(
+              new ManifestAttribute("Entry-Point-Key", "e1"),
+              new ManifestAttribute("Entry-Point-Name", "App"),
+              new ManifestAttribute("Entry-Point", "app/native/App"),
+              new ManifestAttribute("Entry-Point-Type", "Qnx/Elf"));
+      var manifest =
+          new Manifest(List.of(archive(), packageSection(), applicationSection(), entryPoint));
+
+      assertThat(ManifestValidator.validate(manifest).messages())
+          .anyMatch(message -> message.text().contains("must begin with Entry-Point-Name"));
+    }
   }
 }
