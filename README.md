@@ -1,30 +1,47 @@
 # BlackBerry 10 Native Tools
 
-This repository implements the **BlackBerry Link** and **BlackBerry Blend** device protocols and the bp2p
-Wi-Fi **tunnel** they run over, alongside wrappers for BlackBerry's own NDK tools — each module builds to
-a standalone native executable with **GraalVM Native Image**.
+A **clean-room** reimplementation of the **BlackBerry Link** and **BlackBerry Blend** device
+protocols, the **bp2p Wi-Fi tunnel** they run over, and the BlackBerry 10 developer tools (device
+connect, application deploy and packaging). Every module is written from scratch in **Java 25** and
+builds to a standalone native executable with **GraalVM Native Image**.
+
+> **Clean-room — no proprietary BlackBerry code.** This project does **not** use, bundle, or depend
+> on any BlackBerry/QNX library, the BlackBerry 10 NDK, or the `blackberry-deploy` /
+> `blackberry-packager` tools. The device protocols, the `login.cgi` password/TLS handshake, the
+> `.bar` archive format, device discovery, pairing, the file share and the deploy/package paths are
+> all independently reimplemented in pure Java on the JDK. **No NDK and no proprietary libraries are
+> required to build or run.**
+
+**Feature parity** with the original BlackBerry Link / Blend and the NDK developer tools is kept, **except for code
+signing and debug-token issuance**, which are intentionally out of scope — they
+depend on BlackBerry signing identities and RIM infrastructure. Everything else is supported:
+unsigned and development-mode application install/uninstall, firmware install, device discovery and
+pairing, PIM sync, backup and restore, the device file share, media metadata, and the device
+connect / deploy / package developer workflow.
 
 The project uses the **Community Edition of GraalVM 25**.
 
-> **Important:** This repository does not contain any proprietary BlackBerry tools or libraries. You must provide the
-> required libraries from your own BlackBerry 10 NDK installation. Neither blackberry-deploy nor any other BlackBerry
-> tool is modified.
-
 ## Modules
 
-- [bb-core](bb-core) — Shared library (JSON, the daemon server, error handling) the other modules build on.
-- [bb-connect](bb-connect) — starts the device's SSH daemon.
-- [bb-deploy](bb-deploy) — BlackBerry 10 NDK's own `blackberry-deploy` tool.
-- [bb-packager](bb-packager) — BlackBerry 10 NDK's own `blackberry-packager` tool.
-- [bb-link](bb-link) — Implementation of the BlackBerry Link protocol.
-- [bb-tunnel](bb-tunnel) — Implementation of the bp2p Wi-Fi tunnel.
+- [bb-core](bb-core) — The shared, pure-JDK foundation the other modules build on: JSON, the daemon
+  server loop, error types, `.bar` inspection and manifest validation, the device login + TLS client
+  stack (`core.device`), and device discovery (`core.discovery`). It depends on nothing else in the
+  repository.
+- [bb-link](bb-link) — The BlackBerry Link protocol: session, pairing, PIM sync, update/install,
+  backup and restore, the device file share, media metadata and discovery.
+- [bb-tunnel](bb-tunnel) — The bp2p Wi-Fi tunnel the device's Wi-Fi service surface runs over.
+- [bb-dev](bb-dev) — The native developer tools, replacing the NDK's `blackberry-connect`,
+  `blackberry-deploy` and `blackberry-packager`: it starts the device's SSH daemon (connect) and
+  deploys and packages applications — in pure JDK, with no BlackBerry tooling. (Signing and
+  debug-token issuance are not included.)
 - **bb-blend** — Implementation of BlackBerry Blend; coming soon.
 
 ## Requirements
 
 - Java / GraalVM Community Edition 25
 - Maven
-- BlackBerry 10 NDK
+
+No BlackBerry 10 NDK and no proprietary BlackBerry libraries are required.
 
 ## Setup
 
@@ -32,10 +49,8 @@ The project uses the **Community Edition of GraalVM 25**.
 
 Apache Maven is required to build the project.
 
-Maven can be installed using your operating system's package manager or manually. See the official Maven installation
-documentation:
-
-[Apache Maven Installation Guide](https://maven.apache.org/install.html)
+Maven can be installed using your operating system's package manager or manually. See the official
+Maven installation documentation: [Apache Maven Installation Guide](https://maven.apache.org/install.html)
 
 ### 2. Install GraalVM 25
 
@@ -74,78 +89,16 @@ native-image --version
 
 If `native-image` is not found, make sure the GraalVM `bin` directory is included in your `PATH`.
 
----
-
-### 2. Provide the BlackBerry 10 libraries
-
-The proprietary BlackBerry libraries are not included in this repository. Copy the required `.jar` files from your
-BlackBerry 10 NDK into the repository's `/libs` directory.
-
-The required libraries are:
-
-```text
-apache-mime4j-0.6.7.jar
-BarAir.jar
-BarChecker.jar
-BarDeploy.jar
-BarLibrary.jar
-BarPackager.jar
-BarSigner.jar
-commons-codec-1.4.jar
-commons-logging-1.1.1.jar
-Connect.jar
-DebugTokenRequest.jar
-EccpressoAlt.jar
-EccpressoJDK15ECC.jar
-httpclient-4.0.3.jar
-httpcore-4.0.1.jar
-httpmime-4.0.3.jar
-jqconnDoor.jar
-KeyTool.jar
-TrustpointAll.jar
-TrustpointJDK15.jar
-TrustpointProviders.jar
-```
-
-The exact location of these files depends on your BlackBerry 10 NDK installation. On Linux, it is
-`/bbndk/host_10_3_1_12/linux/x86/usr/lib`.
-
-The `/libs` directory is intentionally not populated by this repository because these files are proprietary BlackBerry
-components.
-
----
-
-### 3. Install the BlackBerry libraries into Maven
-
-Once the required JARs have been copied into `/libs`, run:
-
-```bash
-bash lib-install.sh
-```
-
-This installs the supplied BlackBerry libraries into the local Maven repository, and places them under `libs-repo`
-directory so that the Maven modules can resolve them as dependencies.
-
-You only need to run this again if the libraries change or your local Maven repository is removed.
-
 ## Project Structure
 
-The repository contains multiple BlackBerry 10 tools, each built as a separate Maven module.
-
-For example:
+The repository contains multiple BlackBerry 10 tools, each built as a separate Maven module:
 
 ```text
 .
-├── bb-connect/
-│   ├── src/
-│   ├── pom.xml
-│   └── target/
-├── bb-deploy/
-│   ├── src/
-│   ├── pom.xml
-│   └── target/
-├── libs/
-├── lib-install.sh
+├── bb-core/     (shared pure-JDK foundation)
+├── bb-link/     (BlackBerry Link protocol)
+├── bb-tunnel/   (bp2p Wi-Fi tunnel)
+├── bb-dev/      (connect / deploy / package developer tools)
 └── pom.xml
 ```
 
@@ -186,27 +139,15 @@ For a clean build:
 mvn clean package
 ```
 
-This compiles the Java sources and then invokes GraalVM Native Image during the Maven `package` phase to produce the
-native executable for each module.
+This compiles the Java sources and then invokes GraalVM Native Image during the Maven `package`
+phase to produce the native executable for each module.
 
 ### Build an individual module
 
-To build the `bb-connect` module:
+To build the `bb-dev` developer tools:
 
 ```bash
-mvn -pl bb-connect package
-```
-
-To build the `bb-deploy` module:
-
-```bash
-mvn -pl bb-deploy package
-```
-
-To build the `bb-packager` module:
-
-```bash
-mvn -pl bb-packager package
+mvn -pl bb-dev -am package
 ```
 
 To build the `bb-link` module:
@@ -218,31 +159,32 @@ mvn -pl bb-link -am package
 To build the `bb-tunnel` module:
 
 ```bash
-mvn -pl bb-tunnel package
+mvn -pl bb-tunnel -am package
 ```
 
-Run it with `sudo ./bb-tunnel/target/bb-tunnel <device-ip>` — root is required to create the `utun`
-interface. See [bb-tunnel/README.md](bb-tunnel/README.md) for the identity certificate and pairing
-requirements.
+The tunnel runs as a background **macOS LaunchDaemon**, so clients reach it without `sudo` on every
+call. After building, install it from the project root with:
+
+```bash
+scripts/install-tunneld.sh
+```
+
+This copies the collected `build/bb-tunnel` binary into place and starts it under `launchd`. Root is
+needed once — to create the `utun` interface and its routes; the broker socket is then handed to your
+user. Remove it with:
+
+```bash
+scripts/uninstall-tunneld.sh
+```
+
+> **The tunnel is macOS-only for now.**
+
+See [bb-tunnel/README.md](bb-tunnel/README.md) for the identity-certificate and pairing requirements.
 
 ### Build Output
 
-The resulting native executables are placed in the `target` directory of the corresponding Maven module.
-For example, after building:
-
-```bash 
-mvn -pl bb-connect package
-```
-
-the executable will be located under:
-
-```text
-bb-connect/
-└── target/
-└── ...
-```
-
-The exact executable filename depends on the module configuration.
+The resulting native executable is placed in the `target` directory of the corresponding Maven
+module. The exact executable filename depends on the module configuration.
 
 ### Collected binaries: `build/`
 
@@ -251,7 +193,7 @@ folder** during `package`:
 
 ```text
 build/
-├── bb-connect, bb-deploy, bb-packager, bb-link, bb-tunnel   (native executables)
+├── bb-dev, bb-link, bb-tunnel   (native executables)
 └── devices/
     └── <PIN>/     ← per-device certs / identities (created at run time)
 ```
@@ -259,4 +201,3 @@ build/
 `build/` is a copy, not a module target, so **`mvn clean` leaves it intact** — the collected binaries
 survive a clean (only each module's `target/` is wiped). `build/` is git-ignored (the binaries can
 embed certificate material, and `devices/` holds key material), so nothing there is committed.
-

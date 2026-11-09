@@ -1,7 +1,7 @@
 #!/bin/sh
 # Remove the bb-tunneld LaunchDaemon installed by install-tunneld.sh.
 #
-#   usage: bb-tunnel/scripts/uninstall-tunneld.sh
+#   usage: scripts/uninstall-tunneld.sh
 set -eu
 
 LABEL="com.jbraddockm.bb-tunneld"

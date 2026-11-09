@@ -3,10 +3,16 @@
 # connect to it without `sudo`. Root is needed only to create the tunnel's utun interface and its
 # routes; the socket is handed to the installing user so it can be used without root.
 #
-#   usage: bb-tunnel/scripts/install-tunneld.sh [path-to-bb-tunnel-binary]
+#   usage: scripts/install-tunneld.sh [path-to-bb-tunnel-binary]
 #
-# The binary defaults to ./build/bb-tunnel or ./bb-tunnel/target/bb-tunnel.
+# The binary defaults to the one collected under the project's build/ folder (where `package` puts
+# it), then the bb-tunnel module target. Paths are resolved from this script's own location, so it
+# works from any working directory.
 set -eu
+
+# scripts/ lives at the project root; resolve the root so the built binary is found reliably.
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+PROJECT_ROOT=$(cd "${SCRIPT_DIR}/.." && pwd)
 
 LABEL="com.jbraddockm.bb-tunneld"
 PLIST="/Library/LaunchDaemons/${LABEL}.plist"
@@ -33,7 +39,7 @@ OWNER="${SUDO_USER:-root}"
 # Resolve the source binary (argument, else a built one in the tree).
 SRC="${1:-}"
 if [ -z "$SRC" ]; then
-  for candidate in "./build/bb-tunnel" "./bb-tunnel/target/bb-tunnel"; do
+  for candidate in "${PROJECT_ROOT}/build/bb-tunnel" "${PROJECT_ROOT}/bb-tunnel/target/bb-tunnel"; do
     if [ -x "$candidate" ]; then SRC="$candidate"; break; fi
   done
 fi
@@ -93,4 +99,4 @@ launchctl bootstrap system "${PLIST}"
 
 echo "bb-tunneld: installed and started. Logs: ${LOG}"
 echo "Clients connect to ${SOCKET} (owned by ${OWNER}); no per-run sudo."
-echo "Uninstall with: bb-tunnel/scripts/uninstall-tunneld.sh"
+echo "Uninstall with: scripts/uninstall-tunneld.sh"
