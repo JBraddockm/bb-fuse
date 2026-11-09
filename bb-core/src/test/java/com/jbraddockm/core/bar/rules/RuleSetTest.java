@@ -1,4 +1,4 @@
-package com.jbraddockm.core.bar;
+package com.jbraddockm.core.bar.rules;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

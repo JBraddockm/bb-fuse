@@ -1,4 +1,4 @@
-package com.jbraddockm.core.bar;
+package com.jbraddockm.core.bar.rules;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,7 +13,7 @@ import java.util.Optional;
  * from the resources under {@code rulesets/}. A rule set is chosen by {@code
  * Archive-Manifest-Version}.
  */
-final class RuleSets {
+public final class RuleSets {
 
   private static final String[] VERSIONS = {"1_0", "1_1", "1_2", "1_3", "1_4", "1_5", "1_6"};
   private static final String CURRENT = "1.6";
@@ -26,7 +26,7 @@ final class RuleSets {
     this.regexes = regexes;
   }
 
-  static RuleSets load() {
+  public static RuleSets load() {
     var byVersion = new LinkedHashMap<String, RuleSet>();
     for (var version : VERSIONS) {
       var ruleSet = RuleSetParser.parse(resource("rulesets/rulesets_" + version + ".xml"));
@@ -35,20 +35,20 @@ final class RuleSets {
     return new RuleSets(byVersion, Regexes.load());
   }
 
-  Optional<RuleSet> forVersion(String version) {
+  public Optional<RuleSet> forVersion(String version) {
     return Optional.ofNullable(byVersion.get(version));
   }
 
-  RuleSet current() {
+  public RuleSet current() {
     return byVersion.get(CURRENT);
   }
 
-  Regexes regexes() {
+  public Regexes regexes() {
     return regexes;
   }
 
   private static String resource(String name) {
-    try (InputStream in = RuleSets.class.getResourceAsStream(name)) {
+    try (InputStream in = RuleSets.class.getResourceAsStream("/com/jbraddockm/core/bar/" + name)) {
       if (in == null) {
         throw new IllegalStateException(name + " is missing from the build");
       }

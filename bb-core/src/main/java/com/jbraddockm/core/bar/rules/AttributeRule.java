@@ -1,4 +1,4 @@
-package com.jbraddockm.core.bar;
+package com.jbraddockm.core.bar.rules;
 
 /**
  * The rule for one manifest attribute within a section, as a {@code <attribute>} of a rule set.
@@ -15,7 +15,7 @@ package com.jbraddockm.core.bar;
  * @param canLocalize whether locale-suffixed variants are allowed
  * @param mandatoryFirstInSection whether it must be the first attribute of its section
  */
-record AttributeRule(
+public record AttributeRule(
     String name,
     Requirement required,
     String regexId,

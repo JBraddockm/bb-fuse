@@ -1,4 +1,4 @@
-package com.jbraddockm.core.bar;
+package com.jbraddockm.core.bar.rules;
 
 import java.util.List;
 import java.util.Map;
@@ -10,24 +10,24 @@ import java.util.Optional;
  * @param version the {@code barSpecificationVersion}, e.g. {@code 1.6}
  * @param userDefinedAttributesAllowed whether attributes outside the rules are permitted
  * @param barNameRegexId the pattern id for the archive's file name; retained from the rule set but
- *     not applied by the manifest-only {@link ManifestValidator}
+ *     not applied by the manifest-only manifest validator
  * @param packages the rules per package type, keyed by {@code Package-Type}
  */
-record RuleSet(
+public record RuleSet(
     String version,
     boolean userDefinedAttributesAllowed,
     String barNameRegexId,
     Map<String, PackageRules> packages) {
 
-  RuleSet {
+  public RuleSet {
     packages = Map.copyOf(packages);
   }
 
-  Optional<PackageRules> rulesFor(String packageType) {
+  public Optional<PackageRules> rulesFor(String packageType) {
     return Optional.ofNullable(packages.get(packageType));
   }
 
-  List<String> packageTypes() {
+  public List<String> packageTypes() {
     return List.copyOf(packages.keySet());
   }
 }

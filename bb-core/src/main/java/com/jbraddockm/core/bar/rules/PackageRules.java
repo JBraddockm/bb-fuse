@@ -1,4 +1,4 @@
-package com.jbraddockm.core.bar;
+package com.jbraddockm.core.bar.rules;
 
 import java.util.List;
 import java.util.Optional;
@@ -9,13 +9,13 @@ import java.util.Optional;
  * @param packageType the {@code Package-Type} these rules are for
  * @param sections the section rules, in order
  */
-record PackageRules(String packageType, List<SectionRule> sections) {
+public record PackageRules(String packageType, List<SectionRule> sections) {
 
-  PackageRules {
+  public PackageRules {
     sections = List.copyOf(sections);
   }
 
-  Optional<SectionRule> section(String sectionName) {
+  public Optional<SectionRule> section(String sectionName) {
     return sections.stream()
         .filter(section -> section.name().equalsIgnoreCase(sectionName))
         .findFirst();

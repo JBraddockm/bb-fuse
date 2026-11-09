@@ -1,4 +1,4 @@
-package com.jbraddockm.core.bar;
+package com.jbraddockm.core.bar.rules;
 
 import java.util.List;
 import java.util.Optional;
@@ -13,18 +13,18 @@ import java.util.Optional;
  *     any)
  * @param attributes the attribute rules, in order
  */
-record SectionRule(
+public record SectionRule(
     String name,
     Requirement required,
     int minCardinality,
     int maxCardinality,
     List<AttributeRule> attributes) {
 
-  SectionRule {
+  public SectionRule {
     attributes = List.copyOf(attributes);
   }
 
-  Optional<AttributeRule> attribute(String attributeName) {
+  public Optional<AttributeRule> attribute(String attributeName) {
     return attributes.stream()
         .filter(attribute -> attribute.name().equalsIgnoreCase(attributeName))
         .findFirst();

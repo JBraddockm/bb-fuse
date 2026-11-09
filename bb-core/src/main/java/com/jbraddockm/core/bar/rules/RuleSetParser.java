@@ -1,4 +1,4 @@
-package com.jbraddockm.core.bar;
+package com.jbraddockm.core.bar.rules;
 
 import com.jbraddockm.core.xml.XmlElement;
 import com.jbraddockm.core.xml.XmlParser;

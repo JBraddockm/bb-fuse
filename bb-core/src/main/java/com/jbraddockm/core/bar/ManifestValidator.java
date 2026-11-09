@@ -2,6 +2,12 @@ package com.jbraddockm.core.bar;
 
 import com.jbraddockm.core.bar.BarValidation.Message;
 import com.jbraddockm.core.bar.BarValidation.Severity;
+import com.jbraddockm.core.bar.rules.AttributeRule;
+import com.jbraddockm.core.bar.rules.PackageRules;
+import com.jbraddockm.core.bar.rules.Requirement;
+import com.jbraddockm.core.bar.rules.RuleSet;
+import com.jbraddockm.core.bar.rules.RuleSets;
+import com.jbraddockm.core.bar.rules.SectionRule;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

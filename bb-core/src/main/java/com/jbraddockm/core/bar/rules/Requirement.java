@@ -1,7 +1,7 @@
-package com.jbraddockm.core.bar;
+package com.jbraddockm.core.bar.rules;
 
 /** When a manifest rule applies — the {@code required} property of a section or attribute. */
-enum Requirement {
+public enum Requirement {
 
   /** Always required. */
   ALWAYS,

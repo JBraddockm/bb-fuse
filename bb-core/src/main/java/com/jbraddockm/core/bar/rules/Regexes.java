@@ -1,4 +1,4 @@
-package com.jbraddockm.core.bar;
+package com.jbraddockm.core.bar.rules;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
  * The value patterns of {@code regex.properties}, compiled and keyed by {@code regexId}. The file
  * is a {@link Properties} file; each value is compiled once to a {@link Pattern}.
  */
-final class Regexes {
+public final class Regexes {
 
   private final Map<String, Pattern> patterns;
 
@@ -23,7 +23,8 @@ final class Regexes {
 
   static Regexes load() {
     var properties = new Properties();
-    try (InputStream in = Regexes.class.getResourceAsStream("rulesets/regex.properties")) {
+    try (InputStream in =
+        Regexes.class.getResourceAsStream("/com/jbraddockm/core/bar/rulesets/regex.properties")) {
       if (in == null) {
         throw new IllegalStateException("regex.properties is missing from the build");
       }
@@ -38,7 +39,7 @@ final class Regexes {
     return new Regexes(patterns);
   }
 
-  Optional<Pattern> pattern(String regexId) {
+  public Optional<Pattern> pattern(String regexId) {
     return Optional.ofNullable(patterns.get(regexId));
   }
 }
