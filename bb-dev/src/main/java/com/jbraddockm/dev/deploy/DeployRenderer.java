@@ -38,9 +38,6 @@ final class DeployRenderer {
       case DeployCommand.IsAppRunning _ -> running(AppRunState.parse(lines));
       case DeployCommand.GetFile _ -> downloaded(FileDownload.parse(lines));
       case DeployCommand.PutFile _ -> uploaded(FileUpload.parse(lines));
-      case DeployCommand.PullCore _ ->
-          throw new IllegalStateException(
-              "a core pull is handled by the deploy tool, not rendered");
     };
   }
 

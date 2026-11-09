@@ -101,12 +101,12 @@ public final class Launcher {
     return """
     bb-dev - an all-in-one BlackBerry 10 developer tool
 
-    Usage: bb-dev <connect|deploy|package|run|pull> [--json] [options...]
+    Usage: bb-dev <connect|deploy|package|debug|pull> [--json] [options...]
 
       connect   start the device's SSH daemon (was bb-connect)
       deploy    install and manage applications on the device (was bb-deploy)
       package   build a BlackBerry application archive (was bb-packager)
-      run       spawn an executable on the device and stream its console (qconn launcher)
+      debug     inspect a running or crashed app (run a process, pull a crash core)
       pull      read a device file or directory listing to the host (qconn file)
 
       -daemon   serve the deploy and package commands as a newline-JSON

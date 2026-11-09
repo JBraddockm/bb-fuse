@@ -8,13 +8,9 @@ import com.jbraddockm.dev.DevTool;
 import com.jbraddockm.dev.Output;
 import com.jbraddockm.dev.deploy.sync.SyncResult;
 import com.jbraddockm.dev.deploy.sync.SyncService;
-import com.jbraddockm.dev.qconn.LaunchService;
 import com.jbraddockm.dev.qconn.QconnSocket;
 import com.jbraddockm.dev.qconn.TargetFileService;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -48,7 +44,6 @@ public final class DeployTool implements DevTool {
         uninstall <app>             uninstall an application
         get <app> <path>            download a file from the application's sandbox
         put <app> <local> <path>    upload a file into the application's sandbox
-        cores <app>                 pull the newest crash .core from the app's logs
 
       Options:
         -d, --device <host>         device host or IP address (required)
@@ -125,65 +120,12 @@ public final class DeployTool implements DevTool {
         Json.object("ok", true, "size", bytes.length, "saved", target.toString()));
   }
 
-  /** The newest {@code .core} entry in a device directory, by running {@code ls -1 -t} on it. */
-  private static String newestCore(LaunchService launcher, String directory) throws IOException {
-    launcher.disablePseudoTerminal();
-    var process = launcher.start("/bin/ls", List.of("-1", "-t", directory));
-    try (var reader =
-        new BufferedReader(new InputStreamReader(process.console(), StandardCharsets.UTF_8))) {
-      for (var line = reader.readLine(); line != null; line = reader.readLine()) {
-        var name = line.trim();
-        if (name.endsWith(".core")) {
-          return name;
-        }
-      }
-    }
-    return null;
-  }
-
   private static int fail(Output output, String message) {
     return output.emit(COMMAND_FAILED, "✗ " + message, Json.object("ok", false, "error", message));
   }
 
   private static boolean isHelp(String argument) {
     return argument.equals("help") || argument.equals("-h") || argument.equals("--help");
-  }
-
-  /**
-   * Pulls the newest crash {@code .core} from the app's sandbox {@code logs/}: lists the directory
-   * over qconn (needs a held {@code connect} session), then downloads the core binary-safe over
-   * {@code appInstaller.cgi}.
-   */
-  private int pullCore(
-      DeployCommand.PullCore command, DeployTarget target, AppInstallerEngine engine, Output output)
-      throws LoginException, DeviceReportException, IOException {
-    if (!(command.app() instanceof PackageRef.FullName(String fullName))) {
-      throw new IOException("a core pull needs the full application name");
-    }
-    var logsDir = "/accounts/1000/appdata/" + fullName + "/logs";
-    String core;
-    try (var qconn = QconnSocket.connect(target.host())) {
-      core = newestCore(LaunchService.on(qconn), logsDir);
-    } catch (IOException qconnDown) {
-      return fail(
-          output,
-          "cannot list "
-              + logsDir
-              + " — is a 'bb-dev connect' session holding the device? ("
-              + qconnDown.getMessage()
-              + ")");
-    }
-    if (core == null) {
-      return fail(output, "no .core dump found in " + logsDir);
-    }
-    var bytes = engine.download(new DeployCommand.GetFile(command.app(), "logs/" + core, null));
-    var destination =
-        command.saveAs() == null
-            ? Path.of(core)
-            : Files.isDirectory(command.saveAs())
-                ? command.saveAs().resolve(core)
-                : command.saveAs();
-    return saved(output, destination, bytes);
   }
 
   /**
@@ -252,9 +194,6 @@ public final class DeployTool implements DevTool {
       if (command instanceof DeployCommand.GetFile get && get.saveAs() != null) {
         // Save straight to disk from the raw bytes — binary-safe, unlike the text render.
         return saved(output, get.saveAs(), engine.download(get));
-      }
-      if (command instanceof DeployCommand.PullCore core) {
-        return pullCore(core, target, engine, output);
       }
       var lines = engine.run(command, _ -> {});
       var rendered = DeployRenderer.render(command, lines);

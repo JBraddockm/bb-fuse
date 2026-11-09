@@ -246,9 +246,6 @@ public final class AppInstallerEngine {
           new Request(
               "PUT_FILE",
               packaged(MultipartBody.command("Put File").file(local), app).assetPath(path).build());
-      case DeployCommand.PullCore _ ->
-          throw new IllegalStateException(
-              "a core pull downloads a Get File request, not a Pull Core request");
     };
   }
 

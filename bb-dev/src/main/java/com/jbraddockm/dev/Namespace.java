@@ -1,10 +1,11 @@
 package com.jbraddockm.dev;
 
 import com.jbraddockm.dev.connect.ConnectTool;
+import com.jbraddockm.dev.debug.DebugTool;
+import com.jbraddockm.dev.deploy.AppInstallerSandboxFetcher;
 import com.jbraddockm.dev.deploy.DeployTool;
 import com.jbraddockm.dev.packaging.PackageTool;
 import com.jbraddockm.dev.pull.PullTool;
-import com.jbraddockm.dev.run.RunTool;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -14,7 +15,9 @@ enum Namespace {
   CONNECT("connect", new ConnectTool()),
   DEPLOY("deploy", new DeployTool()),
   PACKAGE("package", new PackageTool(new DeployBarDeployer())),
-  RUN("run", new RunTool()),
+  // The composition root wires deploy's appInstaller transport behind debug's core pull, so the
+  // debug feature stays off deploy.
+  DEBUG("debug", new DebugTool(AppInstallerSandboxFetcher.factory())),
   PULL("pull", new PullTool());
 
   private final String wireName;

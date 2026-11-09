@@ -99,17 +99,6 @@ class DeployCommandLineTest {
               new DeployCommand.PutFile(
                   new PackageRef.FullName("com.x.App.id"), Path.of("local.txt"), "tmp/f.txt"));
     }
-
-    @Test
-    @DisplayName("reads a cores pull by full name, with an optional output location")
-    void coresVerb() throws UsageException {
-      assertThat(command("cores", "com.x.App.id", "--out", "dumps", "-d", "D"))
-          .isEqualTo(
-              new DeployCommand.PullCore(
-                  new PackageRef.FullName("com.x.App.id"), Path.of("dumps")));
-      assertThat(command("cores", "com.x.App.id", "-d", "D"))
-          .isEqualTo(new DeployCommand.PullCore(new PackageRef.FullName("com.x.App.id"), null));
-    }
   }
 
   @Nested

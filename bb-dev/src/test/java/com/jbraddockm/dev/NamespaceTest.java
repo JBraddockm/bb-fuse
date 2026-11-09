@@ -14,6 +14,8 @@ class NamespaceTest {
     assertThat(Namespace.byName("connect")).contains(Namespace.CONNECT);
     assertThat(Namespace.byName("deploy")).contains(Namespace.DEPLOY);
     assertThat(Namespace.byName("package")).contains(Namespace.PACKAGE);
+    assertThat(Namespace.byName("debug")).contains(Namespace.DEBUG);
+    assertThat(Namespace.byName("pull")).contains(Namespace.PULL);
   }
 
   @Test

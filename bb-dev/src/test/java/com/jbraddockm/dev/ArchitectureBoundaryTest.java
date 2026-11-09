@@ -16,19 +16,20 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 /**
- * Keeps bb-dev's packages layered. The feature packages — {@code connect}, {@code deploy} and
- * {@code packaging} — are device-management domains that do not reach into one another; {@code
- * qconn} is the shared device transport they sit on and never reaches back up into a feature; and
- * inside {@code packaging} the dependencies point one way, {@code descriptor} ← {@code internal} ←
- * the front-ends. The root {@code com.jbraddockm.dev} and {@code daemon} are the composition and
- * may depend on several features, so they are exempt. The test reads the sources and is skipped
- * when they are not found.
+ * Keeps bb-dev's packages layered. The feature packages — {@code connect}, {@code deploy}, {@code
+ * packaging} and {@code debug} — are device-management domains that do not reach into one another
+ * ({@code debug} pulls a crash core through a {@link com.jbraddockm.dev.SandboxFetcher} the root
+ * injects, rather than importing {@code deploy}); {@code qconn} is the shared device transport they
+ * sit on and never reaches back up into a feature; and inside {@code packaging} the dependencies
+ * point one way, {@code descriptor} ← {@code internal} ← the front-ends. The root {@code
+ * com.jbraddockm.dev} and {@code daemon} are the composition and may depend on several features, so
+ * they are exempt. The test reads the sources and is skipped when they are not found.
  */
 @DisplayName("Architecture boundaries: features stay isolated and packaging stays layered")
 class ArchitectureBoundaryTest {
 
   private static final String BASE = "com.jbraddockm.dev.";
-  private static final Set<String> FEATURES = Set.of("connect", "deploy", "packaging");
+  private static final Set<String> FEATURES = Set.of("connect", "deploy", "packaging", "debug");
 
   private static Path mainRoot() {
     Optional<Path> root =
