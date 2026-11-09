@@ -43,9 +43,14 @@ public final class DebugTool implements DevTool {
 
         run  <host> <command> [args...]   spawn an executable and stream its console
         core <host> <app>                 pull the newest crash .core from the app's logs
+        logs <host>                       stream the device log (slog2info) over the launcher
 
       run options:   --cwd <dir>  --env NAME=VALUE (repeatable)  --pty  --hold  --port <n>
-      core options:  -p <password>  --out <dir>  --port <https-port>\
+      core options:  -p <password>  --out <dir>  --port <https-port>
+      logs options:  --once (dump, don't follow)  --grep <text>  --port <n>
+                     -- <slog2info option>...  pass flags straight to slog2info, e.g.
+                        -- -b default,bbcascades -S        (one buffer set, named severities)
+                        -- -w -s                           (replay history, then follow)\
       """;
 
   private final SandboxFetcher.Factory fetchers;
@@ -70,6 +75,7 @@ public final class DebugTool implements DevTool {
     return switch (command) {
       case "run" -> runProcess(rest, output);
       case "core" -> pullCore(rest, output);
+      case "logs" -> streamLogs(rest, output);
       case "help", "-h", "--help" -> output.emit(0, USAGE, Json.object("ok", true));
       default ->
           output.emit(
@@ -244,6 +250,73 @@ public final class DebugTool implements DevTool {
         0,
         "✓ Pulled " + core + " (" + bytes.length + " bytes) to " + target,
         Json.object("ok", true, "core", core, "bytes", bytes.length, "saved", target.toString()));
+  }
+
+  private int streamLogs(List<String> arguments, Output output) {
+    String host = null;
+    var port = QconnSocket.PORT;
+    var follow = true;
+    String grep = null;
+    var slogOptions = new ArrayList<String>();
+    var passthrough = false;
+
+    for (var index = 0; index < arguments.size(); index++) {
+      var argument = arguments.get(index);
+      if (passthrough) {
+        // Everything after `--` is passed to slog2info verbatim.
+        slogOptions.add(argument);
+      } else {
+        switch (argument) {
+          case "--" -> passthrough = true;
+          case "--once" -> follow = false;
+          case "--grep" -> grep = value(arguments, ++index);
+          case "--port" -> port = Integer.parseInt(value(arguments, ++index));
+          default -> {
+            if (!argument.startsWith("-") && host == null) {
+              host = argument;
+            }
+          }
+        }
+      }
+    }
+
+    if (host == null) {
+      return output.emit(
+          USAGE_ERROR,
+          "Usage: bb-dev debug logs <host> [--once] [--grep <text>] [--port <n>]"
+              + " [-- <slog2info option>...]",
+          Json.object("ok", false, "error", "a host is required"));
+    }
+
+    // slog2info reads the device log. The default follows new entries with the severity shown — the
+    // flags Momentics' own Slog2Service runs over this same launcher service; `--once` dumps the
+    // current log and exits. Options after `--` replace the defaults entirely (e.g. `-- -b default
+    // -S`
+    // for one buffer set with named severities, or `-- -w -s` to replay history first); see
+    // `debug run <host> /bin/slog2info --help`.
+    var slog =
+        !slogOptions.isEmpty()
+            ? List.copyOf(slogOptions)
+            : follow ? List.of("-w", "-W", "-s") : List.of("-s");
+    try (var qconn = QconnSocket.connect(host, port)) {
+      var launcher = LaunchService.on(qconn);
+      launcher.disablePseudoTerminal();
+      var process = launcher.start("/bin/slog2info", slog);
+      var lines = 0;
+      try (var reader =
+          new BufferedReader(new InputStreamReader(process.console(), StandardCharsets.UTF_8))) {
+        for (var line = reader.readLine(); line != null; line = reader.readLine()) {
+          if (grep == null || line.contains(grep)) {
+            output.note(line);
+            lines++;
+          }
+        }
+      }
+      // Reached only in --once mode; -w streams until the connection drops (Ctrl-C).
+      return output.emit(0, "[" + lines + " log lines]", Json.object("ok", true, "lines", lines));
+    } catch (IOException | NumberFormatException failure) {
+      return fail(output, "logs: " + failure.getMessage());
+    }
   }
 
   /** The newest {@code .core} entry in a device directory, by running {@code ls -1 -t} on it. */

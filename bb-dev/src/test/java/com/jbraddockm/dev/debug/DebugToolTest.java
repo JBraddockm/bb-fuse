@@ -73,4 +73,23 @@ class DebugToolTest {
       assertThat(out()).contains("Usage: bb-dev debug core");
     }
   }
+
+  @Nested
+  @DisplayName("debug logs")
+  class Logs {
+
+    @Test
+    @DisplayName("without a host it reports usage")
+    void usage() {
+      assertThat(run(List.of("logs"), false)).isEqualTo(2);
+      assertThat(out()).contains("Usage: bb-dev debug logs");
+    }
+
+    @Test
+    @DisplayName("a refused connection surfaces the logs error")
+    void connectionError() {
+      assertThat(run(List.of("logs", "127.0.0.1", "--port", "1"), false)).isEqualTo(1);
+      assertThat(out()).contains("bb-dev debug logs:");
+    }
+  }
 }
