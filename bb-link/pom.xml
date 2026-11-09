@@ -48,36 +48,14 @@
             <version>3.0.4</version>
         </dependency>
 
-        <!-- Original BlackBerry tooling (versions managed by the parent). BarDeploy drives the device
-             scan and login (com.qnx.bbt.deploy.*); the Apache HTTP stack is the CGI transport
-             BarDeploy runs over. -->
+        <!-- Original BlackBerry tooling (version managed by the parent). BarDeploy now provides only
+             the login challenge hashing (com.qnx.bbt.deploy.PwCrypto) and the failure-message strings
+             (Messages) that the login path still uses. Its device detector — the sole user of the
+             Apache HTTP stack — has been retired (the CGI transport is on java.net.http, discovery on
+             bb-core's native scanners), so that whole stack is gone. -->
         <dependency>
             <groupId>local.qconn</groupId>
             <artifactId>BarDeploy</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>local.qconn</groupId>
-            <artifactId>httpclient</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>local.qconn</groupId>
-            <artifactId>httpcore</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>local.qconn</groupId>
-            <artifactId>httpmime</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>local.qconn</groupId>
-            <artifactId>apache-mime4j</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>local.qconn</groupId>
-            <artifactId>commons-codec</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>local.qconn</groupId>
-            <artifactId>commons-logging</artifactId>
         </dependency>
 
         <dependency>
