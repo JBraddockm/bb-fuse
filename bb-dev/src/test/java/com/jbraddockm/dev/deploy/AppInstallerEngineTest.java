@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.jbraddockm.dev.testing.Resources;
+import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -173,6 +174,52 @@ class AppInstallerEngineTest {
       run(new DeployCommand.ListInstalledApps(), new ArrayList<>());
 
       assertThat(http.logins).isEqualTo(2);
+    }
+  }
+
+  @Nested
+  @DisplayName("a binary download")
+  class Download {
+
+    private static final PackageRef APP = new PackageRef.FullName("com.example.App.gYABgId");
+
+    @Test
+    @DisplayName("returns the raw bytes after the marker, with every byte value intact")
+    void returnsRawBytes() throws Exception {
+      var file = new byte[] {0x7f, 'E', 'L', 'F', (byte) 0xff, 0x00, (byte) 0x80, (byte) 0x0d, 'z'};
+      var response = new ByteArrayOutputStream();
+      response.writeBytes(
+          "Info: Sending request: GET_FILE\r\n".getBytes(StandardCharsets.US_ASCII));
+      response.writeBytes(
+          ("Info: Sending File: " + file.length + "\r\n").getBytes(StandardCharsets.US_ASCII));
+      response.writeBytes(file);
+      poster.replyRaw(response.toByteArray());
+
+      var bytes = engine.download(new DeployCommand.GetFile(APP, "logs/App.core", null));
+
+      assertThat(bytes).containsExactly(file);
+    }
+
+    @Test
+    @DisplayName("stops at the announced count even when more bytes follow")
+    void honorsTheCount() throws Exception {
+      var response = new ByteArrayOutputStream();
+      response.writeBytes("Info: Sending File: 3\r\n".getBytes(StandardCharsets.US_ASCII));
+      response.writeBytes(new byte[] {1, 2, 3, 4, 5});
+      poster.replyRaw(response.toByteArray());
+
+      var bytes = engine.download(new DeployCommand.GetFile(APP, "logs/App.core", null));
+
+      assertThat(bytes).containsExactly(1, 2, 3);
+    }
+
+    @Test
+    @DisplayName("raises the device's error when no file marker is present")
+    void noFile() {
+      poster.replyRaw("result::failure::1::Cannot open file".getBytes(StandardCharsets.US_ASCII));
+
+      assertThatThrownBy(() -> engine.download(new DeployCommand.GetFile(APP, "logs/x.core", null)))
+          .isInstanceOf(DeviceReportException.class);
     }
   }
 

@@ -128,6 +128,10 @@ final class DeployCommandLine {
         expect(verb, args, 3);
         yield new DeployCommand.PutFile(app(args.get(0)), Path.of(args.get(1)), args.get(2));
       }
+      case "cores" -> {
+        expect(verb, args, 1);
+        yield new DeployCommand.PullCore(app(args.getFirst()), out == null ? null : Path.of(out));
+      }
       default -> throw new UsageException("unknown command: " + verb);
     };
   }

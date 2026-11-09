@@ -33,6 +33,8 @@ final class DeployResults {
       case DeployCommand.LaunchApp _ -> LaunchResult.parse(lines).json();
       case DeployCommand.PutFile _ -> FileUpload.parse(lines).json();
       case DeployCommand.GetFile _ -> FileDownload.parse(lines).json();
+      case DeployCommand.PullCore _ ->
+          throw new IllegalStateException("a core pull is handled by the deploy tool, not here");
     };
   }
 }

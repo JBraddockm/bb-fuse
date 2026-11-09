@@ -3,6 +3,7 @@ package com.jbraddockm.dev;
 import com.jbraddockm.dev.connect.ConnectTool;
 import com.jbraddockm.dev.deploy.DeployTool;
 import com.jbraddockm.dev.packaging.PackageTool;
+import com.jbraddockm.dev.pull.PullTool;
 import com.jbraddockm.dev.run.RunTool;
 import java.util.Arrays;
 import java.util.List;
@@ -13,7 +14,8 @@ enum Namespace {
   CONNECT("connect", new ConnectTool()),
   DEPLOY("deploy", new DeployTool()),
   PACKAGE("package", new PackageTool(new DeployBarDeployer())),
-  RUN("run", new RunTool());
+  RUN("run", new RunTool()),
+  PULL("pull", new PullTool());
 
   private final String wireName;
   private final DevTool tool;

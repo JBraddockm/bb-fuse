@@ -187,4 +187,26 @@ public sealed interface DeployCommand {
       }
     }
   }
+
+  /**
+   * Find and download the newest crash {@code .core} dump from an application's sandbox {@code
+   * logs/}. The deploy tool locates the core (listing the logs directory over qconn) and downloads
+   * it binary-safe over {@code appInstaller.cgi}.
+   *
+   * @param app the application whose core to pull, by full name
+   * @param saveAs the local file or directory to save into, or {@code null} for the current
+   *     directory
+   */
+  record PullCore(PackageRef app, Path saveAs) implements DeployCommand {
+
+    /**
+     * Creates the command.
+     *
+     * @throws IllegalArgumentException if the reference lacks the package name
+     */
+    public PullCore {
+      Objects.requireNonNull(app, "app");
+      app.requireName();
+    }
+  }
 }

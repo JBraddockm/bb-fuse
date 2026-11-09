@@ -139,8 +139,10 @@ class LaunchServiceTest {
     void consoleStreams() throws IOException {
       var process = over("ok 5\nhello from the device").start("/tmp/hi", List.of());
 
-      assertThat(new String(process.console().readAllBytes(), StandardCharsets.US_ASCII))
-          .isEqualTo("hello from the device");
+      try (var console = process.console()) {
+        assertThat(new String(console.readAllBytes(), StandardCharsets.US_ASCII))
+            .isEqualTo("hello from the device");
+      }
     }
 
     @Test

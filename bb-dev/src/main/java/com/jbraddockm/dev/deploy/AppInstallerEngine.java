@@ -13,6 +13,7 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -129,6 +130,74 @@ public final class AppInstallerEngine {
     return List.copyOf(lines);
   }
 
+  /**
+   * Downloads a sandbox file as raw bytes, binary-safe. Unlike {@link #run} — which decodes the
+   * answer as text lines and so corrupts binary content — this posts the {@code Get File} request,
+   * reads the response body as bytes, and returns exactly the bytes that follow the {@code Info:
+   * Sending File: N} marker. Use it for cores, images and any non-text asset.
+   *
+   * @param command the {@code Get File} command naming the app and sandbox path
+   * @return the file's bytes
+   * @throws LoginException if the device rejects the login
+   * @throws DeviceReportException if the device reports the command failed
+   * @throws IOException if the request fails or the device sends no file
+   */
+  public byte[] download(DeployCommand.GetFile command)
+      throws LoginException, DeviceReportException, IOException {
+    ensureLoggedIn();
+    var request = requestFor(command);
+    var answer = poster.post(request.body());
+    try (var body = answer.body()) {
+      if (answer.status() < 200 || answer.status() >= 300) {
+        throw new IOException("the device answered HTTP " + answer.status());
+      }
+      return extractFile(body.readAllBytes());
+    }
+  }
+
+  private static final byte[] FILE_MARKER =
+      "Info: Sending File: ".getBytes(StandardCharsets.US_ASCII);
+
+  /** Returns the file bytes that follow the {@code Info: Sending File: N} marker in a response. */
+  private static byte[] extractFile(byte[] response) throws DeviceReportException {
+    var marker = indexOfMarker(response);
+    if (marker < 0) {
+      var lines = List.of(new String(response, StandardCharsets.UTF_8).split("\n"));
+      throw toolErrorLine(lines)
+          .map(DeviceReportException::new)
+          .orElse(new DeviceReportException("the device sent no file"));
+    }
+    var at = marker + FILE_MARKER.length;
+    var size = 0L;
+    while (at < response.length && response[at] >= '0' && response[at] <= '9') {
+      size = size * 10 + (response[at] - '0');
+      at++;
+    }
+    // The count is followed by one CRLF (or LF); the file's bytes begin right after it.
+    if (at < response.length && response[at] == '\r') {
+      at++;
+    }
+    if (at < response.length && response[at] == '\n') {
+      at++;
+    }
+    var count = (int) Math.min(size, response.length - (long) at);
+    return Arrays.copyOfRange(response, at, at + count);
+  }
+
+  /** The index of the {@link #FILE_MARKER} in {@code haystack}, or {@code -1}. */
+  private static int indexOfMarker(byte[] haystack) {
+    outer:
+    for (var i = 0; i <= haystack.length - FILE_MARKER.length; i++) {
+      for (var j = 0; j < FILE_MARKER.length; j++) {
+        if (haystack[i + j] != FILE_MARKER[j]) {
+          continue outer;
+        }
+      }
+      return i;
+    }
+    return -1;
+  }
+
   /** Forgets the login, so the next command logs in again. */
   public void forgetLogin() {
     loggedIn = false;
@@ -177,6 +246,9 @@ public final class AppInstallerEngine {
           new Request(
               "PUT_FILE",
               packaged(MultipartBody.command("Put File").file(local), app).assetPath(path).build());
+      case DeployCommand.PullCore _ ->
+          throw new IllegalStateException(
+              "a core pull downloads a Get File request, not a Pull Core request");
     };
   }
 

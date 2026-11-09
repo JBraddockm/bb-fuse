@@ -8,10 +8,15 @@ import com.jbraddockm.dev.DevTool;
 import com.jbraddockm.dev.Output;
 import com.jbraddockm.dev.deploy.sync.SyncResult;
 import com.jbraddockm.dev.deploy.sync.SyncService;
+import com.jbraddockm.dev.qconn.LaunchService;
 import com.jbraddockm.dev.qconn.QconnSocket;
 import com.jbraddockm.dev.qconn.TargetFileService;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import javax.net.ssl.KeyManager;
 
@@ -25,23 +30,6 @@ public final class DeployTool implements DevTool {
 
   private static final int USAGE_ERROR = 2;
   private static final int COMMAND_FAILED = 1;
-
-  private final Engines engines;
-
-  /** Creates a deploy tool that opens a real connection to the device. */
-  public DeployTool() {
-    this(AppInstallerEngine::forDevice);
-  }
-
-  DeployTool(Engines engines) {
-    this.engines = engines;
-  }
-
-  /** Opens an installer engine for a device; the production factory is {@code forDevice}. */
-  interface Engines {
-    AppInstallerEngine forDevice(String host, int port, String password, KeyManager[] identity);
-  }
-
   private static final String HELP =
       """
       bb-dev deploy — install and manage applications on a BlackBerry 10 device
@@ -60,6 +48,7 @@ public final class DeployTool implements DevTool {
         uninstall <app>             uninstall an application
         get <app> <path>            download a file from the application's sandbox
         put <app> <local> <path>    upload a file into the application's sandbox
+        cores <app>                 pull the newest crash .core from the app's logs
 
       Options:
         -d, --device <host>         device host or IP address (required)
@@ -80,6 +69,16 @@ public final class DeployTool implements DevTool {
       <app> is the full application name shown by 'apps', for example
       com.example.App.gYABgExampleId.
       """;
+  private final Engines engines;
+
+  /** Creates a deploy tool that opens a real connection to the device. */
+  public DeployTool() {
+    this(AppInstallerEngine::forDevice);
+  }
+
+  DeployTool(Engines engines) {
+    this.engines = engines;
+  }
 
   private static void installMiniBar(AppInstallerEngine engine, byte[] miniBar) throws IOException {
     var temp = Files.createTempFile("bb-dev-mini", ".bar");
@@ -114,17 +113,32 @@ public final class DeployTool implements DevTool {
             result.uploadedAssets()));
   }
 
-  private static int save(DeployCommand.GetFile get, List<String> lines, Output output) {
-    var download = FileDownload.parse(lines);
+  private static int saved(Output output, Path target, byte[] bytes) {
     try {
-      Files.writeString(get.saveAs(), download.content());
+      Files.write(target, bytes);
     } catch (IOException failure) {
-      return fail(output, "cannot write " + get.saveAs() + ": " + failure.getMessage());
+      return fail(output, "cannot write " + target + ": " + failure.getMessage());
     }
     return output.emit(
         0,
-        "✓ Saved " + download.size() + " bytes to " + get.saveAs(),
-        Json.object("ok", true, "size", download.size(), "saved", get.saveAs().toString()));
+        "✓ Saved " + bytes.length + " bytes to " + target,
+        Json.object("ok", true, "size", bytes.length, "saved", target.toString()));
+  }
+
+  /** The newest {@code .core} entry in a device directory, by running {@code ls -1 -t} on it. */
+  private static String newestCore(LaunchService launcher, String directory) throws IOException {
+    launcher.disablePseudoTerminal();
+    var process = launcher.start("/bin/ls", List.of("-1", "-t", directory));
+    try (var reader =
+        new BufferedReader(new InputStreamReader(process.console(), StandardCharsets.UTF_8))) {
+      for (var line = reader.readLine(); line != null; line = reader.readLine()) {
+        var name = line.trim();
+        if (name.endsWith(".core")) {
+          return name;
+        }
+      }
+    }
+    return null;
   }
 
   private static int fail(Output output, String message) {
@@ -133,6 +147,43 @@ public final class DeployTool implements DevTool {
 
   private static boolean isHelp(String argument) {
     return argument.equals("help") || argument.equals("-h") || argument.equals("--help");
+  }
+
+  /**
+   * Pulls the newest crash {@code .core} from the app's sandbox {@code logs/}: lists the directory
+   * over qconn (needs a held {@code connect} session), then downloads the core binary-safe over
+   * {@code appInstaller.cgi}.
+   */
+  private int pullCore(
+      DeployCommand.PullCore command, DeployTarget target, AppInstallerEngine engine, Output output)
+      throws LoginException, DeviceReportException, IOException {
+    if (!(command.app() instanceof PackageRef.FullName(String fullName))) {
+      throw new IOException("a core pull needs the full application name");
+    }
+    var logsDir = "/accounts/1000/appdata/" + fullName + "/logs";
+    String core;
+    try (var qconn = QconnSocket.connect(target.host())) {
+      core = newestCore(LaunchService.on(qconn), logsDir);
+    } catch (IOException qconnDown) {
+      return fail(
+          output,
+          "cannot list "
+              + logsDir
+              + " — is a 'bb-dev connect' session holding the device? ("
+              + qconnDown.getMessage()
+              + ")");
+    }
+    if (core == null) {
+      return fail(output, "no .core dump found in " + logsDir);
+    }
+    var bytes = engine.download(new DeployCommand.GetFile(command.app(), "logs/" + core, null));
+    var destination =
+        command.saveAs() == null
+            ? Path.of(core)
+            : Files.isDirectory(command.saveAs())
+                ? command.saveAs().resolve(core)
+                : command.saveAs();
+    return saved(output, destination, bytes);
   }
 
   /**
@@ -197,11 +248,16 @@ public final class DeployTool implements DevTool {
           return synced;
         }
       }
-      var lines = engine.run(invocation.command(), _ -> {});
-      if (invocation.command() instanceof DeployCommand.GetFile get && get.saveAs() != null) {
-        return save(get, lines, output);
+      var command = invocation.command();
+      if (command instanceof DeployCommand.GetFile get && get.saveAs() != null) {
+        // Save straight to disk from the raw bytes — binary-safe, unlike the text render.
+        return saved(output, get.saveAs(), engine.download(get));
       }
-      var rendered = DeployRenderer.render(invocation.command(), lines);
+      if (command instanceof DeployCommand.PullCore core) {
+        return pullCore(core, target, engine, output);
+      }
+      var lines = engine.run(command, _ -> {});
+      var rendered = DeployRenderer.render(command, lines);
       return output.emit(0, rendered.text(), rendered.json());
     } catch (DeviceReportException | IOException reported) {
       return fail(output, reported.getMessage());
@@ -210,5 +266,10 @@ public final class DeployTool implements DevTool {
     } finally {
       engine.close();
     }
+  }
+
+  /** Opens an installer engine for a device; the production factory is {@code forDevice}. */
+  interface Engines {
+    AppInstallerEngine forDevice(String host, int port, String password, KeyManager[] identity);
   }
 }
