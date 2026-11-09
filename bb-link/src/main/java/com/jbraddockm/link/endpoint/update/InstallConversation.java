@@ -52,6 +52,7 @@ final class InstallConversation implements Conversation<InstallResult> {
 
   /** How long an installation may take altogether, when it reports progress. */
   private static final Duration LONGEST_WAIT = Duration.ofMinutes(30);
+
   private final List<BarInfo> bars;
   private final boolean firmware;
   private final Duration pollInterval;
@@ -61,6 +62,7 @@ final class InstallConversation implements Conversation<InstallResult> {
   private int index;
   private long polls;
   private String lastAnswer = "";
+
   InstallConversation(List<BarInfo> bars, boolean firmware, Duration pollInterval) {
     this.bars = List.copyOf(bars);
     this.firmware = firmware;
@@ -275,9 +277,9 @@ final class InstallConversation implements Conversation<InstallResult> {
    * @return the step that ends the command, or empty if the answer is fine
    */
   private Optional<Step<InstallResult>> refused(ResponseEnvelope answer, ResponseElement expected) {
-    var failure = ResponseFailures.reportedError(answer);
-    if (failure.isPresent()) {
-      return Optional.of(fail(failure.get()));
+    var reported = ResponseFailures.reportedError(answer).map(this::fail);
+    if (reported.isPresent()) {
+      return reported;
     }
     if (answer.element().orElse(null) != expected) {
       return Optional.of(fail(ResponseFailures.notExpected(answer, expected)));
