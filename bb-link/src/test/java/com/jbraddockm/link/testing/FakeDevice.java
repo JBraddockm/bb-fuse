@@ -1,10 +1,10 @@
 package com.jbraddockm.link.testing;
 
+import com.jbraddockm.core.device.PwCrypto;
 import com.jbraddockm.link.endpoint.pairing.pki.CertificateDetails;
 import com.jbraddockm.link.endpoint.pairing.pki.CertificateRequest;
 import com.jbraddockm.link.endpoint.pairing.pki.RsaKeys;
 import com.jbraddockm.link.endpoint.pairing.pki.SignatureScheme;
-import com.qnx.bbt.deploy.PwCrypto;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
@@ -13,7 +13,6 @@ import java.net.InetSocketAddress;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
-import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -575,12 +574,7 @@ public final class FakeDevice implements AutoCloseable {
     }
 
     private void answer(HttpExchange exchange, String query) throws IOException {
-      String expected;
-      try {
-        expected = PwCrypto.hashAndEncode(password, 2, SALT, ITERATIONS, CHALLENGE);
-      } catch (NoSuchAlgorithmException failure) {
-        throw new IOException(failure);
-      }
+      var expected = PwCrypto.hashAndEncode(password, 2, SALT, ITERATIONS, CHALLENGE);
       if (query.contains("challenge_data=" + expected)) {
         respond(exchange, 200, success(), cookieHeader());
       } else {

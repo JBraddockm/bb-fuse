@@ -1,10 +1,8 @@
 package com.jbraddockm.link.transport.login;
 
-import com.qnx.bbt.deploy.Messages;
-
 /**
- * The texts of login failures. They come from the message bundle of the original tool, so that the
- * wording is the same as in bb-deploy.
+ * The texts of login failures. The wording matches the original tool's message bundle, so bb-link
+ * reports a failed login in the same words as bb-deploy.
  */
 final class LoginMessages {
 
@@ -12,20 +10,26 @@ final class LoginMessages {
 
   static String passwordRejected(int failedAttempts, int remainingAttempts) {
     return remainingAttempts == 0
-        ? Messages.getString("Deploy.AuthFailNoMoreAttempts", failedAttempts)
-        : Messages.getString(
-            "Deploy.AuthFailNAttempts", failedAttempts, remainingAttempts + failedAttempts);
+        ? "Authentication failed. There have been too many failed attempts ("
+            + failedAttempts
+            + "). Please enter your password on the device to reset the failed attempts count and"
+            + " try again"
+        : "Authentication failed. There have been "
+            + failedAttempts
+            + " of "
+            + (remainingAttempts + failedAttempts)
+            + " failed attempts";
   }
 
   static String invalidPassword() {
-    return Messages.getString("Deploy.InvalidPassword");
+    return "Authentication failed due to invalid password";
   }
 
   static String clockOutOfSync() {
-    return Messages.getString("Deploy.ClockOutOfSync");
+    return "Device clock is out of sync.";
   }
 
   static String systemError() {
-    return Messages.getString("Deploy.SystemError");
+    return "Authentication failed due to system error";
   }
 }

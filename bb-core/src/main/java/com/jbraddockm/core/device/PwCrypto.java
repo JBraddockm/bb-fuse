@@ -15,7 +15,7 @@ import java.util.HexFormat;
  * ({@link #ALGORITHM_SHA1_V1}), salted iterated SHA-1 ({@link #ALGORITHM_SHA1_V2}) and salted
  * iterated SHA-512 ({@link #ALGORITHM_SHA512_V2}) — selected by the challenge the device sends.
  */
-final class PwCrypto {
+public final class PwCrypto {
 
   /** Single-pass SHA-1, no salt or iteration — the legacy algorithm (challenge algorithm id 0). */
   static final int ALGORITHM_SHA1_V1 = 0;
@@ -43,7 +43,7 @@ final class PwCrypto {
    * @param challenge the challenge the device sent
    * @return the hashed answer, uppercase hexadecimal
    */
-  static String hashAndEncode(
+  public static String hashAndEncode(
       String password, int algorithm, String salt, int iterationCount, String challenge) {
     var charset = Charset.defaultCharset();
     return hashAndEncode(

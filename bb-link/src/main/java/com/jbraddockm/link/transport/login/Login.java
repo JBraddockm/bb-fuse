@@ -1,9 +1,8 @@
 package com.jbraddockm.link.transport.login;
 
+import com.jbraddockm.core.device.PwCrypto;
 import com.jbraddockm.link.transport.cgi.CgiResponse;
 import com.jbraddockm.link.transport.cgi.CgiTransport;
-import com.jbraddockm.link.transport.internal.Impossible;
-import com.qnx.bbt.deploy.PwCrypto;
 import java.io.IOException;
 import java.net.HttpCookie;
 import java.util.Optional;
@@ -88,9 +87,7 @@ public final class Login {
     var iterationCount = challenge.integer(LoginKey.ITERATION_COUNT);
     var challengeText = challenge.required(LoginKey.CHALLENGE);
     try {
-      return Impossible.call(
-          () -> PwCrypto.hashAndEncode(password, algorithm, salt, iterationCount, challengeText),
-          "a required message digest is missing");
+      return PwCrypto.hashAndEncode(password, algorithm, salt, iterationCount, challengeText);
     } catch (NumberFormatException _) {
       throw new UnusableLoginResponseException("The salt is not a hexadecimal number: " + salt);
     }

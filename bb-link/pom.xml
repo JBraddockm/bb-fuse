@@ -48,16 +48,6 @@
             <version>3.0.4</version>
         </dependency>
 
-        <!-- Original BlackBerry tooling (version managed by the parent). BarDeploy now provides only
-             the login challenge hashing (com.qnx.bbt.deploy.PwCrypto) and the failure-message strings
-             (Messages) that the login path still uses. Its device detector — the sole user of the
-             Apache HTTP stack — has been retired (the CGI transport is on java.net.http, discovery on
-             bb-core's native scanners), so that whole stack is gone. -->
-        <dependency>
-            <groupId>local.qconn</groupId>
-            <artifactId>BarDeploy</artifactId>
-        </dependency>
-
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
@@ -96,19 +86,6 @@
 
                 <configuration>
                     <buildArgs combine.children="append">
-
-                        <!--
-                            The device scan calls into the original tool, whose Deploy class builds
-                            its TLS context when it is initialised. That must happen at run time.
-                        -->
-                        <buildArg>
-                            --initialize-at-run-time=com.qnx.bbt.deploy.Deploy
-                        </buildArg>
-
-                        <!-- Login failure texts and the scan come from the original tool's bundle. -->
-                        <buildArg>
-                            -H:IncludeResourceBundles=com.qnx.bbt.deploy.messages
-                        </buildArg>
                         <buildArg>
                             -H:IncludeResourceBundles=com.sun.org.apache.xerces.internal.impl.msg.XMLMessages
                         </buildArg>
