@@ -45,5 +45,6 @@ inspectCertificate
 getBackupInventory
 backupDevice
 restoreDevice
+dumpDeviceLogs
 reboot
 powerOff

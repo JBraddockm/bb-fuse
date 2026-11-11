@@ -28,6 +28,7 @@ class QueryParameterTest {
     "REQUEST_VERSION, request_version",
     "CGI_AUTH, cgiauth",
     "ACTION, action",
+    "FACILITY, facility",
     "SIZE, size",
     "DATA, data"
   })
@@ -38,9 +39,9 @@ class QueryParameterTest {
 
   @Test
   @DisplayName("no two parameters have the same name, and there are no others than these")
-  void thereAreTwentyDistinctParameters() {
+  void thereAreTwentyOneDistinctParameters() {
     assertThat(Arrays.stream(QueryParameter.values()).map(QueryParameter::wireName))
         .doesNotHaveDuplicates()
-        .hasSize(20);
+        .hasSize(21);
   }
 }

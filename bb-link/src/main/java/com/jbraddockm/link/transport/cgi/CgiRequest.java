@@ -156,6 +156,142 @@ public sealed interface CgiRequest {
   }
 
   /**
+   * A GET whose answer is streamed to a file when it is binary, and kept in the body when it is an
+   * XML status or error. It is the GET counterpart of {@link Download} (which is a POST): {@code
+   * support.cgi}'s DumpLog drives its whole state machine with the same GET, and the device decides
+   * per response — an {@code application/octet-stream} archive is written to {@link
+   * #destination()}, while a {@code text/xml} poll status stays in {@link CgiResponse#body()}.
+   *
+   * @param endpoint the CGI program
+   * @param query the query parameters in the order they are sent
+   * @param destination the file a data answer is written to
+   * @param expectedLength the bytes a data answer is expected to have, for progress; {@code 0} if
+   *     not known yet
+   * @param phase what progress events of a download are called
+   * @param item what progress events of a download name
+   * @param purpose what the request does, in a few words, for log messages; may be empty
+   * @param readTimeout how long the device may stay silent while it answers
+   */
+  record StreamingGet(
+      Endpoint endpoint,
+      SequencedMap<QueryParameter, String> query,
+      Path destination,
+      long expectedLength,
+      ProgressPhase phase,
+      String item,
+      String purpose,
+      Duration readTimeout)
+      implements CgiRequest {
+
+    /** Takes an immutable copy of the query. */
+    public StreamingGet {
+      Objects.requireNonNull(endpoint, "endpoint");
+      Objects.requireNonNull(destination, "destination");
+      Objects.requireNonNull(phase, "phase");
+      Objects.requireNonNull(item, "item");
+      Objects.requireNonNull(purpose, "purpose");
+      Objects.requireNonNull(readTimeout, "readTimeout");
+      if (expectedLength < 0) {
+        throw new IllegalArgumentException("a download cannot have a negative length");
+      }
+      query = Collections.unmodifiableSequencedMap(new LinkedHashMap<>(query));
+    }
+
+    /**
+     * Starts a streamed GET to a file.
+     *
+     * @param endpoint the CGI program
+     * @param destination the file a data answer is written to
+     * @param phase what progress events of a download are called
+     * @param item what progress events of a download name
+     * @return a streamed GET without parameters and without a known length
+     */
+    public static StreamingGet to(
+        Endpoint endpoint, Path destination, ProgressPhase phase, String item) {
+      return new StreamingGet(
+          endpoint, new LinkedHashMap<>(), destination, 0, phase, item, "", DEFAULT_READ_TIMEOUT);
+    }
+
+    /**
+     * Adds a parameter with free text as value.
+     *
+     * @param parameter the parameter
+     * @param text the value
+     * @return a new request with the parameter appended
+     */
+    public StreamingGet withText(QueryParameter parameter, String text) {
+      var copy = new LinkedHashMap<>(query);
+      copy.put(parameter, text);
+      return new StreamingGet(
+          endpoint, copy, destination, expectedLength, phase, item, purpose, readTimeout);
+    }
+
+    /**
+     * Sets the expected length, once the device has reported the archive's size.
+     *
+     * @param length the number of bytes the answer is expected to have
+     * @return a new request with that expected length
+     */
+    public StreamingGet withLength(long length) {
+      return new StreamingGet(
+          endpoint, query, destination, length, phase, item, purpose, readTimeout);
+    }
+
+    /**
+     * Says what the request does, for log messages.
+     *
+     * @param what a few words in the present participle
+     * @return a new request with the purpose set
+     */
+    public StreamingGet describedAs(String what) {
+      return new StreamingGet(
+          endpoint, query, destination, expectedLength, phase, item, what, readTimeout);
+    }
+
+    /**
+     * Sets how long the device may stay silent while it answers.
+     *
+     * @param longest the longest silence that is waited for
+     * @return a new request with that limit
+     */
+    public StreamingGet waitingUpTo(Duration longest) {
+      return new StreamingGet(
+          endpoint, query, destination, expectedLength, phase, item, purpose, longest);
+    }
+
+    /**
+     * Returns the path of the request with its query string.
+     *
+     * @return for example {@code /cgi-bin/support.cgi?facility=dumplog}
+     */
+    public String pathAndQuery() {
+      if (query.isEmpty()) {
+        return endpoint.path();
+      }
+      return endpoint.path()
+          + '?'
+          + query.entrySet().stream()
+              .map(
+                  entry ->
+                      FormEncoding.encode(entry.getKey().wireName())
+                          + '='
+                          + FormEncoding.encode(entry.getValue()))
+              .collect(Collectors.joining("&"));
+    }
+
+    @Override
+    public boolean emptyAnswerIsNormal() {
+      // A streamed answer leaves the body empty by design; the conversation reads the file.
+      return true;
+    }
+
+    @Override
+    public String describe() {
+      return purpose.isEmpty() ? "GET " + endpoint.fileName() : purpose;
+    }
+  }
+
+  /**
    * A form post.
    *
    * @param endpoint the CGI program

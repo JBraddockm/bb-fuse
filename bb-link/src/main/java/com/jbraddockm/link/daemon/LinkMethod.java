@@ -69,6 +69,7 @@ import com.jbraddockm.link.endpoint.properties.GetDeviceProperties;
 import com.jbraddockm.link.endpoint.properties.SetDeviceName;
 import com.jbraddockm.link.endpoint.reset.ResetDevice;
 import com.jbraddockm.link.endpoint.reset.ResetMode;
+import com.jbraddockm.link.endpoint.support.DumpDeviceLogs;
 import com.jbraddockm.link.endpoint.update.BarSelection;
 import com.jbraddockm.link.endpoint.update.InspectPackage;
 import com.jbraddockm.link.endpoint.update.InstallPackages;
@@ -269,6 +270,13 @@ enum LinkMethod {
    * tunnel.
    */
   RESTORE_DEVICE("restoreDevice"),
+
+  /**
+   * Collects the device's diagnostic logs and streams the {@code cso-logs-report.zip} archive to a
+   * file. Reaches {@code support.cgi}, so only over USB or the tunnel. The capture is a general
+   * whole-device diagnostic bundle, not BlackBerry-Link-specific.
+   */
+  DUMP_DEVICE_LOGS("dumpDeviceLogs"),
 
   /**
    * Reboots the device through {@code reset.cgi}. The device answers, then restarts and the
@@ -501,7 +509,8 @@ enum LinkMethod {
           REMOVE_PAIRING,
           PIN_SMB_HOST,
           UNPIN_SMB_HOST,
-          RENEW_PAIRING ->
+          RENEW_PAIRING,
+          DUMP_DEVICE_LOGS ->
           Optional.empty();
     };
   }
@@ -827,6 +836,8 @@ enum LinkMethod {
                     reply.complete(
                         wireName, new DeviceRestore().run(session, request, reply), includeRaw);
               });
+      case DUMP_DEVICE_LOGS ->
+          onSession(params -> new DumpDeviceLogs(params.requirePath("outputFile")));
       case REBOOT -> onSession(_ -> new ResetDevice(ResetMode.REBOOT));
       case SHUTDOWN -> onSession(_ -> new ResetDevice(ResetMode.SHUTDOWN));
     };

@@ -57,6 +57,11 @@ public enum QueryParameter implements WireValue {
   /** The action to perform, such as {@code Restore} on a backup upload. */
   ACTION("action"),
 
+  /**
+   * The diagnostics facility to select on {@code support.cgi}: {@code dumplog} or {@code bugminer}.
+   */
+  FACILITY("facility"),
+
   /** The number of bytes of the category uploaded in a restore step. */
   SIZE("size"),
 

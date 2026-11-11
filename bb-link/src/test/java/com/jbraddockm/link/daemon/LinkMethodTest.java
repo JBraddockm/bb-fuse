@@ -201,6 +201,7 @@ class LinkMethodTest {
       "GET_BACKUP_INVENTORY, getBackupInventory",
       "BACKUP_DEVICE, backupDevice",
       "RESTORE_DEVICE, restoreDevice",
+      "DUMP_DEVICE_LOGS, dumpDeviceLogs",
       "REBOOT, reboot",
       "SHUTDOWN, powerOff"
     })
@@ -211,10 +212,10 @@ class LinkMethodTest {
     }
 
     @Test
-    @DisplayName("are 44, and distinct")
-    void areFortyFourAndDistinct() {
+    @DisplayName("are 47, and distinct")
+    void areFortySevenAndDistinct() {
       assertThat(Arrays.stream(LinkMethod.values()).map(LinkMethod::wireName))
-          .hasSize(46)
+          .hasSize(47)
           .doesNotHaveDuplicates();
     }
 

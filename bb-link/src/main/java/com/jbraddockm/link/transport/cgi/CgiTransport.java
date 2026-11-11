@@ -137,8 +137,66 @@ public final class CgiTransport implements AutoCloseable {
       }
       case CgiRequest.Upload upload -> upload(upload, observer);
       case CgiRequest.Download download -> download(download, observer);
+      case CgiRequest.StreamingGet streamingGet -> streamingGet(streamingGet, observer);
       case CgiRequest.Multipart multipart -> multipart(multipart, observer);
     };
+  }
+
+  /**
+   * Sends a GET whose answer is streamed to a file. Like {@link #download}, an octet-stream or
+   * image answer is written to the request's destination and the body is left empty, while an XML
+   * or JSON status/error stays in the body for the conversation to read. This is the GET
+   * counterpart of the POST download: {@code support.cgi}'s DumpLog drives its whole state machine
+   * with this one GET.
+   */
+  private CgiResponse streamingGet(CgiRequest.StreamingGet request, UploadObserver observer)
+      throws IOException {
+    var http = builder(uriOf(request.pathAndQuery()), request.readTimeout()).GET().build();
+    return streamed(
+        http,
+        "GET " + request.pathAndQuery(),
+        "",
+        request.destination(),
+        request.expectedLength(),
+        observer);
+  }
+
+  /**
+   * Sends a request whose answer is streamed to a file and turns the response into a {@link
+   * CgiResponse}: a data stream (octet-stream or image) becomes a {@link CgiResponse#downloaded()}
+   * with an empty body, anything else — an XML or JSON error — stays in the body so the
+   * conversation can read it. Shared by the POST {@link #download} and the GET {@link
+   * #streamingGet}.
+   *
+   * @param requestBody the request body for the trace, empty for a GET
+   */
+  private CgiResponse streamed(
+      HttpRequest http,
+      String requestLine,
+      String requestBody,
+      Path destination,
+      long expectedLength,
+      UploadObserver observer)
+      throws IOException {
+    var cookieNames = cookieNames();
+    try {
+      var response = client.send(http, streamingHandler(destination, expectedLength, observer));
+      var contentType = header(response, "Content-Type");
+      var setCookie = header(response, "Set-Cookie");
+      var outcome = response.body();
+      var result =
+          outcome.downloaded() != null
+              ? new CgiResponse(
+                  response.statusCode(), contentType, "", setCookie, outcome.downloaded())
+              : new CgiResponse(response.statusCode(), contentType, outcome.body(), setCookie);
+      this.observer.onExchange(requestLine, requestBody, cookieNames, result);
+      return result;
+    } catch (IOException failure) {
+      this.observer.onFailedExchange(requestLine, requestBody, cookieNames, failure);
+      throw failure;
+    } catch (InterruptedException interrupted) {
+      throw interruptedToIo(interrupted, requestLine, requestBody, cookieNames);
+    }
   }
 
   /**
@@ -266,26 +324,13 @@ public final class CgiTransport implements AutoCloseable {
             .header("Content-Type", "application/x-www-form-urlencoded")
             .POST(HttpRequest.BodyPublishers.ofString(body, StandardCharsets.US_ASCII))
             .build();
-    var requestLine = "POST " + download.endpoint().path();
-    var cookieNames = cookieNames();
-    try {
-      var response = client.send(http, streamingHandler(download, observer));
-      var contentType = header(response, "Content-Type");
-      var setCookie = header(response, "Set-Cookie");
-      var outcome = response.body();
-      var result =
-          outcome.downloaded() != null
-              ? new CgiResponse(
-                  response.statusCode(), contentType, "", setCookie, outcome.downloaded())
-              : new CgiResponse(response.statusCode(), contentType, outcome.body(), setCookie);
-      this.observer.onExchange(requestLine, body, cookieNames, result);
-      return result;
-    } catch (IOException failure) {
-      this.observer.onFailedExchange(requestLine, body, cookieNames, failure);
-      throw failure;
-    } catch (InterruptedException interrupted) {
-      throw interruptedToIo(interrupted, requestLine, body, cookieNames);
-    }
+    return streamed(
+        http,
+        "POST " + download.endpoint().path(),
+        body,
+        download.destination(),
+        download.expectedLength(),
+        observer);
   }
 
   /** A data answer that was streamed to a file, or an error envelope kept as text. */
@@ -296,17 +341,16 @@ public final class CgiTransport implements AutoCloseable {
    * to the file with progress, anything else is kept as a UTF-8 string so an error can be read.
    */
   private HttpResponse.BodyHandler<DownloadOutcome> streamingHandler(
-      CgiRequest.Download download, UploadObserver observer) {
+      Path destination, long expectedLength, UploadObserver observer) {
     return info -> {
       var contentType = info.headers().firstValue("Content-Type").orElse(null);
       if (isStreamedAnswer(contentType)) {
-        var writer =
-            new StreamingFileWriter(download.destination(), download.expectedLength(), observer);
+        var writer = new StreamingFileWriter(destination, expectedLength, observer);
         return HttpResponse.BodySubscribers.mapping(
             HttpResponse.BodySubscribers.ofByteArrayConsumer(writer),
             _ ->
                 new DownloadOutcome(
-                    "", new CgiResponse.Downloaded(download.destination(), writer.bytesWritten())));
+                    "", new CgiResponse.Downloaded(destination, writer.bytesWritten())));
       }
       return HttpResponse.BodySubscribers.mapping(
           HttpResponse.BodySubscribers.ofString(StandardCharsets.UTF_8),

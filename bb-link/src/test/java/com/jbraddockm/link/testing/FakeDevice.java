@@ -110,6 +110,21 @@ public final class FakeDevice implements AutoCloseable {
   /** What backup.cgi was asked, one line per request, in order. */
   public final List<String> backupRequests = Collections.synchronizedList(new ArrayList<>());
 
+  /** The archive bytes support.cgi streams once the DumpLog gather is ready. */
+  public volatile byte[] supportArchive = new byte[0];
+
+  /** How many {@code InProgress} polls support.cgi reports before the archive is ready. */
+  public volatile int supportPreparePolls = 1;
+
+  /** When true, every support.cgi request answers {@code Bad facility} (error 4). */
+  public volatile boolean supportBadFacility;
+
+  /** What support.cgi was asked, one line per request, in order. */
+  public final List<String> supportRequests = Collections.synchronizedList(new ArrayList<>());
+
+  private final AtomicInteger supportPollIndex = new AtomicInteger();
+  private final AtomicInteger supportCookie = new AtomicInteger();
+
   private final HttpServer server;
   private final String password;
   private final List<String> cookiesSeen = Collections.synchronizedList(new ArrayList<>());
@@ -254,6 +269,7 @@ public final class FakeDevice implements AutoCloseable {
     server.createContext("/cgi-bin/pimsync.cgi", new PimSyncEndpoint()::handle);
     server.createContext("/cgi-bin/update.cgi", new UpdateEndpoint()::handle);
     server.createContext("/cgi-bin/backup.cgi", new BackupEndpoint()::handle);
+    server.createContext("/cgi-bin/support.cgi", new SupportEndpoint()::handle);
     server.start();
   }
 
@@ -981,6 +997,91 @@ public final class FakeDevice implements AutoCloseable {
         backupRequests.add("unexpected " + form);
         fireHook();
         respond(exchange, 400, error("Backup", 8, "invalid request, status missing"), renewal);
+      }
+    }
+  }
+
+  /**
+   * Handles {@code support.cgi} DumpLog requests. The whole lifecycle is driven by the same GET
+   * {@code ?facility=dumplog}: the first selects the facility and starts the gather, the next
+   * {@code supportPreparePolls} report {@code InProgress}, then one reports {@code Ready} with the
+   * size, and the one after streams the archive. A wrong (or missing) facility, or {@code
+   * supportBadFacility}, answers {@code Bad facility} (error 4); {@code action=cancel} answers
+   * error 7.
+   */
+  final class SupportEndpoint {
+
+    private static String dumpLog(String inner) {
+      return "<RimTabletResponse><DumpLog>" + inner + "</DumpLog></RimTabletResponse>";
+    }
+
+    private static String error(int identifier, String description) {
+      return "<RimTabletResponse><Status>Error</Status><Error><ErrorIdentifier>"
+          + identifier
+          + "</ErrorIdentifier><ErrorDescription>"
+          + description
+          + "</ErrorDescription></Error></RimTabletResponse>";
+    }
+
+    private static String fieldOf(String text, String key) {
+      if (text == null) {
+        return null;
+      }
+      for (var pair : text.split("&")) {
+        var parts = pair.split("=", 2);
+        if (parts[0].equals(key)) {
+          return parts.length == 2 ? parts[1] : "";
+        }
+      }
+      return null;
+    }
+
+    void handle(HttpExchange exchange) throws IOException {
+      cgiRequests.incrementAndGet();
+      var cookie = exchange.getRequestHeaders().getFirst("Cookie");
+      var query = exchange.getRequestURI().getRawQuery();
+      cookiesSeen.add(cookie == null ? "" : cookie);
+      if (alwaysRejectCookie || cookie == null || !cookie.contains("dtmauth=" + token)) {
+        supportRequests.add("no session");
+        fireHook();
+        respond(exchange, 200, "", null);
+        return;
+      }
+      var renewal = "support=" + supportCookie.incrementAndGet() + "; " + FUTURE;
+      var facility = fieldOf(query, "facility");
+      var action = fieldOf(query, "action");
+
+      if ("cancel".equals(action)) {
+        supportRequests.add("cancel");
+        fireHook();
+        respond(exchange, 200, error(7, "Remote cancel received"), renewal);
+        return;
+      }
+      if (supportBadFacility || !"dumplog".equals(facility)) {
+        supportRequests.add("bad facility=" + facility);
+        fireHook();
+        respond(exchange, 200, error(4, "Bad facility"), renewal);
+        return;
+      }
+
+      var poll = supportPollIndex.getAndIncrement();
+      fireHook();
+      if (poll == 0) {
+        supportRequests.add("select");
+        respond(exchange, 200, dumpLog("<Status>Started</Status>"), renewal);
+      } else if (poll <= supportPreparePolls) {
+        supportRequests.add("poll=" + poll + " inProgress");
+        respond(exchange, 200, dumpLog("<Status>InProgress</Status>"), renewal);
+      } else if (poll == supportPreparePolls + 1) {
+        supportRequests.add("poll=" + poll + " ready");
+        respond(
+            exchange,
+            200,
+            dumpLog("<Status>Ready</Status><Size>" + supportArchive.length + "</Size>"),
+            renewal);
+      } else {
+        supportRequests.add("stream bytes=" + supportArchive.length);
+        respondBytes(exchange, supportArchive, renewal);
       }
     }
   }
