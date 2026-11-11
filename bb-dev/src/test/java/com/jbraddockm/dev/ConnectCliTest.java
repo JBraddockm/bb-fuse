@@ -5,8 +5,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 /**
  * Tests the {@code connect} command line's argument handling, up to the point it needs a device.
@@ -36,10 +38,22 @@ class ConnectCliTest {
   }
 
   @Test
-  @DisplayName("fails with a usage error when no SSH public key is given")
-  void needsAKey() {
-    assertThat(dispatch("connect", "device.invalid")).isEqualTo(2);
-    assertThat(output()).contains("sshPublicKey");
+  @DisplayName("generates a key at the default location when none is given, then tries to connect")
+  void generatesDefaultKeyWhenNoneGiven(@TempDir Path rim) {
+    var previous = System.getProperty("bb.dev.rim.dir");
+    System.setProperty("bb.dev.rim.dir", rim.toString());
+    try {
+      // No -sshPublicKey: the key is generated at the default path, then the bogus host fails.
+      assertThat(dispatch("connect", "device.invalid")).isEqualTo(1);
+      assertThat(rim.resolve("bbt_id_rsa.pub")).exists();
+      assertThat(rim.resolve("bbt_id_rsa")).exists();
+    } finally {
+      if (previous == null) {
+        System.clearProperty("bb.dev.rim.dir");
+      } else {
+        System.setProperty("bb.dev.rim.dir", previous);
+      }
+    }
   }
 
   @Test

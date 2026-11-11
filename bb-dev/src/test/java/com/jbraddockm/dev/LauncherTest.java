@@ -91,9 +91,9 @@ class LauncherTest {
     @Test
     @DisplayName("routes to the connect tool, which then validates its own options")
     void connectRoutesAndValidates() {
-      // No -sshPublicKey, so the connect tool itself reports a usage error — which proves the
-      // namespace word was consumed and the remaining options were handed to the tool.
-      assertThat(dispatch("connect", "device.invalid", "-password", "abc")).isEqualTo(2);
+      // No host, so the connect tool itself reports a usage error — which proves the namespace word
+      // was consumed and the remaining options were handed to the tool.
+      assertThat(dispatch("connect", "-password", "abc")).isEqualTo(2);
       assertThat(out()).contains("Usage: bb-dev connect");
     }
 
