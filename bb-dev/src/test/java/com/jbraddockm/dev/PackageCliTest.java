@@ -3,6 +3,7 @@ package com.jbraddockm.dev;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.jbraddockm.core.json.Json;
+import com.jbraddockm.dev.packaging.descriptor.BarDescriptor;
 import com.jbraddockm.dev.testing.Resources;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -87,16 +88,25 @@ class PackageCliTest {
   class GenerateXml {
 
     @Test
-    @DisplayName("writes a starter descriptor that parses")
+    @DisplayName("writes a standard Cascades starter descriptor that parses")
     void writesStarter() throws Exception {
       var file = project.resolve("bar-descriptor.xml");
 
       assertThat(dispatch("package", "-generateXml", file.toString())).isZero();
 
-      assertThat(Files.readString(file))
+      var xml = Files.readString(file);
+      assertThat(xml)
           .contains("<qnx")
-          .contains("<id>")
-          .contains("entry=\"true\"");
+          .contains("com.example.MyApp")
+          .contains("entry=\"true\"")
+          .contains("Qnx/Cascades")
+          .contains("run_native");
+
+      // It is a valid descriptor with Momentics' four build configurations.
+      var descriptor = BarDescriptor.parse(xml);
+      assertThat(descriptor.id()).isEqualTo("com.example.MyApp");
+      assertThat(descriptor.author()).isEqualTo("Example Inc.");
+      assertThat(descriptor.configurations()).hasSize(4);
     }
 
     @Test
