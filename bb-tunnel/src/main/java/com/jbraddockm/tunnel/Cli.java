@@ -69,6 +69,7 @@ public final class Cli {
         IO.println();
         IO.println("tunnel up to " + host);
         IO.println("  device ULA : " + lease.deviceUla());
+        IO.println("  host ULA   : " + lease.hostUla() + "  (file-share bind address)");
         IO.println(
             "  SMB host   : " + lease.deviceIpv4() + "  (smb://" + lease.deviceIpv4() + "/)");
         IO.println(

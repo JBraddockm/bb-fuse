@@ -99,16 +99,15 @@ final class TunnelBroker {
    */
   private static String pinFrom(RequestParams params) {
     var explicit = params.optionalString("pin");
-    return explicit.orElseGet(
-        () ->
-            params
-                .optionalString("certificate")
-                .map(Path::of)
-                .map(Path::getParent)
-                .map(Path::getFileName)
-                .map(Path::toString)
-                .filter(name -> name.matches("[A-Za-z0-9]{1,16}"))
-                .orElse(null));
+    return explicit.orElseGet(() ->
+        params
+            .optionalString("certificate")
+            .map(Path::of)
+            .map(Path::getParent)
+            .map(Path::getFileName)
+            .map(Path::toString)
+            .filter(name -> name.matches("[A-Za-z0-9]{1,16}"))
+            .orElse(null));
   }
 
   /** The label a log line leads with: the device PIN when known, else the transport host. */
@@ -211,6 +210,7 @@ final class TunnelBroker {
     synchronized (lock) {
       var info = byHost.computeIfAbsent(host, _ -> new DeviceInfo());
       info.ula = lease.deviceUla();
+      info.hostUla = lease.hostUla();
       info.innerIpv4 = lease.deviceIpv4();
       var pin = pinFrom(params);
       if (pin != null) {
@@ -256,13 +256,12 @@ final class TunnelBroker {
     }
     return fallbackIdentity
         .resolve(params)
-        .orElseThrow(
-            () ->
-                new BrokerException(
-                    "identity_missing",
-                    "no client certificate for the tunnel: pass 'certificate' and 'key' paths, or"
-                        + " give the daemon a device identity (--cert/--key, BB_DEVICE, or a"
-                        + " devices/<PIN>/ folder beside the binary)"));
+        .orElseThrow(() ->
+            new BrokerException(
+                "identity_missing",
+                "no client certificate for the tunnel: pass 'certificate' and 'key' paths, or"
+                    + " give the daemon a device identity (--cert/--key, BB_DEVICE, or a"
+                    + " devices/<PIN>/ folder beside the binary)"));
   }
 
   /** Releases one lease by token. Idempotent; reports the references remaining for the device. */
@@ -298,33 +297,32 @@ final class TunnelBroker {
     var only = params.optionalString("host");
     synchronized (lock) {
       var tunnels = new ArrayList<>();
-      byHost.forEach(
-          (host, info) -> {
-            if (only.isPresent() && !only.get().equals(host)) {
-              return;
-            }
-            var holds = holdsFor(host);
-            var consumers = new LinkedHashSet<String>();
-            holds.forEach(hold -> consumers.add(hold.consumer));
-            tunnels.add(
-                Json.object(
-                    "host",
-                    host,
-                    "state",
-                    "UP",
-                    "ula",
-                    info.ula,
-                    "innerIpv4",
-                    info.innerIpv4,
-                    "guid",
-                    info.guid,
-                    "pin",
-                    info.pin,
-                    "refs",
-                    (long) holds.size(),
-                    "consumers",
-                    List.copyOf(consumers)));
-          });
+      byHost.forEach((host, info) -> {
+        if (only.isPresent() && !only.get().equals(host)) {
+          return;
+        }
+        var holds = holdsFor(host);
+        var consumers = new LinkedHashSet<String>();
+        holds.forEach(hold -> consumers.add(hold.consumer));
+        tunnels.add(
+            Json.object(
+                "host",
+                host,
+                "state",
+                "UP",
+                "ula",
+                info.ula,
+                "innerIpv4",
+                info.innerIpv4,
+                "guid",
+                info.guid,
+                "pin",
+                info.pin,
+                "refs",
+                (long) holds.size(),
+                "consumers",
+                List.copyOf(consumers)));
+      });
       return Json.object("tunnels", tunnels);
     }
   }
@@ -428,6 +426,7 @@ final class TunnelBroker {
         "token", token,
         "host", host,
         "ula", info.ula,
+        "hostUla", info.hostUla,
         "innerIpv4", info.innerIpv4,
         "guid", info.guid,
         "pin", info.pin,
@@ -462,8 +461,9 @@ final class TunnelBroker {
    */
   private static final class DeviceInfo {
     String ula;
+    String hostUla;
     String innerIpv4;
-    String guid; // null until an identify
-    String pin; // null until an identify
+    String guid; // null until an identity
+    String pin; // null until an identity
   }
 }

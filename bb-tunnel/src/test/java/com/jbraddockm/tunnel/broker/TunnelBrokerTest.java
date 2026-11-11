@@ -65,7 +65,7 @@ class TunnelBrokerTest {
    * TunnelManagerTest}; here it only has to behave like the service the broker talks to.
    */
   private static final class FakeTunnels implements Tunnels {
-    private record Info(String ula, String innerIpv4) {}
+    private record Info(String ula, String hostUla, String innerIpv4) {}
 
     private final Map<String, Info> up = new HashMap<>();
     private final Map<String, Integer> refs = new HashMap<>();
@@ -78,7 +78,9 @@ class TunnelBrokerTest {
               host,
               h ->
                   new Info(
-                      "fd00::" + h, proposedSmbHost != null ? proposedSmbHost : "169.254.9.1"));
+                      "fd00::" + h,
+                      "fd00::host:" + h,
+                      proposedSmbHost != null ? proposedSmbHost : "169.254.9.1"));
       refs.merge(host, 1, Integer::sum);
       return new FakeLease(host, info);
     }
@@ -128,6 +130,11 @@ class TunnelBrokerTest {
       }
 
       @Override
+      public String hostUla() {
+        return info.hostUla();
+      }
+
+      @Override
       public String deviceIpv4() {
         return info.innerIpv4();
       }
@@ -169,6 +176,7 @@ class TunnelBrokerTest {
       var lease = broker.acquire("c1", params("host", "192.168.1.118", "consumer", "bb-link"));
 
       assertThat(lease.get("ula")).isEqualTo("fd00::192.168.1.118");
+      assertThat(lease.get("hostUla")).isEqualTo("fd00::host:192.168.1.118");
       assertThat(lease.get("innerIpv4")).isEqualTo("169.254.9.1");
       assertThat(lease.get("token")).isNotNull();
       assertThat(lease.get("refs")).isEqualTo(1L);

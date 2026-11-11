@@ -30,6 +30,9 @@ TunnelManager.Lease lease = manager.acquire(deviceHost, "169.254.1.1", identity)
 deviceUla();  // the device's tunnel ULA — the host bb-link / Blend connect to
   lease.
 
+hostUla();    // OUR tunnel ULA — the bind address for a host-side service (rimdav on [hostUla]:4487)
+  lease.
+
 deviceIpv4(); // the GRANTED inner IPv4 — the SMB host (bb-link's `smbHost` connect param)
 }
 ```
@@ -99,7 +102,7 @@ sequenceDiagram
     Dev -->> D: CONNECT_RESP (device ULA)
     D ->> Dev: IPV4_ENABLE (binds inner IPv4)
     D ->> Dev: DTLS 1.0, data plane into a utun
-    D -->> L: ok {ula, innerIpv4, token}
+    D -->> L: ok {ula, hostUla, innerIpv4, token}
     L ->> Dev: connect over the ULA — CGIs 8443, WebDAV 8080, Blend 2708, SMB 445
 ```
 
@@ -244,7 +247,7 @@ so neither is hardcoded:
 ```java
 try(Tunnel t = Tunnel.open(TunnelConfig.fromClasspath("192.168.1.118"))){
 String device = t.deviceUla();   // the device's address on the tunnel, from CONNECT_RESP
-String ours = t.ourUla();      // derived from the client certificate
+String ours = t.hostUla();     // our ULA, derived from the client certificate — a host-service bind address
 // reach any device service over the tunnel at https://[device]:<port>/ — e.g. :8443, :8080, :2708
 }
 ```

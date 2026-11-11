@@ -53,6 +53,12 @@ public interface Tunnels {
     /** The device's tunnel ULA — the host a consumer connects to. */
     String deviceUla();
 
+    /**
+     * Our (the host's) tunnel ULA — the bind address for a host-side service the device reaches
+     * over the tunnel (e.g. the rimdav file server on {@code [hostUla]:4487}).
+     */
+    String hostUla();
+
     /** The device's inner IPv4 — the SMB host. */
     String deviceIpv4();
 

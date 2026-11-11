@@ -49,6 +49,11 @@ class TunnelManagerTest {
         }
 
         @Override
+        public String hostUla() {
+          return "fd00::host:" + host;
+        }
+
+        @Override
         public void close() {
           closed.add(host);
         }

@@ -186,6 +186,7 @@ public final class TunnelBrokerClient implements AutoCloseable {
     return new BrokerLease(
         string(reply.get("token")),
         string(reply.get("ula")),
+        string(reply.get("hostUla")),
         string(reply.get("innerIpv4")),
         string(reply.get("guid")),
         string(reply.get("pin")),

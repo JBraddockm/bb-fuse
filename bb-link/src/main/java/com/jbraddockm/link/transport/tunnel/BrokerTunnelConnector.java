@@ -56,12 +56,11 @@ public final class BrokerTunnelConnector implements TunnelConnector {
     try {
       var down = new AtomicBoolean();
       // Register the drop listener before acquiring, so a drop cannot slip through the gap.
-      client.onEvent(
-          event -> {
-            if ("dropped".equals(event.type())) {
-              down.set(true);
-            }
-          });
+      client.onEvent(event -> {
+        if ("dropped".equals(event.type())) {
+          down.set(true);
+        }
+      });
       var lease = client.acquire(host, proposedSmbHost, consumer, tunnelCert, tunnelKey);
       return new Binding(client, lease, down);
     } catch (IOException | RuntimeException failure) {
@@ -87,6 +86,11 @@ public final class BrokerTunnelConnector implements TunnelConnector {
     }
 
     @Override
+    public String hostUla() {
+      return lease.hostUla();
+    }
+
+    @Override
     public String smbHost() {
       return lease.innerIpv4();
     }
@@ -100,7 +104,7 @@ public final class BrokerTunnelConnector implements TunnelConnector {
     public void close() {
       try {
         client.release(lease.token());
-      } catch (IOException ignore) {
+      } catch (IOException _) {
         // best effort: the daemon also reclaims the lease when this connection closes
       } finally {
         client.close();

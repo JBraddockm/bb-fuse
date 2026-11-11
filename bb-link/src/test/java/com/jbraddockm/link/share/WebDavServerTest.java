@@ -239,6 +239,35 @@ class WebDavServerTest {
   }
 
   @Nested
+  @DisplayName("binding on the tunnel ULA")
+  class TunnelBind {
+
+    @Test
+    @DisplayName("binds the rimdav port on a host IPv6 ULA literal")
+    void bindsUla() {
+      var address = WebDavServer.tunnelBindAddress("fd2d:1a2b:3c4d::9a66");
+
+      assertThat(address.getPort()).isEqualTo(WebDavServer.RIMDAV_PORT);
+      assertThat(address.getAddress()).isInstanceOf(java.net.Inet6Address.class);
+    }
+
+    @Test
+    @DisplayName(
+        "refuses anything that is not an IPv6 literal, so the share never faces a routable"
+            + " interface")
+    void refusesNonUla() {
+      org.assertj.core.api.Assertions.assertThatThrownBy(
+              () -> WebDavServer.tunnelBindAddress("169.254.2.2"))
+          .isInstanceOf(IllegalArgumentException.class);
+      org.assertj.core.api.Assertions.assertThatThrownBy(
+              () -> WebDavServer.tunnelBindAddress("example.com"))
+          .isInstanceOf(IllegalArgumentException.class);
+      org.assertj.core.api.Assertions.assertThatThrownBy(() -> WebDavServer.tunnelBindAddress("  "))
+          .isInstanceOf(IllegalArgumentException.class);
+    }
+  }
+
+  @Nested
   @DisplayName("as a read-only share")
   class ReadOnly {
 

@@ -207,6 +207,11 @@ class BrokerServerRoundTripTest {
       }
 
       @Override
+      public String hostUla() {
+        return "fd00::host:" + host;
+      }
+
+      @Override
       public String deviceIpv4() {
         return info.innerIpv4();
       }

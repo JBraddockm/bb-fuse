@@ -205,6 +205,16 @@ final class Tunnel implements AutoCloseable {
   }
 
   /**
+   * Our (the host's) tunnel ULA — derived from our leaf cert and assigned to the utun, so a
+   * host-side service bound on {@code [hostUla]:<port>} is reachable by the device over the tunnel
+   * (the device routes return traffic to the ULA we sent in {@code CONNECT}). This is the bind
+   * address RIM's rimdav file server uses. Stable for the handle's lifetime.
+   */
+  String hostUla() {
+    return ourUla;
+  }
+
+  /**
    * The device's inner IPv4 on the tunnel (link-local {@code 169.254.x.y}), advertised in {@code
    * IPV4_ENABLE} and bound by the device to its {@code bptp0} interface. Its SMB share is reachable
    * at {@code [deviceIpv4]:445} once the tunnel is {@link State#UP}. Static (from the config), so

@@ -176,6 +176,11 @@ public final class TunnelManager implements Tunnels {
       }
 
       @Override
+      public String hostUla() {
+        return tunnel.hostUla();
+      }
+
+      @Override
       public void close() {
         tunnel.close();
       }
@@ -204,6 +209,8 @@ public final class TunnelManager implements Tunnels {
    */
   interface Connection {
     String deviceUla();
+
+    String hostUla();
 
     void close();
   }
@@ -235,6 +242,11 @@ public final class TunnelManager implements Tunnels {
     @Override
     public String deviceUla() {
       return entry.connection.deviceUla();
+    }
+
+    @Override
+    public String hostUla() {
+      return entry.connection.hostUla();
     }
 
     @Override

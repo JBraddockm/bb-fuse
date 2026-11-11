@@ -2,13 +2,20 @@ package com.jbraddockm.link.transport.tunnel;
 
 /**
  * A hold on a device's Wi-Fi tunnel for the lifetime of a session. The session connects over {@link
- * #ula()} and reports {@link #smbHost()} as the share address; {@link #isDown()} turns true once the
- * tunnel has dropped. Closing it releases the hold.
+ * #ula()} and reports {@link #smbHost()} as the share address; {@link #isDown()} turns true once
+ * the tunnel has dropped. Closing it releases the hold.
  */
 public interface TunnelBinding extends AutoCloseable {
 
   /** The device's tunnel ULA — the host the session actually connects to. */
   String ula();
+
+  /**
+   * Our (the host's) tunnel ULA — the bind address for a host-side service the device reaches over
+   * the tunnel (the rimdav file server on {@code [hostUla]:4487}), or {@code null} if the broker
+   * did not report it.
+   */
+  String hostUla();
 
   /** The device's inner IPv4 on the tunnel — the SMB share host reported to the client. */
   String smbHost();

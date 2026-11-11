@@ -59,6 +59,11 @@ class DeviceSessionTunnelTest {
     }
 
     @Override
+    public String hostUla() {
+      return "fd00::host";
+    }
+
+    @Override
     public String smbHost() {
       return smbHost;
     }

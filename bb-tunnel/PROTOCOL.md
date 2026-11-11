@@ -150,7 +150,7 @@ device without owning its lifecycle. It runs over a **Unix-domain socket** (defa
 
 | op         | params                                                                  | reply (on `ok`)                                                     |
 |------------|-------------------------------------------------------------------------|---------------------------------------------------------------------|
-| `acquire`  | `host` **or** `guid`; optional `smbHost` (propose `169.254.k.1`, honoured if free else countered), `stable` (= propose `169.254.1.1`), `consumer` | `token`, `host`, `ula`, `innerIpv4` (the **granted** SMB host), `guid?`, `pin?`, `refs` |
+| `acquire`  | `host` **or** `guid`; optional `smbHost` (propose `169.254.k.1`, honoured if free else countered), `stable` (= propose `169.254.1.1`), `consumer` | `token`, `host`, `ula`, `hostUla` (**our** tunnel ULA — the bind address for a host-side service, e.g. rimdav on `[hostUla]:4487`), `innerIpv4` (the **granted** SMB host), `guid?`, `pin?`, `refs` |
 | `release`  | `token`                                                                 | `refs` (remaining for the device)                                   |
 | `status`   | optional `host`                                                         | `tunnels`: `[{host,state,ula,innerIpv4,guid?,pin?,refs,consumers}]` |
 | `identify` | `host`, `guid`, optional `pin`                                          | `ok`                                                                |
@@ -210,7 +210,7 @@ sequenceDiagram
     D-->>C: event hello (lists ops)
     C->>D: op acquire {host}
     Note over D: opens or joins the tunnel (device-facing flow in sections 1 to 6)
-    D-->>C: ok {ula, innerIpv4, token}
+    D-->>C: ok {ula, hostUla, innerIpv4, token}
     Note over C: use the device over the ULA
     D-->>C: event dropped {host} (unsolicited, only if the link fails)
     C->>D: op release {token}

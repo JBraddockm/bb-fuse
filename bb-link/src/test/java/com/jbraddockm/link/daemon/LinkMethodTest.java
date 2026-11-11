@@ -82,6 +82,11 @@ class LinkMethodTest {
     }
 
     @Override
+    public String hostUla() {
+      return "fd00::host";
+    }
+
+    @Override
     public String smbHost() {
       return "169.254.1.1";
     }

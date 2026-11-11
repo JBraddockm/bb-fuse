@@ -76,6 +76,7 @@ class BrokerTunnelConnectorTest {
     void bindsOverTheLease() throws IOException {
       try (var binding = connector().connect()) {
         assertThat(binding.ula()).isEqualTo("fd00::dev");
+        assertThat(binding.hostUla()).isEqualTo("fd00::host");
         assertThat(binding.smbHost()).isEqualTo("169.254.1.1");
         assertThat(binding.isDown()).isFalse();
       }
@@ -241,6 +242,8 @@ class BrokerTunnelConnectorTest {
                       "T1",
                       "ula",
                       "fd00::dev",
+                      "hostUla",
+                      "fd00::host",
                       "innerIpv4",
                       "169.254.1.1",
                       "refs",
