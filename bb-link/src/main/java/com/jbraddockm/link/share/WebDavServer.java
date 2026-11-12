@@ -34,6 +34,19 @@ public final class WebDavServer implements AutoCloseable {
    */
   public static final int RIMDAV_PORT = 4487;
 
+  /**
+   * Per-connection idle timeout. A peer that stalls mid-request releases its worker instead of
+   * holding it forever. This bounds the gap between reads, not the whole transfer, so a large
+   * upload that keeps flowing is unaffected.
+   */
+  private static final int READ_TIMEOUT_MILLIS = 30_000;
+
+  /**
+   * Pause after a transient {@code accept()} failure, so a persistent error (such as the
+   * file-descriptor limit) cannot spin the accept loop.
+   */
+  private static final int ACCEPT_BACKOFF_MILLIS = 100;
+
   private final ServerSocket socket;
   private final ExecutorService workers;
   private volatile boolean running = true;
@@ -79,22 +92,34 @@ public final class WebDavServer implements AutoCloseable {
       try {
         connection = socket.accept();
       } catch (IOException closed) {
-        // close() races the accept; a failure while still running is transient, otherwise we stop.
-        if (running) {
-          continue;
+        // close() races the accept; once stopped we exit, otherwise the failure is transient and
+        // we pause briefly so a persistent error does not spin the loop.
+        if (!running) {
+          return;
         }
-        return;
+        backoff();
+        continue;
       }
       workers.execute(() -> serve(handler, connection));
+    }
+  }
+
+  private void backoff() {
+    try {
+      Thread.sleep(ACCEPT_BACKOFF_MILLIS);
+    } catch (InterruptedException interrupted) {
+      Thread.currentThread().interrupt();
+      running = false;
     }
   }
 
   private static void serve(WebDavHandler handler, Socket connection) {
     try (connection) {
       connection.setTcpNoDelay(true);
+      connection.setSoTimeout(READ_TIMEOUT_MILLIS);
       handler.handle(connection.getInputStream(), connection.getOutputStream());
     } catch (IOException dropped) {
-      // a dropped connection is the client's to retry; nothing for the server to do
+      // a dropped or timed-out connection is the client's to retry; nothing for the server to do
     }
   }
 
