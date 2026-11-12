@@ -399,4 +399,52 @@ class WebDavServerTest {
       assertThat(rawResponse(get)).contains("filename*=UTF-8''Bl%E2%80%94ck.txt");
     }
   }
+
+  @Nested
+  @DisplayName("serving byte ranges")
+  class Ranges {
+
+    @BeforeEach
+    void seed() throws IOException {
+      Files.writeString(share.resolve("r.txt"), "0123456789");
+    }
+
+    @Test
+    @DisplayName("returns 206 with the requested slice and a Content-Range")
+    void partial() throws Exception {
+      var response = send("GET", "/r.txt", BodyPublishers.noBody(), "Range", "bytes=2-5");
+
+      assertThat(response.statusCode()).isEqualTo(206);
+      assertThat(response.headers().firstValue("Content-Range")).hasValue("bytes 2-5/10");
+      assertThat(response.body()).isEqualTo("2345");
+    }
+
+    @Test
+    @DisplayName("serves a suffix range (the last N bytes)")
+    void suffix() throws Exception {
+      var response = send("GET", "/r.txt", BodyPublishers.noBody(), "Range", "bytes=-3");
+
+      assertThat(response.statusCode()).isEqualTo(206);
+      assertThat(response.headers().firstValue("Content-Range")).hasValue("bytes 7-9/10");
+      assertThat(response.body()).isEqualTo("789");
+    }
+
+    @Test
+    @DisplayName("answers a range past the end with 416")
+    void unsatisfiable() throws Exception {
+      var response = send("GET", "/r.txt", BodyPublishers.noBody(), "Range", "bytes=100-");
+
+      assertThat(response.statusCode()).isEqualTo(416);
+      assertThat(response.headers().firstValue("Content-Range")).hasValue("bytes */10");
+    }
+
+    @Test
+    @DisplayName("advertises Accept-Ranges on a normal GET")
+    void advertisesAcceptRanges() throws Exception {
+      var response = send("GET", "/r.txt", BodyPublishers.noBody());
+
+      assertThat(response.statusCode()).isEqualTo(200);
+      assertThat(response.headers().firstValue("Accept-Ranges")).hasValue("bytes");
+    }
+  }
 }

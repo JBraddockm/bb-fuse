@@ -164,19 +164,108 @@ final class WebDavHandler {
       send(out, Files.isDirectory(target) ? DavStatus.FORBIDDEN : DavStatus.NOT_FOUND, null, null);
       return;
     }
+    var length = Files.size(target);
     var headers = new LinkedHashMap<String, String>();
     var type = probe(target);
     if (type != null) {
       headers.put("Content-Type", type);
     }
     headers.put("Last-Modified", HTTP_DATE.format(Files.getLastModifiedTime(target).toInstant()));
+    headers.put("Accept-Ranges", "bytes");
     if (download(request)) {
       headers.put("Content-Disposition", contentDisposition(target.getFileName().toString()));
     }
-    var length = Files.size(target);
-    sendHead(out, DavStatus.OK, headers, length);
-    if (body) {
-      Files.copy(target, out);
+    switch (rangeFor(request.header("Range"), length)) {
+      case Unsatisfiable _ -> {
+        headers.put("Content-Range", "bytes */" + length);
+        send(out, DavStatus.RANGE_NOT_SATISFIABLE, headers, null);
+      }
+      case Partial partial -> {
+        headers.put(
+            "Content-Range", "bytes " + partial.start() + "-" + partial.end() + "/" + length);
+        sendHead(out, DavStatus.PARTIAL_CONTENT, headers, partial.length());
+        if (body) {
+          copyRange(target, out, partial.start(), partial.length());
+        }
+      }
+      case Whole _ -> {
+        sendHead(out, DavStatus.OK, headers, length);
+        if (body) {
+          Files.copy(target, out);
+        }
+      }
+    }
+  }
+
+  /** The outcome of matching a {@code Range} header against the entity length. */
+  private sealed interface Ranged permits Whole, Partial, Unsatisfiable {}
+
+  /** No usable range: serve the whole entity with {@code 200}. */
+  private record Whole() implements Ranged {}
+
+  /** A satisfiable single byte range, {@code start} and {@code end} both inclusive. */
+  private record Partial(long start, long end) implements Ranged {
+    long length() {
+      return end - start + 1;
+    }
+  }
+
+  /** A range that cannot be met: respond {@code 416}. */
+  private record Unsatisfiable() implements Ranged {}
+
+  /**
+   * Parses a byte {@code Range} against the entity length. Only a single {@code bytes=} range is
+   * honoured; a multi-range or any header that is absent, of another unit, or malformed is served
+   * whole. A start past the end (or an empty suffix) is unsatisfiable.
+   */
+  private static Ranged rangeFor(String header, long length) {
+    var prefix = "bytes=";
+    if (header == null || !header.startsWith(prefix)) {
+      return new Whole();
+    }
+    var spec = header.substring(prefix.length()).trim();
+    var dash = spec.indexOf('-');
+    if (spec.indexOf(',') >= 0 || dash < 0) {
+      return new Whole();
+    }
+    var startText = spec.substring(0, dash).trim();
+    var endText = spec.substring(dash + 1).trim();
+    try {
+      if (startText.isEmpty()) {
+        if (endText.isEmpty()) {
+          return new Whole();
+        }
+        var suffix = Long.parseLong(endText);
+        if (suffix <= 0 || length == 0) {
+          return new Unsatisfiable();
+        }
+        return new Partial(Math.max(0, length - suffix), length - 1);
+      }
+      var start = Long.parseLong(startText);
+      if (start >= length) {
+        return new Unsatisfiable();
+      }
+      var end = endText.isEmpty() ? length - 1 : Math.min(Long.parseLong(endText), length - 1);
+      return end < start ? new Unsatisfiable() : new Partial(start, end);
+    } catch (NumberFormatException malformed) {
+      return new Whole();
+    }
+  }
+
+  private static void copyRange(Path target, OutputStream out, long start, long count)
+      throws IOException {
+    try (var in = Files.newInputStream(target)) {
+      in.skipNBytes(start);
+      var buffer = new byte[8192];
+      var remaining = count;
+      while (remaining > 0) {
+        var read = in.read(buffer, 0, (int) Math.min(buffer.length, remaining));
+        if (read < 0) {
+          break;
+        }
+        out.write(buffer, 0, read);
+        remaining -= read;
+      }
     }
   }
 
