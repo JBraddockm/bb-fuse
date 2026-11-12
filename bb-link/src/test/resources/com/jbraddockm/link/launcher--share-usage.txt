@@ -1,0 +1,1 @@
+usage: bb-link -share <directory> --device-host <host> [--broker-socket <path>] [--tunnel-cert <path>] [--tunnel-key <path>] [--peer-id <id>] [--read-only]

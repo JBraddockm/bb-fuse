@@ -1,1 +1,1 @@
-usage: bb-link -daemon [-trace <directory>] | -parse <command>
+usage: bb-link -daemon [-trace <directory>] | -parse <command> | -share <directory> --device-host <host> [--broker-socket <path>] [--tunnel-cert <path>] [--tunnel-key <path>] [--peer-id <id>] [--read-only]

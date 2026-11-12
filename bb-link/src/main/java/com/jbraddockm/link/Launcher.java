@@ -1,13 +1,19 @@
 package com.jbraddockm.link;
 
 import com.jbraddockm.core.daemon.DaemonServer;
+import com.jbraddockm.core.tunnel.TunnelBrokerClient;
 import com.jbraddockm.link.daemon.FixtureReplay;
 import com.jbraddockm.link.daemon.LinkService;
+import com.jbraddockm.link.share.FileShare;
+import com.jbraddockm.link.share.ShareConfig;
+import com.jbraddockm.link.share.ShareRunner;
 import com.jbraddockm.link.transport.cgi.ExchangeObserver;
 import com.jbraddockm.link.transport.trace.TraceRecorder;
+import com.jbraddockm.link.transport.tunnel.BrokerTunnelConnector;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * The application entry point.
@@ -23,8 +29,13 @@ public final class Launcher {
 
   private static final int USAGE_ERROR = 2;
   private static final String USAGE =
-      "usage: bb-link -daemon [-trace <directory>] | -parse <command>";
+      "usage: bb-link -daemon [-trace <directory>] | -parse <command>"
+          + " | -share <directory> --device-host <host> [--broker-socket <path>]"
+          + " [--tunnel-cert <path>] [--tunnel-key <path>] [--peer-id <id>] [--read-only]";
   private static final String DAEMON_USAGE = "usage: bb-link -daemon [-trace <directory>]";
+  private static final String SHARE_USAGE =
+      "usage: bb-link -share <directory> --device-host <host> [--broker-socket <path>]"
+          + " [--tunnel-cert <path>] [--tunnel-key <path>] [--peer-id <id>] [--read-only]";
 
   private Launcher() {}
 
@@ -45,10 +56,47 @@ public final class Launcher {
       case Invocation.Daemon(var traceDirectory) ->
           DaemonServer.run(new LinkService(observerFor(traceDirectory.orElse(null))));
       case Invocation.Replay(var command) -> System.exit(FixtureReplay.run(command));
+      case Invocation.Share share -> runShare(share);
       case Invocation.Usage(var text) -> {
         System.err.println(text);
         System.exit(USAGE_ERROR);
       }
+    }
+  }
+
+  /**
+   * Runs the host file share until interrupted: acquires a broker tunnel to the device, binds the
+   * WebDAV server on the host ULA ({@code [hostUla]:4487}) serving the chosen directory, publishes
+   * the discovery advert, and parks until Ctrl-C or the tunnel drops. bb-link never opens the
+   * tunnel itself — it acquires a hold over the broker socket — so there is no code dependency on
+   * bb-tunnel.
+   */
+  private static void runShare(Invocation.Share share) throws IOException {
+    var socket = share.brokerSocket().orElse(TunnelBrokerClient.DEFAULT_SOCKET);
+    var connector =
+        new BrokerTunnelConnector(
+            socket,
+            share.deviceHost(),
+            null,
+            "bb-link-share",
+            share.tunnelCert().orElse(null),
+            share.tunnelKey().orElse(null));
+    var config = new ShareConfig(share.root(), share.readOnly());
+    var peerIdentifier = share.peerIdentifier().orElse("");
+    var stop = new CountDownLatch(1);
+    Runtime.getRuntime().addShutdownHook(new Thread(stop::countDown, "bb-link-share-stop"));
+    try {
+      ShareRunner.run(
+          connector,
+          binding -> {
+            var fileShare = FileShare.onTunnel(binding.hostUla(), config, peerIdentifier);
+            System.err.println(
+                "file share up on [" + binding.hostUla() + "]:" + fileShare.address().getPort());
+            return fileShare;
+          },
+          stop::await);
+    } catch (InterruptedException interrupted) {
+      Thread.currentThread().interrupt();
     }
   }
 
@@ -70,7 +118,74 @@ public final class Launcher {
     if (arguments.length == 2 && arguments[0].equals("-parse")) {
       return new Invocation.Replay(arguments[1]);
     }
+    if (arguments.length > 0 && arguments[0].equals("-share")) {
+      return interpretShare(arguments);
+    }
     return new Invocation.Usage(USAGE);
+  }
+
+  /**
+   * Reads a {@code -share} command line: one positional directory and the tunnel options. The
+   * directory and {@code --device-host} are required; a missing value, an unknown option, a
+   * repeated or missing directory means the share usage.
+   *
+   * @param arguments the command-line arguments, starting with {@code -share}
+   * @return the share invocation, or the usage when the arguments mean nothing
+   */
+  private static Invocation interpretShare(String[] arguments) {
+    Path root = null;
+    String deviceHost = null;
+    Optional<Path> brokerSocket = Optional.empty();
+    Optional<Path> tunnelCert = Optional.empty();
+    Optional<Path> tunnelKey = Optional.empty();
+    Optional<String> peerIdentifier = Optional.empty();
+    boolean readOnly = false;
+    for (var i = 1; i < arguments.length; i++) {
+      switch (arguments[i]) {
+        case "--device-host" -> {
+          if (++i >= arguments.length) {
+            return new Invocation.Usage(SHARE_USAGE);
+          }
+          deviceHost = arguments[i];
+        }
+        case "--broker-socket" -> {
+          if (++i >= arguments.length) {
+            return new Invocation.Usage(SHARE_USAGE);
+          }
+          brokerSocket = Optional.of(Path.of(arguments[i]));
+        }
+        case "--tunnel-cert" -> {
+          if (++i >= arguments.length) {
+            return new Invocation.Usage(SHARE_USAGE);
+          }
+          tunnelCert = Optional.of(Path.of(arguments[i]));
+        }
+        case "--tunnel-key" -> {
+          if (++i >= arguments.length) {
+            return new Invocation.Usage(SHARE_USAGE);
+          }
+          tunnelKey = Optional.of(Path.of(arguments[i]));
+        }
+        case "--peer-id" -> {
+          if (++i >= arguments.length) {
+            return new Invocation.Usage(SHARE_USAGE);
+          }
+          peerIdentifier = Optional.of(arguments[i]);
+        }
+        case "--read-only" -> readOnly = true;
+        default -> {
+          if (arguments[i].startsWith("-") || root != null) {
+            return new Invocation.Usage(SHARE_USAGE);
+          }
+          root = Path.of(arguments[i]);
+        }
+      }
+    }
+    if (root == null || deviceHost == null) {
+      return new Invocation.Usage(SHARE_USAGE);
+    }
+    return new Invocation.Share(
+        root, deviceHost, brokerSocket, tunnelCert, tunnelKey, peerIdentifier, readOnly);
   }
 
   private static ExchangeObserver observerFor(Path traceDirectory) throws IOException {
@@ -94,6 +209,27 @@ public final class Launcher {
      * @param command the name of the command
      */
     record Replay(String command) implements Invocation {}
+
+    /**
+     * Run the host file share: serve {@code root} to the device over a broker tunnel.
+     *
+     * @param root the host directory to share
+     * @param deviceHost the device's transport address to open the tunnel to
+     * @param brokerSocket the tunnel-broker socket, or empty for the default
+     * @param tunnelCert the device's tunnel certificate, or empty to leave it to the daemon
+     * @param tunnelKey the key for {@code tunnelCert}, or empty
+     * @param peerIdentifier the identifier the device stored for this workstation, or empty
+     * @param readOnly whether the share refuses writes
+     */
+    record Share(
+        Path root,
+        String deviceHost,
+        Optional<Path> brokerSocket,
+        Optional<Path> tunnelCert,
+        Optional<Path> tunnelKey,
+        Optional<String> peerIdentifier,
+        boolean readOnly)
+        implements Invocation {}
 
     /**
      * Arguments that mean nothing: say how the tool is used.
