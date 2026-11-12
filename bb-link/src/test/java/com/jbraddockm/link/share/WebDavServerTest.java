@@ -12,6 +12,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.junit.jupiter.api.AfterEach;
@@ -57,6 +58,19 @@ class WebDavServerTest {
             .header(headerName, value)
             .build();
     return client.send(request, BodyHandlers.ofString());
+  }
+
+  /** Sends a request exactly as given (raw bytes) and returns {@code [statusLine, body]}. */
+  private String[] raw(byte[] request) throws IOException {
+    try (var socket = new java.net.Socket(base.getHost(), base.getPort())) {
+      socket.getOutputStream().write(request);
+      socket.getOutputStream().flush();
+      socket.shutdownOutput();
+      var response =
+          new String(socket.getInputStream().readAllBytes(), StandardCharsets.ISO_8859_1);
+      var parts = response.split("\r\n\r\n", 2);
+      return new String[] {parts[0].split("\r\n")[0], parts.length > 1 ? parts[1] : ""};
+    }
   }
 
   @Nested
@@ -152,6 +166,20 @@ class WebDavServerTest {
       var get = send("GET", "/nope.txt", BodyPublishers.noBody());
 
       assertThat(get.statusCode()).isEqualTo(404);
+    }
+
+    @Test
+    @DisplayName("rejects a PUT shorter than its Content-Length and leaves no file behind")
+    void rejectsTruncatedUpload() throws Exception {
+      var request =
+          ("PUT /short.txt HTTP/1.1\r\nHost: x\r\nContent-Length: 10\r\n\r\nabc")
+              .getBytes(StandardCharsets.ISO_8859_1);
+
+      assertThat(raw(request)[0]).contains("400");
+      assertThat(share.resolve("short.txt")).doesNotExist();
+      try (var leftovers = Files.list(share)) {
+        assertThat(leftovers).noneMatch(entry -> entry.getFileName().toString().endsWith(".part"));
+      }
     }
   }
 
@@ -293,6 +321,31 @@ class WebDavServerTest {
         assertThat(put.statusCode()).isEqualTo(403);
         assertThat(share.resolve("g.txt")).doesNotExist();
       }
+    }
+  }
+
+  @Nested
+  @DisplayName("file names with non-ASCII characters")
+  class NonAsciiNames {
+
+    @Test
+    @DisplayName("stores and serves a file whose name has a raw UTF-8 byte (an em dash)")
+    void rawUtf8Name() throws Exception {
+      // The device sends a non-ASCII file name as raw UTF-8 bytes in the path, not percent-encoded;
+      // 0xE2 0x80 0x94 is U+2014 (em dash). The server must keep those bytes intact so the jail can
+      // decode them as UTF-8, rather than rejecting the request as a malformed URI.
+      var path = "/Blâ\u0080\u0094ck.txt";
+      var put =
+          ("PUT " + path + " HTTP/1.1\r\nHost: x\r\nContent-Length: 5\r\n\r\nhello")
+              .getBytes(StandardCharsets.ISO_8859_1);
+      assertThat(raw(put)[0]).contains("201");
+      assertThat(share.resolve("Bl—ck.txt")).hasContent("hello");
+
+      var get =
+          ("GET " + path + " HTTP/1.1\r\nHost: x\r\n\r\n").getBytes(StandardCharsets.ISO_8859_1);
+      var response = raw(get);
+      assertThat(response[0]).contains("200");
+      assertThat(response[1]).isEqualTo("hello");
     }
   }
 }
