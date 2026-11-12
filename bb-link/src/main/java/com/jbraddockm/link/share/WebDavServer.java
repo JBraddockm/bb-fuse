@@ -9,7 +9,10 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.nio.file.Path;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * A running WebDAV file-share server: a plain blocking-socket HTTP/1.1 server serving one jailed
@@ -47,6 +50,21 @@ public final class WebDavServer implements AutoCloseable {
    */
   private static final int ACCEPT_BACKOFF_MILLIS = 100;
 
+  /**
+   * Upper bound on concurrent request workers, so a burst of connections cannot spawn threads
+   * without limit. One paired device over the tunnel needs only a handful.
+   */
+  private static final int MAX_WORKERS = 16;
+
+  /**
+   * Connections allowed to wait for a free worker; beyond this a new connection is dropped so the
+   * client retries, applying backpressure rather than growing memory.
+   */
+  private static final int ACCEPT_QUEUE_DEPTH = 64;
+
+  /** Idle workers are reaped after this long. */
+  private static final int WORKER_KEEPALIVE_SECONDS = 60;
+
   private final ServerSocket socket;
   private final ExecutorService workers;
   private volatile boolean running = true;
@@ -73,12 +91,18 @@ public final class WebDavServer implements AutoCloseable {
     socket.setReuseAddress(true);
     socket.bind(bind);
     var workers =
-        Executors.newCachedThreadPool(
+        new ThreadPoolExecutor(
+            MAX_WORKERS,
+            MAX_WORKERS,
+            WORKER_KEEPALIVE_SECONDS,
+            TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>(ACCEPT_QUEUE_DEPTH),
             runnable -> {
               var thread = new Thread(runnable, "webdav-worker");
               thread.setDaemon(true);
               return thread;
             });
+    workers.allowCoreThreadTimeOut(true);
     var server = new WebDavServer(socket, workers);
     var acceptor = new Thread(() -> server.acceptLoop(handler), "webdav-accept");
     acceptor.setDaemon(true);
@@ -100,7 +124,21 @@ public final class WebDavServer implements AutoCloseable {
         backoff();
         continue;
       }
-      workers.execute(() -> serve(handler, connection));
+      try {
+        workers.execute(() -> serve(handler, connection));
+      } catch (RejectedExecutionException saturated) {
+        // every worker is busy and the queue is full, or the server is stopping: drop this
+        // connection so the client retries, rather than letting the pool grow without bound.
+        closeQuietly(connection);
+      }
+    }
+  }
+
+  private static void closeQuietly(Socket connection) {
+    try {
+      connection.close();
+    } catch (IOException ignored) {
+      // nothing more to do
     }
   }
 
