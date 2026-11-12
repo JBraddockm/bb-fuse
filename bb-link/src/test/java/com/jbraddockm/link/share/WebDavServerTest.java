@@ -62,14 +62,18 @@ class WebDavServerTest {
 
   /** Sends a request exactly as given (raw bytes) and returns {@code [statusLine, body]}. */
   private String[] raw(byte[] request) throws IOException {
+    var response = rawResponse(request);
+    var parts = response.split("\r\n\r\n", 2);
+    return new String[] {parts[0].split("\r\n")[0], parts.length > 1 ? parts[1] : ""};
+  }
+
+  /** Sends a request exactly as given (raw bytes) and returns the whole response text. */
+  private String rawResponse(byte[] request) throws IOException {
     try (var socket = new java.net.Socket(base.getHost(), base.getPort())) {
       socket.getOutputStream().write(request);
       socket.getOutputStream().flush();
       socket.shutdownOutput();
-      var response =
-          new String(socket.getInputStream().readAllBytes(), StandardCharsets.ISO_8859_1);
-      var parts = response.split("\r\n\r\n", 2);
-      return new String[] {parts[0].split("\r\n")[0], parts.length > 1 ? parts[1] : ""};
+      return new String(socket.getInputStream().readAllBytes(), StandardCharsets.ISO_8859_1);
     }
   }
 
@@ -166,6 +170,27 @@ class WebDavServerTest {
       var get = send("GET", "/nope.txt", BodyPublishers.noBody());
 
       assertThat(get.statusCode()).isEqualTo(404);
+    }
+
+    @Test
+    @DisplayName("answers Expect: 100-continue with an interim 100 before the final 201")
+    void honoursExpectContinue() throws Exception {
+      var request =
+          ("""
+          PUT /c.txt HTTP/1.1\r
+          Host: x\r
+          Expect: 100-continue\r
+          Content-Length: 5\r
+          \r
+          hello\
+          """)
+              .getBytes(StandardCharsets.ISO_8859_1);
+
+      var response = rawResponse(request);
+
+      assertThat(response).contains("100 Continue").contains("201 Created");
+      assertThat(response.indexOf("100 Continue")).isLessThan(response.indexOf("201 Created"));
+      assertThat(share.resolve("c.txt")).hasContent("hello");
     }
 
     @Test

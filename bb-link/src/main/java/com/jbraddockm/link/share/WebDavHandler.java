@@ -49,6 +49,10 @@ final class WebDavHandler {
   /** Caps the request line and headers so a malformed peer cannot exhaust memory. */
   private static final int MAX_HEAD_BYTES = 64 * 1024;
 
+  /** The interim response for a client that waits with {@code Expect: 100-continue}. */
+  private static final byte[] CONTINUE =
+      "HTTP/1.1 100 Continue\r\n\r\n".getBytes(StandardCharsets.ISO_8859_1);
+
   private final JailedRoot jail;
   private final boolean readOnly;
 
@@ -184,6 +188,7 @@ final class WebDavHandler {
       send(out, DavStatus.CONFLICT, null, null);
       return;
     }
+    sendContinueIfExpected(request, out);
     var existed = Files.exists(target);
     // create_full_put_path on: make the parent directories. The jail resolves every file target
     // under its root directory, so the target always has a parent (a PUT on the root itself is a
@@ -360,6 +365,19 @@ final class WebDavHandler {
       body.readAllBytes();
     } catch (IOException _) {
       // the body is already gone or the peer closed; nothing to drain
+    }
+  }
+
+  /**
+   * Sends an interim {@code 100 Continue} when the client asked to wait with {@code Expect:
+   * 100-continue}, so it streams the request body at once instead of pausing for a timeout.
+   */
+  private static void sendContinueIfExpected(Request request, BufferedOutputStream out)
+      throws IOException {
+    var expect = request.header("Expect");
+    if (expect != null && expect.equalsIgnoreCase("100-continue")) {
+      out.write(CONTINUE);
+      out.flush();
     }
   }
 
