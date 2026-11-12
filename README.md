@@ -1,4 +1,4 @@
-# BlackBerry 10 Native Tools
+# BB-Fuse
 
 A **clean-room** reimplementation of the **BlackBerry Link** and **BlackBerry Blend** device
 protocols, the **bp2p Wi-Fi tunnel** they run over, and the BlackBerry 10 developer tools (device
