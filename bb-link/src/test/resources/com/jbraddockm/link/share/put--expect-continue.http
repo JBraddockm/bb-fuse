@@ -1,0 +1,6 @@
+PUT /c.txt HTTP/1.1
+Host: x
+Expect: 100-continue
+Content-Length: 5
+
+hello

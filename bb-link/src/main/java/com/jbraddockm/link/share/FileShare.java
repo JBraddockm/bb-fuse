@@ -6,13 +6,13 @@ import java.net.InetSocketAddress;
 
 /**
  * A running host file share: the single "allow remote access" control that turns the share on and
- * off (tracker N1.5). Starting it binds the {@link WebDavServer} (serving the {@link ShareConfig}'s
- * jailed root) and publishes the {@link WebdavAdvertiser}; {@link #close()} stops both. The advert
- * is a courtesy — if it cannot start, the share still serves — so it is withdrawn first and never
- * fails the teardown.
+ * off. Starting it binds the {@link WebDavServer} (serving the {@link ShareConfig}'s jailed root)
+ * and publishes the {@link WebdavAdvertiser}; {@link #close()} stops both. The advert is a courtesy
+ * — if it cannot start, the share still serves — so it is withdrawn first and never fails the
+ * teardown.
  *
  * <p>The composition is deliberately small and transport-agnostic: the caller supplies the bound
- * address (for N1 the host's tunnel ULA on {@link WebDavServer#RIMDAV_PORT}, from {@link
+ * address (the host's tunnel ULA on {@link WebDavServer#RIMDAV_PORT}, from {@link
  * WebDavServer#tunnelBindAddress}) and how the advert starts. A caller holding a tunnel lease uses
  * {@link #onTunnel}.
  */

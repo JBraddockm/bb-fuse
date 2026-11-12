@@ -1,0 +1,5 @@
+PUT /a/b.txt HTTP/1.1
+Host: x
+Content-Length: 1
+
+x

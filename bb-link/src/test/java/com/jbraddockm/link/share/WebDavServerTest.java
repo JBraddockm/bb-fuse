@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.jbraddockm.core.webdav.DavResource;
 import com.jbraddockm.core.webdav.MultiStatus;
+import com.jbraddockm.link.testing.Resources;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URI;
@@ -75,6 +76,11 @@ class WebDavServerTest {
       socket.shutdownOutput();
       return new String(socket.getInputStream().readAllBytes(), StandardCharsets.ISO_8859_1);
     }
+  }
+
+  /** The raw bytes of an HTTP request fixture ({@code *.http}) beside this test. */
+  private static byte[] request(String name) {
+    return Resources.bytes(WebDavServerTest.class, name);
   }
 
   @Nested
@@ -173,20 +179,31 @@ class WebDavServerTest {
     }
 
     @Test
+    @DisplayName("omits Content-Length on a 204 response")
+    void noContentOmitsLength() throws Exception {
+      Files.writeString(share.resolve("f.txt"), "old");
+
+      assertThat(rawResponse(request("put--overwrite.http")))
+          .contains("204")
+          .doesNotContain("Content-Length");
+      assertThat(share.resolve("f.txt")).hasContent("new");
+    }
+
+    @Test
+    @DisplayName("answers 500 when a write cannot be carried out")
+    void writeFailure() throws Exception {
+      // The target's parent already exists as a regular file, so creating the directory fails; the
+      // server reports it rather than dropping the connection.
+      Files.writeString(share.resolve("a"), "i am a file, not a directory");
+
+      assertThat(raw(request("put--parent-is-a-file.http"))[0]).contains("500");
+      assertThat(share.resolve("a")).isRegularFile();
+    }
+
+    @Test
     @DisplayName("answers Expect: 100-continue with an interim 100 before the final 201")
     void honoursExpectContinue() throws Exception {
-      var request =
-          ("""
-          PUT /c.txt HTTP/1.1\r
-          Host: x\r
-          Expect: 100-continue\r
-          Content-Length: 5\r
-          \r
-          hello\
-          """)
-              .getBytes(StandardCharsets.ISO_8859_1);
-
-      var response = rawResponse(request);
+      var response = rawResponse(request("put--expect-continue.http"));
 
       assertThat(response).contains("100 Continue").contains("201 Created");
       assertThat(response.indexOf("100 Continue")).isLessThan(response.indexOf("201 Created"));
@@ -196,11 +213,7 @@ class WebDavServerTest {
     @Test
     @DisplayName("rejects a PUT shorter than its Content-Length and leaves no file behind")
     void rejectsTruncatedUpload() throws Exception {
-      var request =
-          ("PUT /short.txt HTTP/1.1\r\nHost: x\r\nContent-Length: 10\r\n\r\nabc")
-              .getBytes(StandardCharsets.ISO_8859_1);
-
-      assertThat(raw(request)[0]).contains("400");
+      assertThat(raw(request("put--truncated.http"))[0]).contains("400");
       assertThat(share.resolve("short.txt")).doesNotExist();
       try (var leftovers = Files.list(share)) {
         assertThat(leftovers).noneMatch(entry -> entry.getFileName().toString().endsWith(".part"));
@@ -356,19 +369,15 @@ class WebDavServerTest {
     @Test
     @DisplayName("stores and serves a file whose name has a raw UTF-8 byte (an em dash)")
     void rawUtf8Name() throws Exception {
-      // The device sends a non-ASCII file name as raw UTF-8 bytes in the path, not percent-encoded;
-      // 0xE2 0x80 0x94 is U+2014 (em dash). The server must keep those bytes intact so the jail can
-      // decode them as UTF-8, rather than rejecting the request as a malformed URI.
-      var path = "/Blâ\u0080\u0094ck.txt";
-      var put =
-          ("PUT " + path + " HTTP/1.1\r\nHost: x\r\nContent-Length: 5\r\n\r\nhello")
-              .getBytes(StandardCharsets.ISO_8859_1);
-      assertThat(raw(put)[0]).contains("201");
+      // The device sends a non-ASCII file name as raw UTF-8 bytes in the path, not percent-encoded
+      // (the fixtures hold the bytes 0xE2 0x80 0x94 = U+2014, an em dash). The server must keep
+      // those
+      // bytes intact so the jail decodes them as UTF-8, rather than rejecting the request as a
+      // malformed URI.
+      assertThat(raw(request("put--nonascii-name.http"))[0]).contains("201");
       assertThat(share.resolve("Bl—ck.txt")).hasContent("hello");
 
-      var get =
-          ("GET " + path + " HTTP/1.1\r\nHost: x\r\n\r\n").getBytes(StandardCharsets.ISO_8859_1);
-      var response = raw(get);
+      var response = raw(request("get--nonascii-name.http"));
       assertThat(response[0]).contains("200");
       assertThat(response[1]).isEqualTo("hello");
     }
@@ -378,12 +387,7 @@ class WebDavServerTest {
     void moveToNonAsciiDestination() throws Exception {
       Files.writeString(share.resolve("from.txt"), "payload");
       // The Destination is an absolute URI whose path carries U+2014 as raw UTF-8 (0xE2 0x80 0x94).
-      var destination = "http://x:4487/Blâ\u0080\u0094ck.txt";
-      var move =
-          ("MOVE /from.txt HTTP/1.1\r\nHost: x\r\nDestination: " + destination + "\r\n\r\n")
-              .getBytes(StandardCharsets.ISO_8859_1);
-
-      assertThat(raw(move)[0]).contains("201");
+      assertThat(raw(request("move--nonascii-destination.http"))[0]).contains("201");
       assertThat(share.resolve("Bl—ck.txt")).hasContent("payload");
       assertThat(share.resolve("from.txt")).doesNotExist();
     }
@@ -392,11 +396,9 @@ class WebDavServerTest {
     @DisplayName("marks a non-ASCII download with an RFC 5987 filename*")
     void downloadNonAscii() throws Exception {
       Files.writeString(share.resolve("Bl—ck.txt"), "x");
-      var get =
-          ("GET /Blâ\u0080\u0094ck.txt?download=1 HTTP/1.1\r\nHost: x\r\n\r\n")
-              .getBytes(StandardCharsets.ISO_8859_1);
 
-      assertThat(rawResponse(get)).contains("filename*=UTF-8''Bl%E2%80%94ck.txt");
+      assertThat(rawResponse(request("get--nonascii-download.http")))
+          .contains("filename*=UTF-8''Bl%E2%80%94ck.txt");
     }
   }
 

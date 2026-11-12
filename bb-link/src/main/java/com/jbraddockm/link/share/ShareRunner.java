@@ -5,10 +5,10 @@ import com.jbraddockm.link.transport.tunnel.TunnelConnector;
 import java.io.IOException;
 
 /**
- * Runs a host file share for the lifetime of a tunnel (tracker N1.5): acquire a tunnel hold, start
- * the share on the hold's host ULA, park until told to stop, then tear both down. It is the
- * standalone composition root that joins bb-tunnel's host ULA (over the broker socket, so bb-link
- * keeps no code dependency on bb-tunnel), bb-core mDNS, and the {@link WebDavServer}.
+ * Runs a host file share for the lifetime of a tunnel: acquire a tunnel hold, start the share on
+ * the hold's host ULA, park until told to stop, then tear both down. It is the standalone
+ * composition root that joins bb-tunnel's host ULA (over the broker socket, so bb-link keeps no
+ * code dependency on bb-tunnel), bb-core mDNS, and the {@link WebDavServer}.
  *
  * <p>The three collaborators are seams so the orchestration is tested without a tunnel: how the
  * tunnel is acquired ({@link TunnelConnector}), how the share is started from the resulting hold

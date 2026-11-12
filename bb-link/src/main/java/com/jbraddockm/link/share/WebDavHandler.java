@@ -105,18 +105,40 @@ final class WebDavHandler {
       send(out, DavStatus.FORBIDDEN, null, null);
       return;
     }
-    switch (method) {
-      case OPTIONS -> options(out);
-      case PROPFIND -> propfind(request, in, out, target);
-      case GET -> get(request, out, target, true);
-      case HEAD -> get(request, out, target, false);
-      case PUT -> put(request, in, out, target);
-      case MKCOL -> mkcol(request, in, out, target);
-      case DELETE -> delete(request, in, out, target);
-      case MOVE -> moveOrCopy(request, in, out, target, true);
-      case COPY -> moveOrCopy(request, in, out, target, false);
-      case PROPPATCH -> proppatch(request, in, out, target);
+    try {
+      switch (method) {
+        case OPTIONS -> options(out);
+        case PROPFIND -> propfind(request, in, out, target);
+        case GET -> get(request, out, target, true);
+        case HEAD -> get(request, out, target, false);
+        case PUT -> put(request, in, out, target);
+        case MKCOL -> mkcol(request, in, out, target);
+        case DELETE -> delete(request, in, out, target);
+        case MOVE -> moveOrCopy(request, in, out, target, true);
+        case COPY -> moveOrCopy(request, in, out, target, false);
+        case PROPPATCH -> proppatch(request, in, out, target);
+      }
+    } catch (IOException failure) {
+      if (!isWrite(method)) {
+        throw failure; // a read streams its response; a mid-stream failure just drops the socket
+      }
+      // A write failed before its response was sent (the disk is full, a path component is not a
+      // directory, and so on): answer rather than dropping the connection.
+      send(
+          out,
+          outOfSpace(failure) ? DavStatus.INSUFFICIENT_STORAGE : DavStatus.INTERNAL_SERVER_ERROR,
+          null,
+          null);
     }
+  }
+
+  /**
+   * Whether a write failure looks like storage exhaustion. There is no dedicated exception for it,
+   * so this matches the common message wording to answer {@code 507} rather than {@code 500}.
+   */
+  private static boolean outOfSpace(IOException failure) {
+    var message = failure.getMessage();
+    return message != null && message.toLowerCase(Locale.ROOT).contains("space");
   }
 
   private static boolean isWrite(DavMethod method) {
@@ -160,8 +182,12 @@ final class WebDavHandler {
 
   private void get(Request request, BufferedOutputStream out, Path target, boolean body)
       throws IOException {
-    if (!Files.exists(target) || Files.isDirectory(target)) {
-      send(out, Files.isDirectory(target) ? DavStatus.FORBIDDEN : DavStatus.NOT_FOUND, null, null);
+    if (Files.isDirectory(target)) {
+      send(out, DavStatus.FORBIDDEN, null, null);
+      return;
+    }
+    if (!Files.exists(target)) {
+      send(out, DavStatus.NOT_FOUND, null, null);
       return;
     }
     var length = Files.size(target);
@@ -529,7 +555,11 @@ final class WebDavHandler {
     if (headers != null) {
       headers.forEach((name, value) -> head.append(name).append(": ").append(value).append("\r\n"));
     }
-    head.append("Content-Length: ").append(contentLength).append("\r\n");
+    // A 204 carries no body and must not declare a Content-Length (RFC 7230 §3.3.2); every other
+    // status the server sends does, so the client knows exactly how many body bytes to read.
+    if (status != DavStatus.NO_CONTENT) {
+      head.append("Content-Length: ").append(contentLength).append("\r\n");
+    }
     head.append("Connection: close\r\n");
     head.append("\r\n");
     out.write(head.toString().getBytes(StandardCharsets.ISO_8859_1));

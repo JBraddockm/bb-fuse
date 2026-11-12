@@ -9,9 +9,9 @@ import java.util.Optional;
 /**
  * Advertises this workstation's bp2p <b>webdav</b> file share over mDNS so that a paired BlackBerry
  * 10 device discovers it and mounts it in the File Manager. It is the discovery half of the host
- * file server (tracker N1): {@link WebDavServer} serves the share on the host's tunnel ULA, and
- * this advert — matching what BlackBerry Link's {@code RimRegisterServicePassthrough} puts on the
- * wire — is how the device learns the share is there.
+ * file server: {@link WebDavServer} serves the share on the host's tunnel ULA, and this advert —
+ * matching what BlackBerry Link's {@code RimRegisterServicePassthrough} puts on the wire — is how
+ * the device learns the share is there.
  *
  * <p><b>Why a system-responder proxy advert, not JmDNS.</b> The device browses {@code
  * _bp2p._tcp,_webdav} on the <b>LAN</b>, and the service must resolve to the host's tunnel

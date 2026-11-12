@@ -18,6 +18,12 @@ import java.util.Optional;
  *
  * <p>The root's real path (symlinks resolved) is fixed at construction; every resolved path is
  * checked against it both lexically and, where it or an ancestor exists, by real path.
+ *
+ * <p>The real-path check and the handler's use of the path are separate steps, so a symlink swapped
+ * in between them is a time-of-check/time-of-use window the pure-JDK file API cannot close (there
+ * is no {@code openat}/{@code O_NOFOLLOW}). It is left open deliberately: the share faces a single
+ * paired device over the tunnel and serves a host-selected root, so an attacker able to race
+ * symlinks under that root already has local write access to it.
  */
 final class JailedRoot {
 

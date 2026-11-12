@@ -1,0 +1,4 @@
+MOVE /from.txt HTTP/1.1
+Host: x
+Destination: http://x:4487/Bl—ck.txt
+
