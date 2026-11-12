@@ -7,6 +7,7 @@ import com.jbraddockm.core.webdav.MultiStatus;
 import com.jbraddockm.link.testing.Resources;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -16,6 +17,9 @@ import java.net.http.HttpResponse.BodyHandlers;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -31,6 +35,11 @@ class WebDavServerTest {
   private WebDavServer server;
   private HttpClient client;
   private URI base;
+
+  /** The raw bytes of an HTTP request fixture ({@code *.http}) beside this test. */
+  private static byte[] request(String name) {
+    return Resources.bytes(WebDavServerTest.class, name);
+  }
 
   @BeforeEach
   void startServer() throws IOException {
@@ -76,11 +85,6 @@ class WebDavServerTest {
       socket.shutdownOutput();
       return new String(socket.getInputStream().readAllBytes(), StandardCharsets.ISO_8859_1);
     }
-  }
-
-  /** The raw bytes of an HTTP request fixture ({@code *.http}) beside this test. */
-  private static byte[] request(String name) {
-    return Resources.bytes(WebDavServerTest.class, name);
   }
 
   @Nested
@@ -447,6 +451,51 @@ class WebDavServerTest {
 
       assertThat(response.statusCode()).isEqualTo(200);
       assertThat(response.headers().firstValue("Accept-Ranges")).hasValue("bytes");
+    }
+  }
+
+  @Nested
+  @DisplayName("shutting down")
+  class Lifecycle {
+
+    @Test
+    @DisplayName("an idle server drains at once")
+    void idleDrains() {
+      server.beginShutdown();
+
+      assertThat(server.awaitIdle(Duration.ofSeconds(2))).isTrue();
+      assertThat(server.activeRequests()).isZero();
+    }
+
+    @Test
+    @DisplayName("counts an in-flight request and holds the drain until it finishes")
+    void inFlightHoldsTheDrain() throws Exception {
+      var entered = new CountDownLatch(1);
+      var release = new CountDownLatch(1);
+      // A handler that blocks until the test releases it, so a request is deterministically in
+      // flight without polling.
+      WebDavServer.RequestHandler blocking =
+          (_, _) -> {
+            entered.countDown();
+            try {
+              release.await();
+            } catch (InterruptedException interrupted) {
+              Thread.currentThread().interrupt();
+            }
+          };
+
+      try (var blocked = WebDavServer.start(new InetSocketAddress("127.0.0.1", 0), blocking);
+          var _ = new Socket("127.0.0.1", blocked.address().getPort())) {
+        assertThat(entered.await(2, TimeUnit.SECONDS)).isTrue();
+        assertThat(blocked.activeRequests()).isEqualTo(1);
+
+        blocked.beginShutdown();
+        assertThat(blocked.awaitIdle(Duration.ofMillis(200))).isFalse(); // still in flight
+
+        release.countDown();
+        assertThat(blocked.awaitIdle(Duration.ofSeconds(2))).isTrue(); // drained
+        assertThat(blocked.activeRequests()).isZero();
+      }
     }
   }
 }

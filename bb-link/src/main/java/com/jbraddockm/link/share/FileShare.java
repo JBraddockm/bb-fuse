@@ -3,6 +3,8 @@ package com.jbraddockm.link.share;
 import java.io.IOException;
 import java.net.Inet6Address;
 import java.net.InetSocketAddress;
+import java.time.Duration;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * A running host file share: the single "allow remote access" control that turns the share on and
@@ -20,6 +22,7 @@ public final class FileShare implements AutoCloseable {
 
   private final WebDavServer server;
   private final AutoCloseable advert;
+  private final AtomicBoolean advertWithdrawn = new AtomicBoolean(false);
 
   private FileShare(WebDavServer server, AutoCloseable advert) {
     this.server = server;
@@ -74,17 +77,57 @@ public final class FileShare implements AutoCloseable {
     return server.address();
   }
 
-  /** Stops the share: withdraws the advert (best-effort), then stops the server. */
+  /**
+   * Begins a graceful shutdown: withdraws the advert (so the device discovers it no longer) and
+   * stops the server accepting new connections, letting in-flight transfers finish. Pair with
+   * {@link #awaitIdle}, {@link #activeRequests} and {@link #forceShutdown}.
+   */
+  public void beginShutdown() {
+    withdrawAdvert();
+    server.beginShutdown();
+  }
+
+  /**
+   * Waits for in-flight transfers to finish after {@link #beginShutdown}.
+   *
+   * @param timeout how long to wait
+   * @return {@code true} if the share drained, {@code false} if the timeout elapsed first
+   */
+  public boolean awaitIdle(Duration timeout) {
+    return server.awaitIdle(timeout);
+  }
+
+  /**
+   * The number of transfers currently in flight — watch this to decide whether to keep waiting or
+   * to {@link #forceShutdown}.
+   *
+   * @return the in-flight request count
+   */
+  public int activeRequests() {
+    return server.activeRequests();
+  }
+
+  /** Forces the share to stop now, interrupting any in-flight transfer. */
+  public void forceShutdown() {
+    withdrawAdvert();
+    server.forceShutdown();
+  }
+
+  /** Stops the share: a graceful drain within a short grace period, then the server is forced. */
   @Override
   public void close() {
-    if (advert != null) {
+    withdrawAdvert();
+    server.close();
+  }
+
+  private void withdrawAdvert() {
+    if (advert != null && advertWithdrawn.compareAndSet(false, true)) {
       try {
         advert.close();
       } catch (Exception ignored) {
         // the advert is a courtesy; a failure to withdraw it must not stop the server teardown
       }
     }
-    server.close();
   }
 
   /** Starts the discovery advert; a seam, so a test needs no mDNS responder. */

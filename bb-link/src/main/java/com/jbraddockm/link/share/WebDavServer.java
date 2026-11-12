@@ -1,6 +1,8 @@
 package com.jbraddockm.link.share;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -8,11 +10,13 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * A running WebDAV file-share server: a plain blocking-socket HTTP/1.1 server serving one jailed
@@ -36,6 +40,12 @@ public final class WebDavServer implements AutoCloseable {
    * Manager reaches the share at {@code [hostUla]:4487} over the tunnel.
    */
   public static final int RIMDAV_PORT = 4487;
+
+  /**
+   * The name of the logger carrying the per-request access log (logged at {@code DEBUG}). The
+   * foreground share routes it to the console; by default it is off.
+   */
+  public static final String REQUEST_LOG = WebDavHandler.class.getName();
 
   /**
    * Per-connection idle timeout. A peer that stalls mid-request releases its worker instead of
@@ -65,8 +75,15 @@ public final class WebDavServer implements AutoCloseable {
   /** Idle workers are reaped after this long. */
   private static final int WORKER_KEEPALIVE_SECONDS = 60;
 
+  /**
+   * On close, how long an in-flight request (a transfer in progress) is given to finish before its
+   * worker is interrupted, so stopping the share does not truncate an active download or upload.
+   */
+  private static final int SHUTDOWN_GRACE_SECONDS = 10;
+
   private final ServerSocket socket;
   private final ExecutorService workers;
+  private final AtomicInteger active = new AtomicInteger();
   private volatile boolean running = true;
 
   private WebDavServer(ServerSocket socket, ExecutorService workers) {
@@ -86,7 +103,11 @@ public final class WebDavServer implements AutoCloseable {
    */
   public static WebDavServer start(InetSocketAddress bind, Path shareRoot, boolean readOnly)
       throws IOException {
-    var handler = new WebDavHandler(JailedRoot.of(shareRoot), readOnly);
+    return start(bind, new WebDavHandler(JailedRoot.of(shareRoot), readOnly));
+  }
+
+  /** Starts the server with a given request handler — a seam for testing the accept/drain loop. */
+  static WebDavServer start(InetSocketAddress bind, RequestHandler handler) throws IOException {
     var socket = new ServerSocket();
     socket.setReuseAddress(true);
     socket.bind(bind);
@@ -110,7 +131,7 @@ public final class WebDavServer implements AutoCloseable {
     return server;
   }
 
-  private void acceptLoop(WebDavHandler handler) {
+  private void acceptLoop(RequestHandler handler) {
     while (running) {
       Socket connection;
       try {
@@ -151,13 +172,16 @@ public final class WebDavServer implements AutoCloseable {
     }
   }
 
-  private static void serve(WebDavHandler handler, Socket connection) {
+  private void serve(RequestHandler handler, Socket connection) {
+    active.incrementAndGet();
     try (connection) {
       connection.setTcpNoDelay(true);
       connection.setSoTimeout(READ_TIMEOUT_MILLIS);
       handler.handle(connection.getInputStream(), connection.getOutputStream());
     } catch (IOException dropped) {
       // a dropped or timed-out connection is the client's to retry; nothing for the server to do
+    } finally {
+      active.decrementAndGet();
     }
   }
 
@@ -203,14 +227,72 @@ public final class WebDavServer implements AutoCloseable {
     return (InetSocketAddress) socket.getLocalSocketAddress();
   }
 
-  @Override
-  public void close() {
+  /**
+   * Begins a graceful shutdown: stops accepting new connections and lets in-flight requests finish.
+   * Returns at once — use {@link #awaitIdle} to wait for them to drain, {@link #activeRequests} to
+   * see how many remain, and {@link #forceShutdown} to stop them. Idempotent.
+   */
+  public void beginShutdown() {
     running = false;
     try {
       socket.close();
     } catch (IOException ignored) {
       // closing the listening socket is best-effort; the accept loop exits on it
     }
+    workers.shutdown();
+  }
+
+  /**
+   * Waits for the in-flight requests to finish after {@link #beginShutdown}.
+   *
+   * @param timeout how long to wait
+   * @return {@code true} if the server drained (nothing still in flight), {@code false} if the
+   *     timeout elapsed first
+   */
+  public boolean awaitIdle(Duration timeout) {
+    try {
+      return workers.awaitTermination(timeout.toMillis(), TimeUnit.MILLISECONDS);
+    } catch (InterruptedException interrupted) {
+      Thread.currentThread().interrupt();
+      return workers.isTerminated();
+    }
+  }
+
+  /**
+   * The number of requests currently being served — what a caller watches to decide whether to keep
+   * waiting for a graceful shutdown or to {@link #forceShutdown}.
+   *
+   * @return the in-flight request count
+   */
+  public int activeRequests() {
+    return active.get();
+  }
+
+  /** Forces shutdown now: stops accepting and interrupts any in-flight request. Idempotent. */
+  public void forceShutdown() {
+    beginShutdown();
     workers.shutdownNow();
+  }
+
+  /**
+   * Stops the server, letting an in-flight transfer finish within a short grace period so it is not
+   * truncated, then forcing any straggler. For finer control (an app driving the share), use {@link
+   * #beginShutdown}, {@link #awaitIdle} and {@link #forceShutdown} directly.
+   */
+  @Override
+  public void close() {
+    beginShutdown();
+    if (!awaitIdle(Duration.ofSeconds(SHUTDOWN_GRACE_SECONDS))) {
+      forceShutdown();
+    }
+  }
+
+  /**
+   * The per-connection work: read one request and write the response. {@link WebDavHandler} is the
+   * real implementation; a test supplies its own to exercise the accept and shutdown loop.
+   */
+  @FunctionalInterface
+  interface RequestHandler {
+    void handle(InputStream in, OutputStream out) throws IOException;
   }
 }

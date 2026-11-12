@@ -38,7 +38,7 @@ import java.util.stream.Stream;
  * One request is served per connection, which is then closed ({@code Connection: close}); the
  * device opens a fresh connection per request.
  */
-final class WebDavHandler {
+final class WebDavHandler implements WebDavServer.RequestHandler {
 
   private static final DateTimeFormatter HTTP_DATE =
       DateTimeFormatter.RFC_1123_DATE_TIME.withZone(ZoneId.of("GMT"));
@@ -51,6 +51,15 @@ final class WebDavHandler {
   /** The interim response for a client that waits with {@code Expect: 100-continue}. */
   private static final byte[] CONTINUE =
       "HTTP/1.1 100 Continue\r\n\r\n".getBytes(StandardCharsets.ISO_8859_1);
+
+  private static final System.Logger LOG = System.getLogger(WebDavHandler.class.getName());
+
+  /**
+   * Request headers worth logging, to see whether the device sends conditional or range requests.
+   */
+  private static final String[] LOGGED_HEADERS = {
+    "Range", "If-Range", "If-Modified-Since", "If-None-Match"
+  };
 
   private final JailedRoot jail;
   private final boolean readOnly;
@@ -68,7 +77,8 @@ final class WebDavHandler {
    * @param rawOut the connection's output
    * @throws IOException if the connection fails while reading or writing
    */
-  void handle(InputStream rawIn, OutputStream rawOut) throws IOException {
+  @Override
+  public void handle(InputStream rawIn, OutputStream rawOut) throws IOException {
     var in = new BufferedInputStream(rawIn);
     var out = new BufferedOutputStream(rawOut);
     try {
@@ -77,6 +87,7 @@ final class WebDavHandler {
         send(out, DavStatus.BAD_REQUEST, null, null);
         return;
       }
+      logAccess(request);
       serve(request, in, out);
     } catch (RuntimeException failure) {
       send(out, DavStatus.INTERNAL_SERVER_ERROR, null, null);
@@ -514,6 +525,22 @@ final class WebDavHandler {
   }
 
   // --- HTTP wire I/O --------------------------------------------------------------------------
+
+  /** Logs one line per request, with any conditional or range headers it carried. */
+  private static void logAccess(Request request) {
+    LOG.log(System.Logger.Level.DEBUG, () -> accessLine(request));
+  }
+
+  private static String accessLine(Request request) {
+    var line = new StringBuilder(request.method()).append(' ').append(request.rawPath());
+    for (var header : LOGGED_HEADERS) {
+      var value = request.header(header);
+      if (value != null) {
+        line.append(' ').append(header).append('=').append(value);
+      }
+    }
+    return line.toString();
+  }
 
   private static void drainBody(Request request, BufferedInputStream in) {
     try (var body = request.body(in)) {

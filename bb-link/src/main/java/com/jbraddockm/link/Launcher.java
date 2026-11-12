@@ -15,8 +15,13 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.BindException;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * The application entry point.
@@ -31,6 +36,13 @@ import java.util.concurrent.CountDownLatch;
 public final class Launcher {
 
   private static final int USAGE_ERROR = 2;
+
+  /**
+   * Safety cap on the shutdown hook waiting for the run's final teardown (releasing the tunnel
+   * hold) once the share has drained, so the hook cannot hang the JVM indefinitely.
+   */
+  private static final long SHUTDOWN_JOIN_MILLIS = 30_000;
+
   private static final String USAGE =
       "usage: bb-link -daemon [-trace <directory>] | -parse <command>"
           + " | -share <directory> --device-host <host> [--broker-socket <path>]"
@@ -75,6 +87,7 @@ public final class Launcher {
    * bb-tunnel.
    */
   private static void runShare(Invocation.Share share) {
+    showRequestLog();
     var socket = share.brokerSocket().orElse(TunnelBrokerClient.DEFAULT_SOCKET);
     var connector =
         new BrokerTunnelConnector(
@@ -87,12 +100,17 @@ public final class Launcher {
     var config = new ShareConfig(share.root(), share.readOnly());
     var peerIdentifier = share.peerIdentifier().orElse("");
     var stop = new CountDownLatch(1);
-    Runtime.getRuntime().addShutdownHook(new Thread(stop::countDown, "bb-link-share-stop"));
+    var shareRef = new AtomicReference<FileShare>();
+    var main = Thread.currentThread();
+    Runtime.getRuntime()
+        .addShutdownHook(
+            new Thread(() -> stopShare(shareRef.get(), stop, main), "bb-link-share-stop"));
     try {
       ShareRunner.run(
           connector,
           binding -> {
             var fileShare = FileShare.onTunnel(binding.hostUla(), config, peerIdentifier);
+            shareRef.set(fileShare);
             System.err.println(
                 "file share up on [" + binding.hostUla() + "]:" + fileShare.address().getPort());
             return fileShare;
@@ -104,6 +122,33 @@ public final class Launcher {
       // The share could not start (port already bound, no reachable tunnel, bad share directory):
       // report it as a one-line message instead of letting it escape as a Java stack trace.
       fail(shareFailureMessage(failure));
+    }
+  }
+
+  /**
+   * Stops the share on Ctrl-C. The first interrupt drains gracefully — it stops accepting and lets
+   * in-flight transfers finish; a second interrupt makes the JVM halt at once, forcing them. On a
+   * startup failure nothing is serving yet, so it just lets the run end.
+   */
+  private static void stopShare(FileShare share, CountDownLatch stop, Thread main) {
+    if (share == null) {
+      stop.countDown();
+      return;
+    }
+    var active = share.activeRequests();
+    System.err.println(
+        active > 0
+            ? "stopping — letting " + active + " transfer(s) finish (interrupt again to force)"
+            : "stopping the file share");
+    share.beginShutdown();
+    // Wait for the in-flight transfers to finish. A second interrupt halts the JVM, forcing them;
+    // the hour cap is only a last resort so the hook cannot wait forever.
+    share.awaitIdle(Duration.ofHours(1));
+    stop.countDown();
+    try {
+      main.join(SHUTDOWN_JOIN_MILLIS);
+    } catch (InterruptedException _) {
+      Thread.currentThread().interrupt();
     }
   }
 
@@ -128,6 +173,19 @@ public final class Launcher {
   private static void fail(String message) {
     System.err.println("error: " + message);
     System.exit(1);
+  }
+
+  /**
+   * Shows the share's per-request access log (logged at {@code DEBUG}) on the console. The share is
+   * a foreground tool, so its request log is worth seeing; elsewhere the logger stays off.
+   */
+  private static void showRequestLog() {
+    var logger = Logger.getLogger(WebDavServer.REQUEST_LOG);
+    var console = new ConsoleHandler();
+    console.setLevel(Level.FINE);
+    logger.addHandler(console);
+    logger.setLevel(Level.FINE);
+    logger.setUseParentHandlers(false);
   }
 
   /**
