@@ -187,6 +187,20 @@
                                           todir="${build.collect.dir}" overwrite="true"/>
                                     <chmod file="${build.collect.dir}/${native.image.name}"
                                            perm="ugo+rx"/>
+                                    <!-- Ad-hoc code-sign the native binary. macOS anchors an
+                                         Application Firewall "allow incoming" decision to a code
+                                         signature; an unsigned binary cannot be kept in the allow
+                                         list, so the file-share server is reset on every inbound
+                                         connection. The signature is best-effort (codesign is
+                                         macOS-only). -->
+                                    <exec executable="codesign" failonerror="false"
+                                          osfamily="mac">
+                                        <arg value="--sign"/>
+                                        <arg value="-"/>
+                                        <arg value="--force"/>
+                                        <arg value="--timestamp=none"/>
+                                        <arg value="${build.collect.dir}/${native.image.name}"/>
+                                    </exec>
                                 </target>
                             </configuration>
                         </execution>
