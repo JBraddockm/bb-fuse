@@ -12,6 +12,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 @DisplayName("ShareRunner: acquire, start, park, tear down")
+// The fake tunnel hold holds no real resource; the runner's own close is what is under test.
+@SuppressWarnings("resource")
 class ShareRunnerTest {
 
   /** A tunnel hold that records its close and reports a fixed host ULA. */
@@ -79,7 +81,7 @@ class ShareRunnerTest {
     var binding = new FakeBinding(events);
     TunnelConnector connector = () -> binding;
     ShareRunner.ShareStarter starter =
-        hold -> {
+        _ -> {
           throw new IOException("bind refused");
         };
 
@@ -97,7 +99,7 @@ class ShareRunnerTest {
     var binding = new FakeBinding(events);
     TunnelConnector connector = () -> binding;
     ShareRunner.ShareStarter starter =
-        hold -> {
+        _ -> {
           events.add("share-started");
           return () -> events.add("share-closed");
         };

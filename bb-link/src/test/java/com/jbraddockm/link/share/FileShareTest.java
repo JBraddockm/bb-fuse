@@ -22,6 +22,8 @@ import org.junit.jupiter.api.io.TempDir;
  * server and the advert on close. Binds on IPv6 loopback ({@code [::1]}) so no tunnel is needed.
  */
 @DisplayName("The host file share")
+// The JDK HttpClient and the share under test are closed where it matters; the client needs no ARM.
+@SuppressWarnings("resource")
 class FileShareTest {
 
   @TempDir Path root;
@@ -62,8 +64,7 @@ class FileShareTest {
   @Test
   @DisplayName("serves without an advert when none is given")
   void noAdvert() throws Exception {
-    var share = FileShare.start(loopback(), ShareConfig.of(root), null);
-    try {
+    try (var share = FileShare.start(loopback(), ShareConfig.of(root), null)) {
       var client = HttpClient.newHttpClient();
       var base = URI.create("http://[::1]:" + share.address().getPort());
       var options =
@@ -73,8 +74,6 @@ class FileShareTest {
                   .build(),
               BodyHandlers.discarding());
       assertThat(options.statusCode()).isEqualTo(200);
-    } finally {
-      share.close();
     }
   }
 

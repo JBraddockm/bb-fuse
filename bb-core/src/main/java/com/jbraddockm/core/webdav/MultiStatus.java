@@ -76,7 +76,7 @@ public final class MultiStatus {
   public static List<DavResource> parse(String document) {
     var root = XmlParser.parse(document);
     var resources = new ArrayList<DavResource>();
-    for (var response : localChildren(root, "response")) {
+    for (var response : responses(root)) {
       var href = localChild(response, "href").map(XmlElement::text).orElse("");
       var prop =
           localChild(response, "propstat")
@@ -116,10 +116,11 @@ public final class MultiStatus {
     return List.copyOf(resources);
   }
 
-  private static List<XmlElement> localChildren(XmlElement parent, String localName) {
+  /** The {@code <D:response>} children of a multistatus, prefix-agnostic. */
+  private static List<XmlElement> responses(XmlElement multistatus) {
     var matches = new ArrayList<XmlElement>();
-    for (var child : parent.children()) {
-      if (local(child.name()).equals(localName)) {
+    for (var child : multistatus.children()) {
+      if (local(child.name()).equals("response")) {
         matches.add(child);
       }
     }

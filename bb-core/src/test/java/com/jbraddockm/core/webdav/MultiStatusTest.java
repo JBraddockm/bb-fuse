@@ -74,7 +74,7 @@ class MultiStatusTest {
     @DisplayName("is namespace-prefix-agnostic (handles D:, d: and no prefix)")
     void prefixAgnostic() {
       var withD = MultiStatus.build(List.of(FILE));
-      var lower = withD.replace("D:", "d:").replace("xmlns:d", "xmlns:d");
+      var lower = withD.replace("D:", "d:").replace("xmlns:D", "xmlns:d");
       var none = withD.replace("D:", "").replace("xmlns:=\"DAV:\"", "xmlns=\"DAV:\"");
 
       assertThat(MultiStatus.parse(lower))
