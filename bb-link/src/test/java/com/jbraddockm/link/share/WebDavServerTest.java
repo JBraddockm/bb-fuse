@@ -372,5 +372,31 @@ class WebDavServerTest {
       assertThat(response[0]).contains("200");
       assertThat(response[1]).isEqualTo("hello");
     }
+
+    @Test
+    @DisplayName("MOVE honours a Destination whose name has a raw UTF-8 byte")
+    void moveToNonAsciiDestination() throws Exception {
+      Files.writeString(share.resolve("from.txt"), "payload");
+      // The Destination is an absolute URI whose path carries U+2014 as raw UTF-8 (0xE2 0x80 0x94).
+      var destination = "http://x:4487/Blâ\u0080\u0094ck.txt";
+      var move =
+          ("MOVE /from.txt HTTP/1.1\r\nHost: x\r\nDestination: " + destination + "\r\n\r\n")
+              .getBytes(StandardCharsets.ISO_8859_1);
+
+      assertThat(raw(move)[0]).contains("201");
+      assertThat(share.resolve("Bl—ck.txt")).hasContent("payload");
+      assertThat(share.resolve("from.txt")).doesNotExist();
+    }
+
+    @Test
+    @DisplayName("marks a non-ASCII download with an RFC 5987 filename*")
+    void downloadNonAscii() throws Exception {
+      Files.writeString(share.resolve("Bl—ck.txt"), "x");
+      var get =
+          ("GET /Blâ\u0080\u0094ck.txt?download=1 HTTP/1.1\r\nHost: x\r\n\r\n")
+              .getBytes(StandardCharsets.ISO_8859_1);
+
+      assertThat(rawResponse(get)).contains("filename*=UTF-8''Bl%E2%80%94ck.txt");
+    }
   }
 }

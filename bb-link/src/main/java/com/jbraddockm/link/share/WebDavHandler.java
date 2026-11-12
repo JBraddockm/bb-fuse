@@ -10,7 +10,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
@@ -172,7 +171,7 @@ final class WebDavHandler {
     }
     headers.put("Last-Modified", HTTP_DATE.format(Files.getLastModifiedTime(target).toInstant()));
     if (download(request)) {
-      headers.put("Content-Disposition", "attachment; filename=\"" + target.getFileName() + "\"");
+      headers.put("Content-Disposition", contentDisposition(target.getFileName().toString()));
     }
     var length = Files.size(target);
     sendHead(out, DavStatus.OK, headers, length);
@@ -341,12 +340,22 @@ final class WebDavHandler {
     if (raw == null || raw.isEmpty()) {
       return Optional.empty();
     }
-    try {
-      var path = URI.create(raw).getRawPath();
-      return jail.resolve(path == null ? raw : path);
-    } catch (IllegalArgumentException _) {
-      return jail.resolve(raw);
+    return jail.resolve(destinationPath(raw.trim()));
+  }
+
+  /**
+   * Extracts the path from a {@code Destination} header, which may be an absolute URI ({@code
+   * scheme://authority/path}) or an absolute path. The bytes are kept intact — not parsed through
+   * {@link java.net.URI}, which rejects a raw non-ASCII byte — so a non-ASCII destination name
+   * survives to be percent-decoded as UTF-8 by the jail, exactly like the request path.
+   */
+  private static String destinationPath(String destination) {
+    var scheme = destination.indexOf("://");
+    if (scheme < 0) {
+      return destination;
     }
+    var pathStart = destination.indexOf('/', scheme + 3);
+    return pathStart < 0 ? "/" : destination.substring(pathStart);
   }
 
   private static int depthOf(Request request) {
@@ -356,6 +365,37 @@ final class WebDavHandler {
   private static boolean download(Request request) {
     var query = request.rawQuery();
     return query != null && query.contains("download=1");
+  }
+
+  /**
+   * Builds a {@code Content-Disposition} for a download: a plain {@code filename} fallback with
+   * non-ASCII characters flattened, and an RFC 5987 {@code filename*} carrying the real UTF-8 name
+   * for clients that understand it.
+   */
+  private static String contentDisposition(String name) {
+    var fallback = new StringBuilder(name.length());
+    for (var i = 0; i < name.length(); i++) {
+      var c = name.charAt(i);
+      fallback.append(c < 0x20 || c > 0x7e || c == '"' || c == '\\' ? '_' : c);
+    }
+    return "attachment; filename=\"" + fallback + "\"; filename*=UTF-8''" + rfc5987(name);
+  }
+
+  /** Percent-encodes a name as an RFC 5987 {@code ext-value}: UTF-8 bytes, attr-char kept raw. */
+  private static String rfc5987(String name) {
+    var encoded = new StringBuilder();
+    for (var b : name.getBytes(StandardCharsets.UTF_8)) {
+      var c = (char) (b & 0xff);
+      if ((c >= 'A' && c <= 'Z')
+          || (c >= 'a' && c <= 'z')
+          || (c >= '0' && c <= '9')
+          || "!#$&+-.^_`|~".indexOf(c) >= 0) {
+        encoded.append(c);
+      } else {
+        encoded.append(String.format("%%%02X", b & 0xff));
+      }
+    }
+    return encoded.toString();
   }
 
   // --- HTTP wire I/O --------------------------------------------------------------------------
