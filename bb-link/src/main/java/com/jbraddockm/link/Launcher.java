@@ -7,10 +7,13 @@ import com.jbraddockm.link.daemon.LinkService;
 import com.jbraddockm.link.share.FileShare;
 import com.jbraddockm.link.share.ShareConfig;
 import com.jbraddockm.link.share.ShareRunner;
+import com.jbraddockm.link.share.WebDavServer;
 import com.jbraddockm.link.transport.cgi.ExchangeObserver;
 import com.jbraddockm.link.transport.trace.TraceRecorder;
 import com.jbraddockm.link.transport.tunnel.BrokerTunnelConnector;
 import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.net.BindException;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
@@ -71,7 +74,7 @@ public final class Launcher {
    * tunnel itself — it acquires a hold over the broker socket — so there is no code dependency on
    * bb-tunnel.
    */
-  private static void runShare(Invocation.Share share) throws IOException {
+  private static void runShare(Invocation.Share share) {
     var socket = share.brokerSocket().orElse(TunnelBrokerClient.DEFAULT_SOCKET);
     var connector =
         new BrokerTunnelConnector(
@@ -97,7 +100,34 @@ public final class Launcher {
           stop::await);
     } catch (InterruptedException interrupted) {
       Thread.currentThread().interrupt();
+    } catch (IOException | IllegalArgumentException | UncheckedIOException failure) {
+      // The share could not start (port already bound, no reachable tunnel, bad share directory):
+      // report it as a one-line message instead of letting it escape as a Java stack trace.
+      fail(shareFailureMessage(failure));
     }
+  }
+
+  /** A concise, user-facing message for a share that could not start. */
+  static String shareFailureMessage(Throwable failure) {
+    return switch (failure) {
+      case BindException _ ->
+          "a file share is already running on this device's tunnel address (port "
+              + WebDavServer.RIMDAV_PORT
+              + ") — stop it before starting another";
+      case IllegalArgumentException invalid -> messageOf(invalid);
+      case UncheckedIOException unreadable -> messageOf(unreadable);
+      default -> "could not start the file share: " + messageOf(failure);
+    };
+  }
+
+  private static String messageOf(Throwable failure) {
+    var message = failure.getMessage();
+    return message == null ? failure.getClass().getSimpleName() : message;
+  }
+
+  private static void fail(String message) {
+    System.err.println("error: " + message);
+    System.exit(1);
   }
 
   /**

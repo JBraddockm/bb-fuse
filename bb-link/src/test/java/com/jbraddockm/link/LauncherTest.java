@@ -3,7 +3,11 @@ package com.jbraddockm.link;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.jbraddockm.link.Launcher.Invocation;
+import com.jbraddockm.link.share.WebDavServer;
 import com.jbraddockm.link.testing.Resources;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.net.BindException;
 import java.nio.file.Path;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
@@ -150,6 +154,40 @@ class LauncherTest {
           .isEqualTo(expected);
       assertThat(Launcher.interpret(new String[] {"-share", "/a", "/b", "--device-host", "h"}))
           .isEqualTo(expected);
+    }
+  }
+
+  @Nested
+  @DisplayName("a share that cannot start")
+  class ShareFailures {
+
+    @Test
+    @DisplayName("a bound address reads as a share already running on this device")
+    void addressInUse() {
+      assertThat(Launcher.shareFailureMessage(new BindException("Address already in use")))
+          .contains("already running")
+          .contains(Integer.toString(WebDavServer.RIMDAV_PORT));
+    }
+
+    @Test
+    @DisplayName("a bad or unreadable share directory keeps the jail's own message")
+    void badDirectory() {
+      assertThat(
+              Launcher.shareFailureMessage(
+                  new IllegalArgumentException("the share root is not a directory: /tmp/x")))
+          .isEqualTo("the share root is not a directory: /tmp/x");
+      assertThat(
+              Launcher.shareFailureMessage(
+                  new UncheckedIOException(
+                      "the share root cannot be read: /tmp/y", new IOException())))
+          .isEqualTo("the share root cannot be read: /tmp/y");
+    }
+
+    @Test
+    @DisplayName("any other failure is prefixed, never a stack trace")
+    void otherFailure() {
+      assertThat(Launcher.shareFailureMessage(new IOException("connection refused")))
+          .isEqualTo("could not start the file share: connection refused");
     }
   }
 
