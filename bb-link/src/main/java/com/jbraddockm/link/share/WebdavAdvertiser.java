@@ -1,9 +1,8 @@
 package com.jbraddockm.link.share;
 
-import com.jbraddockm.core.mdns.MdnsService;
-import com.jbraddockm.core.mdns.ServiceAdvert;
 import java.io.IOException;
-import java.util.HashMap;
+import java.net.Inet6Address;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -11,12 +10,17 @@ import java.util.Optional;
  * Advertises this workstation's bp2p <b>webdav</b> file share over mDNS so that a paired BlackBerry
  * 10 device discovers it and mounts it in the File Manager. It is the discovery half of the host
  * file server (tracker N1): {@link WebDavServer} serves the share on the host's tunnel ULA, and
- * this advert is how the device learns the share is there.
+ * this advert — matching what BlackBerry Link's {@code RimRegisterServicePassthrough} puts on the
+ * wire — is how the device learns the share is there.
  *
- * <p>It registers a service of type {@link WebdavIdentity#SERVICE_TYPE} with the instance name
- * {@code webdav_<seed>_<token>} (see {@link WebdavIdentity}) on {@link WebDavServer#RIMDAV_PORT}
- * and a TXT record carrying the DNS-SD envelope. The advert rides the shared {@link MdnsService},
- * so it and the Wi-Fi device browse share one JmDNS instance.
+ * <p><b>Why a system-responder proxy advert, not JmDNS.</b> The device browses {@code
+ * _bp2p._tcp,_webdav} on the <b>LAN</b>, and the service must resolve to the host's tunnel
+ * <b>ULA</b> (so the device dials it over the tunnel), published as {@code <ULAhex>.local → ULA} —
+ * a host record for an address that lives on the utun, not the LAN interface. JmDNS advertises only
+ * the address of the interface it is bound to, so it cannot publish that cross-interface record.
+ * The system mDNS responder can, through a <i>proxy</i> registration ({@code dns-sd -P}), which is
+ * how BlackBerry Link's host does it. See the {@link ProxyAdvertiser} seam and {@link
+ * DnsSdProxyAdvertiser}.
  *
  * <p>Keep an instance alive for as long as the share should be reachable; {@link #close()}
  * withdraws the advert.
@@ -25,64 +29,74 @@ public final class WebdavAdvertiser implements AutoCloseable {
 
   private static final System.Logger LOG = System.getLogger(WebdavAdvertiser.class.getName());
 
-  private final Advertiser advertiser;
-  private MdnsService.Registration advert;
+  private final ProxyAdvertiser advertiser;
+  private AutoCloseable registration;
 
-  /** Advertises over the shared mDNS facility. */
+  /** Advertises through the system mDNS responder. */
   public WebdavAdvertiser() {
-    this(MdnsService.shared()::advertise);
+    this(DnsSdProxyAdvertiser.INSTANCE);
   }
 
   /**
-   * Advertises over the given facility.
+   * Advertises through the given registrar.
    *
    * @param advertiser registers the service
    */
-  WebdavAdvertiser(Advertiser advertiser) {
+  WebdavAdvertiser(ProxyAdvertiser advertiser) {
     this.advertiser = advertiser;
   }
 
   /**
-   * Registers the webdav service and begins advertising. Blocks only for the initial mDNS
-   * registration.
+   * Registers the webdav service and begins advertising it on the LAN, resolving to the host ULA.
    *
    * @param peerIdentifier the identifier the device stored for this workstation at pairing, folded
    *     into the instance name so the device recognises the share as this computer's
-   * @throws IOException if mDNS registration fails
+   * @param hostUla the host's bp2p tunnel ULA — the address the service resolves to
+   * @throws IOException if the advert cannot be registered
    */
-  public void start(String peerIdentifier) throws IOException {
+  public void start(String peerIdentifier, Inet6Address hostUla) throws IOException {
     var seed = WebdavIdentity.newSeed();
     var token = WebdavIdentity.token(peerIdentifier, seed);
     var instance = WebdavIdentity.instanceName(seed, token);
+    var hostLabel = WebdavIdentity.hostLabel(hostUla);
 
-    Map<String, String> txt = new HashMap<>();
-    txt.put("txtvers", "1");
-    txt.put("protovers", "2");
+    // Both TXT version fields must be 0: the device compares the advertised txtvers and protovers
+    // against its own (both 0) and ignores any webdav service whose values differ, so a non-zero
+    // value here leaves the share undiscoverable.
+    Map<String, String> txt = new LinkedHashMap<>();
+    txt.put("txtvers", "0");
+    txt.put("protovers", "0");
 
-    advert =
+    registration =
         advertiser.advertise(
-            new ServiceAdvert(
-                WebdavIdentity.SERVICE_TYPE, instance, null, WebDavServer.RIMDAV_PORT, txt));
+            instance, WebdavIdentity.DNSSD_TYPE, WebDavServer.RIMDAV_PORT, hostLabel, hostUla, txt);
     LOG.log(
         System.Logger.Level.INFO,
         () ->
-            "Advertising bp2p webdav service " + instance + " on port " + WebDavServer.RIMDAV_PORT);
+            "Advertising bp2p webdav service "
+                + instance
+                + " as ["
+                + hostUla.getHostAddress()
+                + "]:"
+                + WebDavServer.RIMDAV_PORT
+                + " (host "
+                + hostLabel
+                + ".local)");
   }
 
   /**
    * Best-effort {@link #start}: returns the running advertiser, or {@link Optional#empty()} (with a
    * warning) if it cannot start. Never throws — discovery is a courtesy, so nothing it does may
-   * break the share it rides along with. This catches more than the {@link IOException} {@link
-   * #start} declares: in a native image mDNS can fail with a runtime exception or a linkage error,
-   * and those must be swallowed too.
+   * break the share it rides along with.
    *
    * @param peerIdentifier the identifier the device stored for this workstation at pairing
+   * @param hostUla the host's bp2p tunnel ULA
    * @return the running advertiser, or empty when it could not start
    */
-  public static Optional<WebdavAdvertiser> tryStart(String peerIdentifier) {
+  public static Optional<WebdavAdvertiser> tryStart(String peerIdentifier, Inet6Address hostUla) {
     var advertiser = new WebdavAdvertiser();
     try {
-      advertiser.start(peerIdentifier);
+      advertiser.start(peerIdentifier, hostUla);
       return Optional.of(advertiser);
     } catch (Exception | LinkageError failure) {
       LOG.log(System.Logger.Level.WARNING, "webdav advertising failed to start", failure);
@@ -94,24 +108,44 @@ public final class WebdavAdvertiser implements AutoCloseable {
   /** Withdraws the advert. Safe to call more than once. */
   @Override
   public void close() {
-    var local = advert;
-    advert = null;
+    var local = registration;
+    registration = null;
     if (local != null) {
-      local.close();
+      try {
+        local.close();
+      } catch (Exception ignored) {
+        // withdrawing the advert is best-effort
+      }
     }
   }
 
-  /** Registers a service over mDNS; a seam, so a test needs no mDNS responder. */
+  /**
+   * Registers a DNS-SD service through the system mDNS responder's <b>proxy</b> mode — advertising
+   * a host record for an address this machine does not hold on the advertising interface. A seam,
+   * so a test needs no responder.
+   */
   @FunctionalInterface
-  interface Advertiser {
+  interface ProxyAdvertiser {
 
     /**
-     * Advertises a service.
+     * Advertises a service with a proxy host record.
      *
-     * @param advert the service to advertise
-     * @return the registration that withdraws it
+     * @param serviceName the DNS-SD instance name
+     * @param serviceType the service type, including any subtype (e.g. {@code _bp2p._tcp,_webdav})
+     * @param port the SRV port
+     * @param hostName the host label the SRV targets (the {@code .local} domain is added)
+     * @param address the address the host record resolves to
+     * @param txt the TXT entries
+     * @return the registration that withdraws the advert
      * @throws IOException if the service could not be registered
      */
-    MdnsService.Registration advertise(ServiceAdvert advert) throws IOException;
+    AutoCloseable advertise(
+        String serviceName,
+        String serviceType,
+        int port,
+        String hostName,
+        Inet6Address address,
+        Map<String, String> txt)
+        throws IOException;
   }
 }

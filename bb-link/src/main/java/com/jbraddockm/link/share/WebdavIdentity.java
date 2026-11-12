@@ -1,5 +1,6 @@
 package com.jbraddockm.link.share;
 
+import java.net.Inet6Address;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -27,8 +28,12 @@ import java.util.HexFormat;
  */
 final class WebdavIdentity {
 
-  /** The DNS-SD service type the webdav share is registered under. */
-  static final String SERVICE_TYPE = "_bp2p._tcp.local.";
+  /**
+   * The DNS-SD service type with the {@code _webdav} subtype, in the {@code type,subtype} form
+   * {@code dns-sd} takes. The device browses {@code _bp2p._tcp} under the {@code _webdav} subtype,
+   * so the advert must carry that subtype or the device's subtype browse never matches it.
+   */
+  static final String DNSSD_TYPE = "_bp2p._tcp,_webdav";
 
   /** The first instance-name token. */
   static final String INSTANCE_PREFIX = "webdav";
@@ -65,6 +70,22 @@ final class WebdavIdentity {
   /** The instance name {@code webdav_<SEED>_<TOKEN>} (upper-case hex, as seen on the wire). */
   static String instanceName(byte[] seed, byte[] token) {
     return INSTANCE_PREFIX + "_" + UPPER.formatHex(seed) + "_" + UPPER.formatHex(token);
+  }
+
+  /**
+   * The mDNS host label for a bp2p ULA — the ULA's 16 bytes without the leading {@code 0xfd}, in
+   * upper-case hex (30 characters), the way the device advertises its own: ULA {@code
+   * fd15:c6dc:…:2269} becomes host label {@code 15C6DC…2269}. The advertised AAAA record maps
+   * {@code <label>.local} to the ULA.
+   *
+   * @param ula the host's bp2p tunnel ULA
+   * @return the host label (without the {@code .local} domain)
+   */
+  static String hostLabel(Inet6Address ula) {
+    var bytes = ula.getAddress();
+    var rest = new byte[bytes.length - 1];
+    System.arraycopy(bytes, 1, rest, 0, rest.length);
+    return UPPER.formatHex(rest);
   }
 
   private static MessageDigest sha1() {

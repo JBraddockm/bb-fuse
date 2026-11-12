@@ -1,6 +1,7 @@
 package com.jbraddockm.link.share;
 
 import java.io.IOException;
+import java.net.Inet6Address;
 import java.net.InetSocketAddress;
 
 /**
@@ -59,10 +60,9 @@ public final class FileShare implements AutoCloseable {
    */
   public static FileShare onTunnel(String hostUla, ShareConfig config, String peerIdentifier)
       throws IOException {
-    return start(
-        WebDavServer.tunnelBindAddress(hostUla),
-        config,
-        () -> WebdavAdvertiser.tryStart(peerIdentifier).orElse(null));
+    var bind = WebDavServer.tunnelBindAddress(hostUla);
+    var ula = (Inet6Address) bind.getAddress();
+    return start(bind, config, () -> WebdavAdvertiser.tryStart(peerIdentifier, ula).orElse(null));
   }
 
   /**
