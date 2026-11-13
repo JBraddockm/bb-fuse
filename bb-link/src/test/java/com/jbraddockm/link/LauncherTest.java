@@ -3,7 +3,7 @@ package com.jbraddockm.link;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.jbraddockm.link.Launcher.Invocation;
-import com.jbraddockm.link.share.WebDavServer;
+import com.jbraddockm.link.remoteaccess.WebDavServer;
 import com.jbraddockm.link.testing.Resources;
 import java.io.IOException;
 import java.io.UncheckedIOException;

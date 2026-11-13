@@ -1,4 +1,4 @@
-package com.jbraddockm.link.share;
+package com.jbraddockm.link.remoteaccess;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -10,27 +10,27 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 @DisplayName("The host file-share configuration")
-class ShareConfigTest {
+class RemoteAccessConfigTest {
 
   @TempDir Path dir;
 
   @Test
   @DisplayName("defaults to read-write and requires a root")
   void defaults() {
-    assertThat(ShareConfig.of(dir).readOnly()).isFalse();
-    assertThatThrownBy(() -> new ShareConfig(null, false))
+    assertThat(RemoteAccessConfig.of(dir).readOnly()).isFalse();
+    assertThatThrownBy(() -> new RemoteAccessConfig(null, false))
         .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
   @DisplayName("round-trips through a properties file")
   void roundTrip() throws IOException {
-    var config = new ShareConfig(dir.resolve("shared"), true);
+    var config = new RemoteAccessConfig(dir.resolve("shared"), true);
     var file = dir.resolve("share.properties");
 
     config.save(file);
 
-    assertThat(ShareConfig.load(file)).isEqualTo(config);
+    assertThat(RemoteAccessConfig.load(file)).isEqualTo(config);
   }
 
   @Test
@@ -39,6 +39,7 @@ class ShareConfigTest {
     var file = dir.resolve("empty.properties");
     java.nio.file.Files.writeString(file, "readOnly=true\n");
 
-    assertThatThrownBy(() -> ShareConfig.load(file)).isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> RemoteAccessConfig.load(file))
+        .isInstanceOf(IllegalArgumentException.class);
   }
 }

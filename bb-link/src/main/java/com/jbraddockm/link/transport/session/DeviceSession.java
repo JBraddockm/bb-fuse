@@ -57,6 +57,7 @@ public final class DeviceSession implements ServiceSession {
   private CgiTransport transport;
   private SmbCredentials smbCredentials;
   private AutoCloseable attachment;
+  private TunnelScopedServer tunnelServer;
   private boolean closed;
 
   private DeviceSession(DeviceTarget target, ExchangeObserver observer, String tunnelSmbHost) {
@@ -193,6 +194,38 @@ public final class DeviceSession implements ServiceSession {
     lock.lock();
     try {
       this.attachment = Objects.requireNonNull(resource, "resource");
+    } finally {
+      lock.unlock();
+    }
+  }
+
+  /**
+   * Registers the tunnel-scoped server — host remote access — that serves for this session's
+   * lifetime. It is drained and stopped when the session closes, <em>before</em> the tunnel it
+   * serves over is released, so the device's in-flight transfers are not cut off by the tunnel
+   * dropping. Replaces any server attached before.
+   *
+   * @param server the server to run with the session
+   */
+  public void attachTunnelServer(TunnelScopedServer server) {
+    lock.lock();
+    try {
+      this.tunnelServer = Objects.requireNonNull(server, "server");
+    } finally {
+      lock.unlock();
+    }
+  }
+
+  /**
+   * The tunnel-scoped server attached to this session — present while host remote access is running
+   * on it, so a command can report or stop it.
+   *
+   * @return the server, or empty when none is attached
+   */
+  public Optional<TunnelScopedServer> tunnelServer() {
+    lock.lock();
+    try {
+      return Optional.ofNullable(tunnelServer);
     } finally {
       lock.unlock();
     }
@@ -403,6 +436,17 @@ public final class DeviceSession implements ServiceSession {
     lock.lock();
     try {
       closed = true;
+      if (tunnelServer != null) {
+        try {
+          // Drain-then-force host remote access before the tunnel it serves over is released, so
+          // in-flight transfers finish rather than being cut off by the tunnel dropping. The
+          // server's own close() is bounded (a short grace period, then a force).
+          tunnelServer.close();
+        } catch (Exception _) {
+          // Best-effort: a failed teardown must not keep the tunnel lease or the session open.
+        }
+        tunnelServer = null;
+      }
       discardTransport();
       if (tunnelBinding != null) {
         tunnelBinding

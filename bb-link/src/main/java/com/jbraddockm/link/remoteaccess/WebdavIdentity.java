@@ -1,4 +1,4 @@
-package com.jbraddockm.link.share;
+package com.jbraddockm.link.remoteaccess;
 
 import java.net.Inet6Address;
 import java.nio.charset.StandardCharsets;

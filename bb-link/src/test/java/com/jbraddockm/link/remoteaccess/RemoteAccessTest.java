@@ -1,4 +1,4 @@
-package com.jbraddockm.link.share;
+package com.jbraddockm.link.remoteaccess;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -18,13 +18,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * Tests for {@link FileShare}: that it serves the configured root once started and stops both the
- * server and the advert on close. Binds on IPv6 loopback ({@code [::1]}) so no tunnel is needed.
+ * Tests for {@link RemoteAccess}: that it serves the configured root once started and stops both
+ * the server and the advert on close. Binds on IPv6 loopback ({@code [::1]}) so no tunnel is
+ * needed.
  */
 @DisplayName("The host file share")
 // The JDK HttpClient and the share under test are closed where it matters; the client needs no ARM.
 @SuppressWarnings("resource")
-class FileShareTest {
+class RemoteAccessTest {
 
   @TempDir Path root;
 
@@ -36,9 +37,9 @@ class FileShareTest {
   @DisplayName("serves the configured root and withdraws the advert and server on close")
   void servesAndStops() throws Exception {
     var advertCloses = new AtomicInteger();
-    FileShare.AdvertStarter advert = () -> advertCloses::incrementAndGet;
+    RemoteAccess.AdvertStarter advert = () -> advertCloses::incrementAndGet;
 
-    var share = FileShare.start(loopback(), ShareConfig.of(root), advert);
+    var share = RemoteAccess.start(loopback(), RemoteAccessConfig.of(root), advert);
     var client = HttpClient.newHttpClient();
     var base = URI.create("http://[::1]:" + share.address().getPort());
 
@@ -64,7 +65,7 @@ class FileShareTest {
   @Test
   @DisplayName("serves without an advert when none is given")
   void noAdvert() throws Exception {
-    try (var share = FileShare.start(loopback(), ShareConfig.of(root), null)) {
+    try (var share = RemoteAccess.start(loopback(), RemoteAccessConfig.of(root), null)) {
       var client = HttpClient.newHttpClient();
       var base = URI.create("http://[::1]:" + share.address().getPort());
       var options =
@@ -80,13 +81,13 @@ class FileShareTest {
   @Test
   @DisplayName("stops the server even when withdrawing the advert fails")
   void advertCloseFailureDoesNotBlockTeardown() throws Exception {
-    FileShare.AdvertStarter advert =
+    RemoteAccess.AdvertStarter advert =
         () ->
             () -> {
               throw new IOException("withdraw failed");
             };
 
-    var share = FileShare.start(loopback(), ShareConfig.of(root), advert);
+    var share = RemoteAccess.start(loopback(), RemoteAccessConfig.of(root), advert);
     var port = share.address().getPort();
 
     share.close();

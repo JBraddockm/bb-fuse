@@ -1,4 +1,4 @@
-package com.jbraddockm.link.share;
+package com.jbraddockm.link.remoteaccess;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;

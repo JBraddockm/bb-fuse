@@ -1,4 +1,4 @@
-package com.jbraddockm.link.share;
+package com.jbraddockm.link.remoteaccess;
 
 import com.jbraddockm.core.webdav.DavPaths;
 import java.io.IOException;

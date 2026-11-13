@@ -4,10 +4,10 @@ import com.jbraddockm.core.daemon.DaemonServer;
 import com.jbraddockm.core.tunnel.TunnelBrokerClient;
 import com.jbraddockm.link.daemon.FixtureReplay;
 import com.jbraddockm.link.daemon.LinkService;
-import com.jbraddockm.link.share.FileShare;
-import com.jbraddockm.link.share.ShareConfig;
-import com.jbraddockm.link.share.ShareRunner;
-import com.jbraddockm.link.share.WebDavServer;
+import com.jbraddockm.link.remoteaccess.RemoteAccess;
+import com.jbraddockm.link.remoteaccess.RemoteAccessConfig;
+import com.jbraddockm.link.remoteaccess.RemoteAccessRunner;
+import com.jbraddockm.link.remoteaccess.WebDavServer;
 import com.jbraddockm.link.transport.cgi.ExchangeObserver;
 import com.jbraddockm.link.transport.trace.TraceRecorder;
 import com.jbraddockm.link.transport.tunnel.BrokerTunnelConnector;
@@ -97,19 +97,19 @@ public final class Launcher {
             "bb-link-share",
             share.tunnelCert().orElse(null),
             share.tunnelKey().orElse(null));
-    var config = new ShareConfig(share.root(), share.readOnly());
+    var config = new RemoteAccessConfig(share.root(), share.readOnly());
     var peerIdentifier = share.peerIdentifier().orElse("");
     var stop = new CountDownLatch(1);
-    var shareRef = new AtomicReference<FileShare>();
+    var shareRef = new AtomicReference<RemoteAccess>();
     var main = Thread.currentThread();
     Runtime.getRuntime()
         .addShutdownHook(
             new Thread(() -> stopShare(shareRef.get(), stop, main), "bb-link-share-stop"));
     try {
-      ShareRunner.run(
+      RemoteAccessRunner.run(
           connector,
           binding -> {
-            var fileShare = FileShare.onTunnel(binding.hostUla(), config, peerIdentifier);
+            var fileShare = RemoteAccess.onTunnel(binding.hostUla(), config, peerIdentifier);
             shareRef.set(fileShare);
             System.err.println(
                 "file share up on [" + binding.hostUla() + "]:" + fileShare.address().getPort());
@@ -130,7 +130,7 @@ public final class Launcher {
    * in-flight transfers finish; a second interrupt makes the JVM halt at once, forcing them. On a
    * startup failure nothing is serving yet, so it just lets the run end.
    */
-  private static void stopShare(FileShare share, CountDownLatch stop, Thread main) {
+  private static void stopShare(RemoteAccess share, CountDownLatch stop, Thread main) {
     if (share == null) {
       stop.countDown();
       return;

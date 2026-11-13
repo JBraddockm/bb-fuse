@@ -1,4 +1,4 @@
-package com.jbraddockm.link.share;
+package com.jbraddockm.link.remoteaccess;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIOException;
@@ -11,10 +11,10 @@ import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-@DisplayName("ShareRunner: acquire, start, park, tear down")
+@DisplayName("RemoteAccessRunner: acquire, start, park, tear down")
 // The fake tunnel hold holds no real resource; the runner's own close is what is under test.
 @SuppressWarnings("resource")
-class ShareRunnerTest {
+class RemoteAccessRunnerTest {
 
   /** A tunnel hold that records its close and reports a fixed host ULA. */
   private static final class FakeBinding implements TunnelBinding {
@@ -59,15 +59,15 @@ class ShareRunnerTest {
     var binding = new FakeBinding(events);
     TunnelConnector connector = () -> binding;
     var seenHostUla = new String[1];
-    ShareRunner.ShareStarter starter =
+    RemoteAccessRunner.RemoteAccessStarter starter =
         hold -> {
           seenHostUla[0] = hold.hostUla();
           events.add("share-started");
           return () -> events.add("share-closed");
         };
-    ShareRunner.Parker parker = () -> events.add("parked");
+    RemoteAccessRunner.Parker parker = () -> events.add("parked");
 
-    ShareRunner.run(connector, starter, parker);
+    RemoteAccessRunner.run(connector, starter, parker);
 
     assertThat(seenHostUla[0]).isEqualTo("fd00::host");
     assertThat(events).containsExactly("share-started", "parked", "share-closed", "binding-closed");
@@ -80,13 +80,13 @@ class ShareRunnerTest {
     var events = new ArrayList<String>();
     var binding = new FakeBinding(events);
     TunnelConnector connector = () -> binding;
-    ShareRunner.ShareStarter starter =
+    RemoteAccessRunner.RemoteAccessStarter starter =
         _ -> {
           throw new IOException("bind refused");
         };
 
     assertThatIOException()
-        .isThrownBy(() -> ShareRunner.run(connector, starter, () -> events.add("parked")));
+        .isThrownBy(() -> RemoteAccessRunner.run(connector, starter, () -> events.add("parked")));
 
     assertThat(binding.closed).isTrue();
     assertThat(events).containsExactly("binding-closed");
@@ -98,14 +98,14 @@ class ShareRunnerTest {
     var events = new ArrayList<String>();
     var binding = new FakeBinding(events);
     TunnelConnector connector = () -> binding;
-    ShareRunner.ShareStarter starter =
+    RemoteAccessRunner.RemoteAccessStarter starter =
         _ -> {
           events.add("share-started");
           return () -> events.add("share-closed");
         };
 
     try {
-      ShareRunner.run(
+      RemoteAccessRunner.run(
           connector,
           starter,
           () -> {

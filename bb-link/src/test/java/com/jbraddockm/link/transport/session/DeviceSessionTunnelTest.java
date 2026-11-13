@@ -16,6 +16,9 @@ import com.jbraddockm.link.transport.cgi.TransportScheme;
 import com.jbraddockm.link.transport.tunnel.TunnelBinding;
 import com.jbraddockm.link.transport.tunnel.TunnelConnector;
 import java.io.IOException;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -93,6 +96,62 @@ class DeviceSessionTunnelTest {
       connects++;
       return binding;
     }
+  }
+
+  /** A tunnel-scoped server that records its teardown into a shared order log. */
+  private static TunnelScopedServer recordingServer(List<String> order) {
+    return new TunnelScopedServer() {
+      @Override
+      public int activeRequests() {
+        return 0;
+      }
+
+      @Override
+      public void beginShutdown() {}
+
+      @Override
+      public boolean awaitIdle(Duration timeout) {
+        return true;
+      }
+
+      @Override
+      public void forceShutdown() {}
+
+      @Override
+      public void close() {
+        order.add("server");
+      }
+    };
+  }
+
+  /** A tunnel hold that records its release into a shared order log. */
+  private static TunnelBinding recordingBinding(List<String> order, String ula, String smbHost) {
+    return new TunnelBinding() {
+      @Override
+      public String ula() {
+        return ula;
+      }
+
+      @Override
+      public String hostUla() {
+        return "fd00::host";
+      }
+
+      @Override
+      public String smbHost() {
+        return smbHost;
+      }
+
+      @Override
+      public boolean isDown() {
+        return false;
+      }
+
+      @Override
+      public void close() {
+        order.add("tunnel");
+      }
+    };
   }
 
   @Nested
@@ -248,6 +307,86 @@ class DeviceSessionTunnelTest {
       session.close();
 
       assertThat(binding.closes).isEqualTo(1);
+    }
+  }
+
+  @Nested
+  @DisplayName("owning a tunnel-scoped server (host remote access)")
+  class TunnelScopedServerOwnership {
+
+    @Test
+    @DisplayName("close drains the server before releasing the tunnel, then withdraws the advert")
+    void drainsServerBeforeTunnelThenAdvert() throws IOException {
+      var order = new ArrayList<String>();
+      var session =
+          tunnelled(
+              "10.0.0.5",
+              8443,
+              new FakeConnector(recordingBinding(order, "fd00::1", "169.254.2.1")));
+      session.establishTunnel(CommandListener.SILENT);
+      session.attachTunnelServer(recordingServer(order));
+      session.attach(() -> order.add("advert"));
+
+      session.close();
+
+      // The server drains over the tunnel it serves on, so it must be torn down before the tunnel
+      // lease is released; the friendly advert is a courtesy and is withdrawn last.
+      assertThat(order).containsExactly("server", "tunnel", "advert");
+      assertThat(session.tunnelServer()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("a failing server teardown still releases the tunnel and withdraws the advert")
+    void failingServerStillReleasesTheTunnel() throws IOException {
+      var order = new ArrayList<String>();
+      var session =
+          tunnelled(
+              "10.0.0.5",
+              8443,
+              new FakeConnector(recordingBinding(order, "fd00::1", "169.254.2.1")));
+      session.establishTunnel(CommandListener.SILENT);
+      session.attachTunnelServer(
+          new TunnelScopedServer() {
+            @Override
+            public int activeRequests() {
+              return 0;
+            }
+
+            @Override
+            public void beginShutdown() {}
+
+            @Override
+            public boolean awaitIdle(Duration timeout) {
+              return true;
+            }
+
+            @Override
+            public void forceShutdown() {}
+
+            @Override
+            public void close() {
+              throw new RuntimeException("teardown blew up");
+            }
+          });
+      session.attach(() -> order.add("advert"));
+
+      session.close(); // must not propagate the failure
+
+      assertThat(order).containsExactly("tunnel", "advert");
+    }
+
+    @Test
+    @DisplayName("the attached server is retrievable while the session is open")
+    void serverIsRetrievableWhileOpen() throws IOException {
+      var session =
+          tunnelled("10.0.0.5", 8443, new FakeConnector(new FakeBinding("fd00::1", "169.254.2.1")));
+      session.establishTunnel(CommandListener.SILENT);
+      var server = recordingServer(new ArrayList<>());
+
+      session.attachTunnelServer(server);
+
+      assertThat(session.tunnelServer()).containsSame(server);
+      session.close();
     }
   }
 }
