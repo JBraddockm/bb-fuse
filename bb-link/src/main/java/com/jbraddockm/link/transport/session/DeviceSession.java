@@ -276,6 +276,24 @@ public final class DeviceSession implements ServiceSession {
   }
 
   /**
+   * The host's bp2p tunnel ULA (an IPv6 literal) that a tunnel-scoped server binds on — present
+   * only while a tunnel is held, empty for a USB or direct connect. Host remote access serves from
+   * {@code [hostUla]:4487}, so this is how a command learns where to bind it.
+   *
+   * @return the host ULA, or empty when no live tunnel is held
+   */
+  public Optional<String> hostUla() {
+    lock.lock();
+    try {
+      return tunnelBinding != null && !tunnelBinding.isDown()
+          ? Optional.of(tunnelBinding.hostUla())
+          : Optional.empty();
+    } finally {
+      lock.unlock();
+    }
+  }
+
+  /**
    * The network path commands actually run over: the tunnel's path once {@link #establishTunnel}
    * has redirected this session, otherwise the configured target's path. This — not {@link
    * #target()}, which keeps the address the user gave — is what decides endpoint reachability.

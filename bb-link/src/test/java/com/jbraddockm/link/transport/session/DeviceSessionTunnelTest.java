@@ -278,6 +278,22 @@ class DeviceSessionTunnelTest {
     }
 
     @Test
+    @DisplayName(
+        "hostUla is empty before establish, the binding's ULA while held, empty once dropped")
+    void reportsTheHostUla() throws IOException {
+      var binding = new FakeBinding("fd00::1", "169.254.2.1"); // its hostUla() is "fd00::host"
+      var session = tunnelled("10.0.0.5", 8443, new FakeConnector(binding));
+      assertThat(session.hostUla()).isEmpty();
+
+      session.establishTunnel(CommandListener.SILENT);
+      assertThat(session.hostUla()).contains("fd00::host");
+
+      binding.down = true;
+      assertThat(session.hostUla()).isEmpty();
+      session.close();
+    }
+
+    @Test
     @DisplayName("a session with no tunnel configured never holds one")
     void directConnectHoldsNoTunnel() {
       var session =
