@@ -130,11 +130,11 @@ class DeviceSessionTunnelTest {
   }
 
   /** A tunnel hold that records its release into a shared order log. */
-  private static TunnelBinding recordingBinding(List<String> order, String ula, String smbHost) {
+  private static TunnelBinding recordingBinding(List<String> order) {
     return new TunnelBinding() {
       @Override
       public String ula() {
-        return ula;
+        return "fd00::1";
       }
 
       @Override
@@ -144,7 +144,7 @@ class DeviceSessionTunnelTest {
 
       @Override
       public String smbHost() {
-        return smbHost;
+        return "169.254.2.1";
       }
 
       @Override
@@ -339,11 +339,7 @@ class DeviceSessionTunnelTest {
     @DisplayName("close drains the server before releasing the tunnel, then withdraws the advert")
     void drainsServerBeforeTunnelThenAdvert() throws IOException {
       var order = new ArrayList<String>();
-      var session =
-          tunnelled(
-              "10.0.0.5",
-              8443,
-              new FakeConnector(recordingBinding(order, "fd00::1", "169.254.2.1")));
+      var session = tunnelled("10.0.0.5", 8443, new FakeConnector(recordingBinding(order)));
       session.establishTunnel(CommandListener.SILENT);
       session.attachTunnelServer(recordingServer(order), false);
       session.attach(() -> order.add("advert"));
@@ -360,11 +356,7 @@ class DeviceSessionTunnelTest {
     @DisplayName("a failing server teardown still releases the tunnel and withdraws the advert")
     void failingServerStillReleasesTheTunnel() throws IOException {
       var order = new ArrayList<String>();
-      var session =
-          tunnelled(
-              "10.0.0.5",
-              8443,
-              new FakeConnector(recordingBinding(order, "fd00::1", "169.254.2.1")));
+      var session = tunnelled("10.0.0.5", 8443, new FakeConnector(recordingBinding(order)));
       session.establishTunnel(CommandListener.SILENT);
       session.attachTunnelServer(
           new TunnelScopedServer() {

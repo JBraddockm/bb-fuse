@@ -3,11 +3,7 @@ package com.jbraddockm.link;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.jbraddockm.link.Launcher.Invocation;
-import com.jbraddockm.link.remoteaccess.WebDavServer;
 import com.jbraddockm.link.testing.Resources;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.net.BindException;
 import java.nio.file.Path;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
@@ -79,115 +75,6 @@ class LauncherTest {
       assertThat(Launcher.interpret(new String[] {"-parse"})).isEqualTo(expected);
       assertThat(Launcher.interpret(new String[] {"-parse", "getPin", "extra"}))
           .isEqualTo(expected);
-    }
-  }
-
-  @Nested
-  @DisplayName("the file share")
-  class Share {
-
-    @Test
-    @DisplayName("a directory and a device host is the share, with the tunnel options folded in")
-    void aShare() {
-      var invocation =
-          Launcher.interpret(
-              new String[] {
-                "-share",
-                "/srv/shared",
-                "--device-host",
-                "192.168.1.118",
-                "--broker-socket",
-                "/tmp/bb-tunneld.sock",
-                "--tunnel-cert",
-                "devices/2C1E7583/tunnel_cert.pem",
-                "--tunnel-key",
-                "devices/2C1E7583/tunnel_key.pem",
-                "--peer-id",
-                "2C1E7583",
-                "--read-only"
-              });
-
-      assertThat(invocation)
-          .isEqualTo(
-              new Invocation.Share(
-                  Path.of("/srv/shared"),
-                  "192.168.1.118",
-                  Optional.of(Path.of("/tmp/bb-tunneld.sock")),
-                  Optional.of(Path.of("devices/2C1E7583/tunnel_cert.pem")),
-                  Optional.of(Path.of("devices/2C1E7583/tunnel_key.pem")),
-                  Optional.of("2C1E7583"),
-                  true));
-    }
-
-    @Test
-    @DisplayName("just a directory and a device host defaults the rest")
-    void minimal() {
-      assertThat(
-              Launcher.interpret(
-                  new String[] {"-share", "/srv/shared", "--device-host", "192.168.1.118"}))
-          .isEqualTo(
-              new Invocation.Share(
-                  Path.of("/srv/shared"),
-                  "192.168.1.118",
-                  Optional.empty(),
-                  Optional.empty(),
-                  Optional.empty(),
-                  Optional.empty(),
-                  false));
-    }
-
-    @Test
-    @DisplayName(
-        "no directory, no device host, a dangling value, an unknown option, or a second directory"
-            + " says how the share is used")
-    void notUnderstood() {
-      var expected = new Invocation.Usage(usage("launcher--share-usage.txt"));
-
-      assertThat(Launcher.interpret(new String[] {"-share", "--device-host", "h"}))
-          .isEqualTo(expected);
-      assertThat(Launcher.interpret(new String[] {"-share", "/srv/shared"})).isEqualTo(expected);
-      assertThat(Launcher.interpret(new String[] {"-share", "/srv/shared", "--device-host"}))
-          .isEqualTo(expected);
-      assertThat(
-              Launcher.interpret(
-                  new String[] {"-share", "/srv/shared", "--device-host", "h", "--bogus"}))
-          .isEqualTo(expected);
-      assertThat(Launcher.interpret(new String[] {"-share", "/a", "/b", "--device-host", "h"}))
-          .isEqualTo(expected);
-    }
-  }
-
-  @Nested
-  @DisplayName("a share that cannot start")
-  class ShareFailures {
-
-    @Test
-    @DisplayName("a bound address reads as a share already running on this device")
-    void addressInUse() {
-      assertThat(Launcher.shareFailureMessage(new BindException("Address already in use")))
-          .contains("already running")
-          .contains(Integer.toString(WebDavServer.RIMDAV_PORT));
-    }
-
-    @Test
-    @DisplayName("a bad or unreadable share directory keeps the jail's own message")
-    void badDirectory() {
-      assertThat(
-              Launcher.shareFailureMessage(
-                  new IllegalArgumentException("the share root is not a directory: /tmp/x")))
-          .isEqualTo("the share root is not a directory: /tmp/x");
-      assertThat(
-              Launcher.shareFailureMessage(
-                  new UncheckedIOException(
-                      "the share root cannot be read: /tmp/y", new IOException())))
-          .isEqualTo("the share root cannot be read: /tmp/y");
-    }
-
-    @Test
-    @DisplayName("any other failure is prefixed, never a stack trace")
-    void otherFailure() {
-      assertThat(Launcher.shareFailureMessage(new IOException("connection refused")))
-          .isEqualTo("could not start the file share: connection refused");
     }
   }
 
