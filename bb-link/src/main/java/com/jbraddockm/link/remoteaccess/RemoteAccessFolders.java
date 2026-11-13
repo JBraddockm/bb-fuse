@@ -15,14 +15,12 @@ import java.util.Objects;
  * <p>The default root is injected so tests need no home directory; {@link #withHomeDefault()}
  * builds the production one.
  */
-public final class RemoteAccessFolders {
-
-  private final Path defaultRoot;
+public record RemoteAccessFolders(Path defaultRoot) {
 
   /**
    * @param defaultRoot the folder served when a device names none of its own
    */
-  RemoteAccessFolders(Path defaultRoot) {
+  public RemoteAccessFolders(Path defaultRoot) {
     this.defaultRoot = Objects.requireNonNull(defaultRoot, "defaultRoot");
   }
 
@@ -41,6 +39,7 @@ public final class RemoteAccessFolders {
    *
    * @return the default root
    */
+  @Override
   public Path defaultRoot() {
     return defaultRoot;
   }

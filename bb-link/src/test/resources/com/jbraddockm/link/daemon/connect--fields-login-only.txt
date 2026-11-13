@@ -4,3 +4,4 @@ port
 authentication
 tunnel
 smb
+remoteAccess

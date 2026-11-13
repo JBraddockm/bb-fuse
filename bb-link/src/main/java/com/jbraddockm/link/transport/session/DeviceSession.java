@@ -22,6 +22,7 @@ import com.jbraddockm.link.transport.login.SmbCredentials;
 import com.jbraddockm.link.transport.tunnel.TunnelBinding;
 import com.jbraddockm.link.transport.tunnel.TunnelConnector;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.List;
 import java.util.Objects;
@@ -58,6 +59,8 @@ public final class DeviceSession implements ServiceSession {
   private SmbCredentials smbCredentials;
   private AutoCloseable attachment;
   private TunnelScopedServer tunnelServer;
+  private Path deviceFolder;
+  private String peerIdentifier;
   private boolean closed;
 
   private DeviceSession(DeviceTarget target, ExchangeObserver observer, String tunnelSmbHost) {
@@ -226,6 +229,55 @@ public final class DeviceSession implements ServiceSession {
     lock.lock();
     try {
       return Optional.ofNullable(tunnelServer);
+    } finally {
+      lock.unlock();
+    }
+  }
+
+  /**
+   * Remembers which paired device this connect is for: the device folder ({@code <devices>/<PIN>/},
+   * where {@code device.json} and the certificates live) and the peer identifier the device stored
+   * for this computer. Both may be {@code null} — a password or no-password connect has no
+   * certificate, so no folder beside it. Set once, during {@code open}.
+   *
+   * @param deviceFolder the device's folder, or {@code null}
+   * @param peerIdentifier the identifier the device stored for this computer, or {@code null}
+   */
+  public void rememberDevice(Path deviceFolder, String peerIdentifier) {
+    lock.lock();
+    try {
+      this.deviceFolder = deviceFolder;
+      this.peerIdentifier = peerIdentifier;
+    } finally {
+      lock.unlock();
+    }
+  }
+
+  /**
+   * The device folder this connect is for ({@code <devices>/<PIN>/}), when it connected with a
+   * certificate beside which the folder sits.
+   *
+   * @return the folder, or empty
+   */
+  public Optional<Path> deviceFolder() {
+    lock.lock();
+    try {
+      return Optional.ofNullable(deviceFolder);
+    } finally {
+      lock.unlock();
+    }
+  }
+
+  /**
+   * The identifier the device stored for this computer at pairing — folded into the remote-access
+   * advert so the device recognises the server as this computer's.
+   *
+   * @return the identifier, or empty
+   */
+  public Optional<String> peerIdentifier() {
+    lock.lock();
+    try {
+      return Optional.ofNullable(peerIdentifier);
     } finally {
       lock.unlock();
     }

@@ -77,6 +77,7 @@ public final class RemoteAccess implements TunnelScopedServer {
    *
    * @return the bound address
    */
+  @Override
   public InetSocketAddress address() {
     return server.address();
   }

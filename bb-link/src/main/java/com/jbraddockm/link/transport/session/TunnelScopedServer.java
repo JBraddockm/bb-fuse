@@ -1,5 +1,6 @@
 package com.jbraddockm.link.transport.session;
 
+import java.net.InetSocketAddress;
 import java.time.Duration;
 
 /**
@@ -15,6 +16,9 @@ import java.time.Duration;
  * or a daemon stop.
  */
 public interface TunnelScopedServer extends AutoCloseable {
+
+  /** The address the server is bound to and serving on. */
+  InetSocketAddress address();
 
   /** The number of requests in flight; watch it to decide whether to keep draining or to force. */
   int activeRequests();

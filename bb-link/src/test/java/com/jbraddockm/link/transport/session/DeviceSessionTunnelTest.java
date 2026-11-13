@@ -102,6 +102,11 @@ class DeviceSessionTunnelTest {
   private static TunnelScopedServer recordingServer(List<String> order) {
     return new TunnelScopedServer() {
       @Override
+      public java.net.InetSocketAddress address() {
+        return null;
+      }
+
+      @Override
       public int activeRequests() {
         return 0;
       }
@@ -363,6 +368,11 @@ class DeviceSessionTunnelTest {
       session.establishTunnel(CommandListener.SILENT);
       session.attachTunnelServer(
           new TunnelScopedServer() {
+            @Override
+            public java.net.InetSocketAddress address() {
+              return null;
+            }
+
             @Override
             public int activeRequests() {
               return 0;
