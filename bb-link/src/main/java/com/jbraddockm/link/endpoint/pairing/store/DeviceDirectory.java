@@ -8,10 +8,11 @@ import java.util.Optional;
 
 /**
  * The one record of a device, {@code <devices>/<PIN>/device.json}: its login identity, its pairing,
- * and its pinned SMB host. This is the single place that reads and writes {@code device.json} — the
- * cert and key files beside it are written by {@link IdentityDirectory} and {@link
- * PairingDirectory}, which keep their metadata here. Each write preserves the other sections, so
- * independent operations (pair, enrol, pin) update the file without clobbering one another.
+ * its pinned SMB host, and its remote-access setting. This is the single place that reads and
+ * writes {@code device.json} — the cert and key files beside it are written by {@link
+ * IdentityDirectory} and {@link PairingDirectory}, which keep their metadata here. Each write
+ * preserves the other sections, so independent operations (pair, enrol, pin) update the file
+ * without clobbering one another.
  *
  * <p>Reads are tolerant: a hand-edited or stale file reads as its parts being absent (see {@link
  * StoredDevice#fromJsonText}), so a bad record can never break a connect.
@@ -117,6 +118,17 @@ public final class DeviceDirectory {
   }
 
   /**
+   * The device's remote-access setting.
+   *
+   * @return the setting, or empty when it is the default (disabled, no folder), none is stored, or
+   *     the record is unreadable
+   * @throws IOException if the file cannot be read
+   */
+  public Optional<StoredRemoteAccess> remoteAccess() throws IOException {
+    return read().map(StoredDevice::remoteAccess);
+  }
+
+  /**
    * Writes (or replaces) the login identity, keeping the other sections.
    *
    * @param identity the identity to record
@@ -124,7 +136,7 @@ public final class DeviceDirectory {
    */
   public void writeIdentity(StoredIdentity identity) throws IOException {
     var current = current();
-    save(new StoredDevice(identity, current.pairing(), current.smbHost()));
+    save(new StoredDevice(identity, current.pairing(), current.smbHost(), current.remoteAccess()));
   }
 
   /**
@@ -135,7 +147,7 @@ public final class DeviceDirectory {
    */
   public void writePairing(StoredPairing pairing) throws IOException {
     var current = current();
-    save(new StoredDevice(current.identity(), pairing, current.smbHost()));
+    save(new StoredDevice(current.identity(), pairing, current.smbHost(), current.remoteAccess()));
   }
 
   /**
@@ -147,7 +159,7 @@ public final class DeviceDirectory {
    */
   public void pinSmbHost(String smbHost) throws IOException {
     var current = current();
-    save(new StoredDevice(current.identity(), current.pairing(), smbHost));
+    save(new StoredDevice(current.identity(), current.pairing(), smbHost, current.remoteAccess()));
   }
 
   /**
@@ -158,12 +170,26 @@ public final class DeviceDirectory {
    */
   public void clearSmbHost() throws IOException {
     var current = current();
-    save(new StoredDevice(current.identity(), current.pairing(), null));
+    save(new StoredDevice(current.identity(), current.pairing(), null, current.remoteAccess()));
+  }
+
+  /**
+   * Writes (or replaces) the remote-access setting, keeping the other sections. The default setting
+   * (disabled, no folder) and {@code null} both clear the section, and the file is removed once it
+   * would hold nothing.
+   *
+   * @param remoteAccess the setting to record, or {@code null} to clear it
+   * @throws IOException if the file cannot be written
+   */
+  public void writeRemoteAccess(StoredRemoteAccess remoteAccess) throws IOException {
+    var current = current();
+    var normalized = remoteAccess == null || remoteAccess.isDefault() ? null : remoteAccess;
+    save(new StoredDevice(current.identity(), current.pairing(), current.smbHost(), normalized));
   }
 
   /** The current record, or an empty one when there is no file. */
   private StoredDevice current() throws IOException {
-    return read().orElseGet(() -> new StoredDevice(null, null, null));
+    return read().orElseGet(() -> new StoredDevice(null, null, null, null));
   }
 
   /** Writes the record atomically, or removes the file when the record would hold nothing. */

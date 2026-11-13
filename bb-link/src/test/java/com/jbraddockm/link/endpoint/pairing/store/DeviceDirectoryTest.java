@@ -153,4 +153,59 @@ class DeviceDirectoryTest {
       assertThat(directory.pinnedSmbHost()).isEmpty();
     }
   }
+
+  @Nested
+  @DisplayName("the remote-access setting")
+  class RemoteAccess {
+
+    private static final StoredRemoteAccess ENABLED =
+        new StoredRemoteAccess(true, Path.of("/srv/shared"));
+
+    @Test
+    @DisplayName("writes it and reads it back")
+    void writesAndReadsBack() throws IOException {
+      directory.writeRemoteAccess(ENABLED);
+
+      assertThat(directory.remoteAccess()).contains(ENABLED);
+    }
+
+    @Test
+    @DisplayName(
+        "keeps the pinned host when written, and keeps the setting when the pin is cleared")
+    void preservesOtherSections() throws IOException {
+      directory.pinSmbHost("169.254.5.1");
+      directory.writeRemoteAccess(ENABLED);
+
+      assertThat(directory.pinnedSmbHost()).contains("169.254.5.1");
+      assertThat(directory.remoteAccess()).contains(ENABLED);
+
+      directory.clearSmbHost();
+
+      assertThat(directory.pinnedSmbHost()).isEmpty();
+      assertThat(directory.remoteAccess()).contains(ENABLED);
+    }
+
+    @Test
+    @DisplayName("writing the default clears it, removing the record when nothing else is kept")
+    void defaultClearsIt() throws IOException {
+      directory.writeRemoteAccess(ENABLED);
+
+      directory.writeRemoteAccess(new StoredRemoteAccess(false, null));
+
+      assertThat(directory.remoteAccess()).isEmpty();
+      assertThat(directory.deviceFile()).doesNotExist();
+    }
+
+    @Test
+    @DisplayName("null clears it too, keeping any other section")
+    void nullClearsIt() throws IOException {
+      directory.pinSmbHost("169.254.5.1");
+      directory.writeRemoteAccess(ENABLED);
+
+      directory.writeRemoteAccess(null);
+
+      assertThat(directory.remoteAccess()).isEmpty();
+      assertThat(directory.pinnedSmbHost()).contains("169.254.5.1");
+    }
+  }
 }
