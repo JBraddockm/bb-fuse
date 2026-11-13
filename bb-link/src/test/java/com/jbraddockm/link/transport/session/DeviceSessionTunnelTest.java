@@ -345,7 +345,7 @@ class DeviceSessionTunnelTest {
               8443,
               new FakeConnector(recordingBinding(order, "fd00::1", "169.254.2.1")));
       session.establishTunnel(CommandListener.SILENT);
-      session.attachTunnelServer(recordingServer(order));
+      session.attachTunnelServer(recordingServer(order), false);
       session.attach(() -> order.add("advert"));
 
       session.close();
@@ -393,7 +393,8 @@ class DeviceSessionTunnelTest {
             public void close() {
               throw new RuntimeException("teardown blew up");
             }
-          });
+          },
+          false);
       session.attach(() -> order.add("advert"));
 
       session.close(); // must not propagate the failure
@@ -409,7 +410,7 @@ class DeviceSessionTunnelTest {
       session.establishTunnel(CommandListener.SILENT);
       var server = recordingServer(new ArrayList<>());
 
-      session.attachTunnelServer(server);
+      session.attachTunnelServer(server, false);
 
       assertThat(session.tunnelServer()).containsSame(server);
       session.close();

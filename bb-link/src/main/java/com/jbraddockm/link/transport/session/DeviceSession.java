@@ -59,6 +59,7 @@ public final class DeviceSession implements ServiceSession {
   private SmbCredentials smbCredentials;
   private AutoCloseable attachment;
   private TunnelScopedServer tunnelServer;
+  private boolean tunnelServerReadOnly;
   private Path deviceFolder;
   private String peerIdentifier;
   private boolean closed;
@@ -209,11 +210,14 @@ public final class DeviceSession implements ServiceSession {
    * dropping. Replaces any server attached before.
    *
    * @param server the server to run with the session
+   * @param readOnly whether the server was started read-only — remembered so a status command can
+   *     report it, as it is a runtime choice the stored setting does not record
    */
-  public void attachTunnelServer(TunnelScopedServer server) {
+  public void attachTunnelServer(TunnelScopedServer server, boolean readOnly) {
     lock.lock();
     try {
       this.tunnelServer = Objects.requireNonNull(server, "server");
+      this.tunnelServerReadOnly = readOnly;
     } finally {
       lock.unlock();
     }
@@ -229,6 +233,41 @@ public final class DeviceSession implements ServiceSession {
     lock.lock();
     try {
       return Optional.ofNullable(tunnelServer);
+    } finally {
+      lock.unlock();
+    }
+  }
+
+  /**
+   * Detaches the tunnel-scoped server so it no longer rides the session's teardown, handing it back
+   * for the caller to stop. Used by the stop and restart commands, which own the shutdown
+   * themselves; after this the session closes nothing for it.
+   *
+   * @return the detached server, or empty when none was attached
+   */
+  public Optional<TunnelScopedServer> detachTunnelServer() {
+    lock.lock();
+    try {
+      var detached = Optional.ofNullable(tunnelServer);
+      tunnelServer = null;
+      tunnelServerReadOnly = false;
+      return detached;
+    } finally {
+      lock.unlock();
+    }
+  }
+
+  /**
+   * Whether the attached tunnel-scoped server is serving read-only — {@code false} when none is
+   * attached. The stored setting does not record it, so the session remembers the runtime choice
+   * for a status command.
+   *
+   * @return the read-only flag of the running server, or {@code false}
+   */
+  public boolean tunnelServerReadOnly() {
+    lock.lock();
+    try {
+      return tunnelServerReadOnly;
     } finally {
       lock.unlock();
     }
@@ -516,6 +555,7 @@ public final class DeviceSession implements ServiceSession {
           // Best-effort: a failed teardown must not keep the tunnel lease or the session open.
         }
         tunnelServer = null;
+        tunnelServerReadOnly = false;
       }
       discardTransport();
       if (tunnelBinding != null) {

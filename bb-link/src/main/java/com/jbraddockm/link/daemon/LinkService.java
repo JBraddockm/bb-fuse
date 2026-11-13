@@ -9,6 +9,8 @@ import com.jbraddockm.core.daemon.Reply;
 import com.jbraddockm.core.daemon.RequestParams;
 import com.jbraddockm.core.daemon.Service;
 import com.jbraddockm.core.daemon.ServiceInfo;
+import com.jbraddockm.core.daemon.SessionCommand;
+import com.jbraddockm.core.daemon.StandaloneCommand;
 import com.jbraddockm.core.discovery.DeviceCharacteristics;
 import com.jbraddockm.core.discovery.DeviceScanner;
 import com.jbraddockm.core.error.CoreErrorCode;
@@ -49,12 +51,19 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 /** The bb-link service: what the shared daemon server runs. */
 public final class LinkService implements Service<DeviceSession> {
 
   /** The version reported in {@code hello}. */
   public static final String VERSION = "0.1.0";
+
+  private static final String START_REMOTE_ACCESS = "startRemoteAccess";
+  private static final String STOP_REMOTE_ACCESS = "stopRemoteAccess";
+  private static final String GET_REMOTE_ACCESS_STATUS = "getRemoteAccessStatus";
+  private static final String RESTART_REMOTE_ACCESS = "restartRemoteAccess";
+  private static final String SET_REMOTE_ACCESS = "setRemoteAccess";
 
   private final TransportScheme scheme;
   private final DeviceScanner scanner;
@@ -294,12 +303,63 @@ public final class LinkService implements Service<DeviceSession> {
         "running",
         running,
         "address",
-        address == null ? null : "[" + address.getHostString() + "]:" + address.getPort());
+        addressText(address));
+  }
+
+  /** The bind address as {@code [host]:port}, or {@code null}. */
+  private static String addressText(InetSocketAddress address) {
+    return address == null ? null : "[" + address.getHostString() + "]:" + address.getPort();
   }
 
   private static String messageOf(Throwable failure) {
     var message = failure.getMessage();
     return message == null ? failure.getClass().getSimpleName() : message;
+  }
+
+  /** The folder a start/restart serves: the request's own, else the device's stored folder. */
+  private static Path effectiveFolder(DeviceSession session, Path explicitFolder) {
+    return explicitFolder != null
+        ? explicitFolder
+        : storedRemoteAccess(session).map(StoredRemoteAccess::folder).orElse(null);
+  }
+
+  /** The device's remote-access setting read from the session's device folder, or empty. */
+  private static Optional<StoredRemoteAccess> storedRemoteAccess(DeviceSession session) {
+    return session.deviceFolder().flatMap(LinkService::storedRemoteAccess);
+  }
+
+  /**
+   * Persists the {@code remoteAccess} intent for the session's device — {@code enabled}, and the
+   * folder when one is given (otherwise the stored folder is kept). Best-effort: a device folder
+   * that cannot be written is logged, never fatal to the command whose live effect already took
+   * hold.
+   */
+  private static void persist(
+      DeviceSession session, boolean enabled, Path folderOverride, Reply reply) {
+    var deviceFolder = session.deviceFolder().orElse(null);
+    if (deviceFolder == null) {
+      return;
+    }
+    try {
+      var directory = DeviceDirectory.at(deviceFolder);
+      var folder =
+          folderOverride != null
+              ? folderOverride
+              : directory.remoteAccess().map(StoredRemoteAccess::folder).orElse(null);
+      directory.writeRemoteAccess(new StoredRemoteAccess(enabled, folder));
+    } catch (IOException | RuntimeException failure) {
+      reply.onLog(
+          LogLevel.WARN, "Could not persist the remote-access setting: " + messageOf(failure));
+    }
+  }
+
+  /** The error a remote-access command fails with on a session that holds no Wi-Fi tunnel. */
+  private static ServiceError noTunnel(String verb) {
+    return new ServiceError(
+        CoreErrorCode.COMMAND_FAILED,
+        verb
+            + " needs a Wi-Fi tunnel to the device; it is not available over USB or a direct"
+            + " connection.");
   }
 
   @Override
@@ -309,9 +369,27 @@ public final class LinkService implements Service<DeviceSession> {
 
   @Override
   public List<CommandSpec<DeviceSession>> commands() {
-    return Arrays.stream(LinkMethod.values())
-        .map(method -> method.spec(scanner, pairing, retrieval))
+    return Stream.concat(
+            Arrays.stream(LinkMethod.values())
+                .map(method -> method.spec(scanner, pairing, retrieval)),
+            remoteAccessCommands().stream())
         .toList();
+  }
+
+  /**
+   * The remote-access verbs, which live here rather than in {@link LinkMethod} because they drive
+   * the session's own tunnel-scoped server through this service's collaborators ({@link
+   * #remoteAccessFolders}, {@link #remoteAccessStarter}) instead of sending a command to the
+   * device. They need no CGI endpoint, so they stay out of {@link EndpointReachability}; the tunnel
+   * requirement is enforced in each command.
+   */
+  private List<CommandSpec<DeviceSession>> remoteAccessCommands() {
+    return List.of(
+        new CommandSpec.SessionScoped<>(START_REMOTE_ACCESS, this::startRemoteAccessCommand),
+        new CommandSpec.SessionScoped<>(STOP_REMOTE_ACCESS, this::stopRemoteAccessCommand),
+        new CommandSpec.SessionScoped<>(GET_REMOTE_ACCESS_STATUS, _ -> remoteAccessStatusCommand()),
+        new CommandSpec.SessionScoped<>(RESTART_REMOTE_ACCESS, this::restartRemoteAccessCommand),
+        new CommandSpec.Standalone<>(SET_REMOTE_ACCESS, this::setRemoteAccessCommand));
   }
 
   /**
@@ -424,26 +502,229 @@ public final class LinkService implements Service<DeviceSession> {
    * result.
    */
   Map<String, Object> startRemoteAccess(DeviceSession session, Reply reply) {
-    var setting = session.deviceFolder().flatMap(LinkService::storedRemoteAccess);
+    var setting = storedRemoteAccess(session);
     boolean enabled = setting.map(StoredRemoteAccess::enabled).orElse(false);
     var configured = setting.map(StoredRemoteAccess::folder).orElse(null);
     var folder = configured != null ? configured : remoteAccessFolders.defaultRoot();
-    var hostUla = session.hostUla();
-    if (enabled && hostUla.isPresent()) {
+    if (enabled && session.hasTunnel()) {
       try {
-        var config = remoteAccessFolders.resolve(configured, false);
-        var server =
-            remoteAccessStarter.start(
-                hostUla.orElseThrow(), config, session.peerIdentifier().orElse(""));
-        session.attachTunnelServer(server);
-        reply.onLog(LogLevel.INFO, "Remote access is serving " + config.root());
-        return remoteAccessStatus(true, config.root(), true, server.address());
+        var address = serve(session, configured, false, reply);
+        return remoteAccessStatus(true, folder, true, address);
       } catch (IOException | RuntimeException failure) {
         reply.onLog(LogLevel.WARN, "Remote access could not start: " + messageOf(failure));
         return remoteAccessStatus(true, folder, false, null);
       }
     }
     return remoteAccessStatus(enabled, folder, false, null);
+  }
+
+  /**
+   * Resolves the configuration, starts the server on the session's host ULA, and attaches it to the
+   * session. The caller has already checked {@link DeviceSession#hasTunnel()}. The started server
+   * is owned by the session — {@link DeviceSession#attachTunnelServer} takes it and the session
+   * drains and closes it on teardown — so it is deliberately not closed here (hence
+   * {@code @SuppressWarnings("resource")}).
+   *
+   * @param folder the folder to serve, or {@code null} for the global default
+   * @param readOnly whether to serve read-only
+   * @return the address the server bound
+   * @throws IOException if the folder cannot be created or the server cannot be bound
+   */
+  private InetSocketAddress serve(DeviceSession session, Path folder, boolean readOnly, Reply reply)
+      throws IOException {
+    var config = remoteAccessFolders.resolve(folder, readOnly);
+    var server =
+        remoteAccessStarter.start(
+            session.hostUla().orElseThrow(), config, session.peerIdentifier().orElse(""));
+    session.attachTunnelServer(server, config.readOnly());
+    reply.onLog(LogLevel.INFO, "Remote access is serving " + config.root());
+    return server.address();
+  }
+
+  /** Starts host remote access on a live session by request, persisting the opt-in. */
+  private SessionCommand<DeviceSession> startRemoteAccessCommand(RequestParams params) {
+    var explicitFolder = params.optionalPath("folder").orElse(null);
+    var readOnly = params.flag("readOnly");
+    return (session, reply) -> {
+      if (!session.hasTunnel()) {
+        reply.fail(noTunnel(START_REMOTE_ACCESS));
+        return;
+      }
+      if (session.tunnelServer().isPresent()) {
+        reply.onLog(
+            LogLevel.INFO,
+            "Remote access is already running; use restartRemoteAccess to change the folder");
+        reply.result(START_REMOTE_ACCESS, accessStatus(session), null);
+        reply.succeed();
+        return;
+      }
+      try {
+        serve(session, effectiveFolder(session, explicitFolder), readOnly, reply);
+        persist(session, true, explicitFolder, reply);
+        reply.result(START_REMOTE_ACCESS, accessStatus(session), null);
+        reply.succeed();
+      } catch (IOException | RuntimeException failure) {
+        reply.fail(
+            new ServiceError(
+                CoreErrorCode.COMMAND_FAILED,
+                "Remote access could not start: " + messageOf(failure)));
+      }
+    };
+  }
+
+  /**
+   * Stops host remote access on a live session. Caller-paced so the session's command queue never
+   * blocks: a graceful stop begins the drain and returns at once with {@code state: "draining"} and
+   * the in-flight count, which the caller polls with {@code getRemoteAccessStatus} and finalises by
+   * calling {@code stopRemoteAccess} again once idle (or with {@code force} to cut it short).
+   * {@code disable} persists the opt-out so the next connect does not auto-start it.
+   */
+  private SessionCommand<DeviceSession> stopRemoteAccessCommand(RequestParams params) {
+    var force = params.flag("force");
+    var disable = params.flag("disable");
+    return (session, reply) -> {
+      if (disable) {
+        persist(session, false, null, reply);
+      }
+      var running = session.tunnelServer();
+      if (running.isEmpty()) {
+        reply.result(STOP_REMOTE_ACCESS, stateStatus(session, "notRunning"), null);
+        reply.succeed();
+        return;
+      }
+      var server = running.orElseThrow();
+      if (force) {
+        server.forceShutdown();
+        session.detachTunnelServer();
+        reply.result(STOP_REMOTE_ACCESS, stateStatus(session, "forced"), null);
+        reply.succeed();
+        return;
+      }
+      server.beginShutdown();
+      if (server.activeRequests() == 0) {
+        server.close();
+        session.detachTunnelServer();
+        reply.result(STOP_REMOTE_ACCESS, stateStatus(session, "stopped"), null);
+        reply.succeed();
+        return;
+      }
+      reply.result(STOP_REMOTE_ACCESS, stateStatus(session, "draining"), null);
+      reply.succeed();
+    };
+  }
+
+  /** Reports the live remote-access status of a session. */
+  private SessionCommand<DeviceSession> remoteAccessStatusCommand() {
+    return (session, reply) -> {
+      reply.result(GET_REMOTE_ACCESS_STATUS, accessStatus(session), null);
+      reply.succeed();
+    };
+  }
+
+  /**
+   * Changes the folder host remote access serves on a live session without a reconnect: a bounded
+   * graceful stop of the current server, then a fresh start on the (new) folder, keeping the
+   * read-only choice unless the request overrides it. The new folder is persisted so a reconnect
+   * auto-starts on it.
+   */
+  private SessionCommand<DeviceSession> restartRemoteAccessCommand(RequestParams params) {
+    var explicitFolder = params.optionalPath("folder").orElse(null);
+    return (session, reply) -> {
+      if (!session.hasTunnel()) {
+        reply.fail(noTunnel(RESTART_REMOTE_ACCESS));
+        return;
+      }
+      var readOnly = params.flag("readOnly", session.tunnelServerReadOnly());
+      session.detachTunnelServer().ifPresent(TunnelScopedServer::close);
+      try {
+        serve(session, effectiveFolder(session, explicitFolder), readOnly, reply);
+        persist(session, true, explicitFolder, reply);
+        reply.result(RESTART_REMOTE_ACCESS, accessStatus(session), null);
+        reply.succeed();
+      } catch (IOException | RuntimeException failure) {
+        reply.fail(
+            new ServiceError(
+                CoreErrorCode.COMMAND_FAILED,
+                "Remote access could not restart: " + messageOf(failure)));
+      }
+    };
+  }
+
+  /** Persists the {@code remoteAccess} setting for a device without a live session. */
+  private StandaloneCommand setRemoteAccessCommand(RequestParams params) {
+    var devices = params.requirePath("devicesDirectory");
+    var pin = params.requireString("pin");
+    var enabled = params.flag("enabled");
+    var folder = params.optionalPath("folder").orElse(null);
+    return reply -> {
+      try {
+        var directory = DeviceDirectory.of(devices, pin);
+        var effective =
+            folder != null
+                ? folder
+                : directory.remoteAccess().map(StoredRemoteAccess::folder).orElse(null);
+        directory.writeRemoteAccess(new StoredRemoteAccess(enabled, effective));
+        reply.result(
+            SET_REMOTE_ACCESS,
+            Json.object(
+                "enabled", enabled, "folder", effective == null ? null : effective.toString()),
+            null);
+        reply.succeed();
+      } catch (IOException failure) {
+        reply.fail(
+            new ServiceError(
+                CoreErrorCode.COMMAND_FAILED,
+                "Could not write the remote-access setting: " + messageOf(failure)));
+      }
+    };
+  }
+
+  /**
+   * The live remote-access status reported by the status, start and restart commands: {@code
+   * enabled} from the stored setting, the rest from the running server. The folder is the stored or
+   * default folder, which start and restart keep in step with what is served.
+   */
+  private Map<String, Object> accessStatus(DeviceSession session) {
+    var stored = storedRemoteAccess(session);
+    var enabled = stored.map(StoredRemoteAccess::enabled).orElse(false);
+    var folder = stored.map(StoredRemoteAccess::folder).orElse(remoteAccessFolders.defaultRoot());
+    return session
+        .tunnelServer()
+        .map(server ->
+            Json.object(
+                "enabled",
+                enabled,
+                "running",
+                true,
+                "folder",
+                folder.toString(),
+                "readOnly",
+                session.tunnelServerReadOnly(),
+                "activeRequests",
+                (long) server.activeRequests(),
+                "address",
+                addressText(server.address())))
+        .orElseGet(() ->
+            Json.object(
+                "enabled",
+                enabled,
+                "running",
+                false,
+                "folder",
+                folder.toString(),
+                "readOnly",
+                false,
+                "activeRequests",
+                0L,
+                "address",
+                null));
+  }
+
+  /** The {@link #accessStatus} map with the {@code state} the stop command reports. */
+  private Map<String, Object> stateStatus(DeviceSession session, String state) {
+    var status = accessStatus(session);
+    status.put("state", state);
+    return status;
   }
 
   /**

@@ -153,13 +153,18 @@ class LinkServiceTest {
     }
 
     @Test
-    @DisplayName("has a command for each method, in the order of the methods")
+    @DisplayName("has a command for each method, then the remote-access verbs, in order")
     void hasACommandForEachMethod() {
       assertThat(service.commands())
           .extracting(CommandSpec::wireName)
-          .hasSize(47)
-          .first()
-          .isEqualTo("getDeviceProperties");
+          .hasSize(LinkMethod.values().length + 5)
+          .startsWith("getDeviceProperties")
+          .endsWith(
+              "startRemoteAccess",
+              "stopRemoteAccess",
+              "getRemoteAccessStatus",
+              "restartRemoteAccess",
+              "setRemoteAccess");
     }
   }
 

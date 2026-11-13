@@ -48,3 +48,8 @@ restoreDevice
 dumpDeviceLogs
 reboot
 powerOff
+startRemoteAccess
+stopRemoteAccess
+getRemoteAccessStatus
+restartRemoteAccess
+setRemoteAccess
